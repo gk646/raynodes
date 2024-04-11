@@ -2,9 +2,9 @@
 #define RAYNODES_SRC_NODES_NODES_H_
 
 #include <raylib.h>
-#include <persist/PropertySaver.h>
 #include <cxstructs/StackVector.h>
 #include "Components.h"
+#include "shared/fwd.h"
 
 enum class NodeType : uint8_t {
   HEADER,
@@ -109,11 +109,7 @@ inline const char* NodeToString(NodeType type) {
   }
 }
 
-enum NodeID : uint16_t;
 
-struct DrawResource;
-struct UpdateResource;
-struct Component;
 struct Node {
   inline static Vector2 DRAG_OFFSET;
   cxstructs::StackVector<Component*, 5> components;
@@ -136,7 +132,7 @@ struct Node {
   void addComponent(Component* comp);
   void update(UpdateResource&);
   void saveState(FILE* file);
-  void loadState(char** serializedState);
+  void loadState(FILE* file);
   void draw(DrawResource&);
 
   //-----------VIRTUALS-----------//
