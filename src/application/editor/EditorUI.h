@@ -3,6 +3,7 @@
 
 #include "nodes/Nodes.h"
 #include "application/elements/Action.h"
+
 namespace Editor {
 inline void DrawGrid(EditorContext& ec) {
   constexpr Color color{58, 68, 102, 255};
@@ -59,7 +60,10 @@ inline void DrawContextMenu(EditorContext& ec) {
     if (CheckCollisionPointRec(GetMousePosition(), textRect)) {
       DrawRectanglePro(textRect, {0, 0}, 0, ColorAlpha(WHITE, 0.6F));
       if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        ec.core.createNode(NodeType(i), GetScreenToWorld2D(pos, ec.display.camera));
+        auto action = new NodeCreateAction(2);
+        auto newN = ec.core.createNode(NodeType(i), GetScreenToWorld2D(pos, ec.display.camera));
+        action->createdNodes.push_back(newN);
+        ec.core.addEditorAction(action);
         ec.logic.showContextMenu = false;
       }
     }
@@ -73,26 +77,46 @@ inline void DrawContextMenu(EditorContext& ec) {
   }
 }
 inline void DrawActions(EditorContext& ec) {
-  const auto width = ec.display.getSpace(0.20);
-  const auto height = ec.display.getSpace(0.20);
+  constexpr int visibleActions = 10;  // Number of actions you want to display at a time
+  const auto width = ec.display.getSpace(0.17);
+  const auto padding = width * 0.03F;
+  const auto height = visibleActions * ec.display.getSpace(0.022);
   const auto anchor = ec.display.getAnchor(RIGHT_TOP, 0.03, width, height);
-  const auto& font = ec.display.editorFont;
   const auto fs = ec.display.fontSize;
   const auto currActionIdx = ec.core.currentActionIndex;
+  const auto& font = ec.display.editorFont;
 
   auto rect = Rectangle{anchor.x, anchor.y, width, height};
 
-  DrawRectangleRec(rect, ColorAlpha(GRAY, 0.7F));
+  DrawRectangleRec(rect, ColorAlpha(DARKGRAY, 0.7F));
+  DrawRectangleLinesEx(rect, padding / 4.0F, ColorAlpha(GRAY, 0.7F));
 
-  // Determine the range of actions to display
-  int start = std::max(0, currActionIdx - 5);
-  int end = std::min(currActionIdx + 5, (int)ec.core.actionQueue.size() - 1);
+  // Adjust the start index to ensure the current action is always on screen
+  int totalActions = ec.core.actionQueue.size();
+  int start = std::max(0, std::min(currActionIdx, totalActions - visibleActions));
+  int end = std::min(start + visibleActions - 1, totalActions - 1);
+
+  rect.y += padding;
 
   for (int i = start; i <= end; ++i) {
-    auto& action = ec.core.actionQueue[i];
-    Color color = i <= currActionIdx ? RAYWHITE : GRAY; // Gray out undone actions
-    DrawTextEx(font, action->toString(), {rect.x, rect.y}, fs, 1.0F, color);
-    rect.y += height / 10.0F; // Move to the next action's position
+    auto action = ec.core.actionQueue[i];
+    bool isCurrentAction = i == currActionIdx;
+    bool isCurrentOrBelow = i >= currActionIdx;
+    bool isCurrentOrAbove = i <= currActionIdx;
+
+    Color textColor = isCurrentOrAbove ? RAYWHITE : BLACK;  // Highlight current action in black, past in gray
+    Color highLightColor = isCurrentAction ? BLUE : GRAY;   // Highlight background of current action in blue
+
+    // Draw background highlight for the current action
+    if (isCurrentOrBelow) {
+      DrawRectangleRec({rect.x + padding, rect.y, width - 2 * padding, fs + padding},
+                       ColorAlpha(highLightColor, 0.4F));
+    }
+
+    // Draw action text
+    DrawTextEx(font, action->toString(), {rect.x + padding, rect.y + padding / 2}, fs, 1.0F, textColor);
+
+    rect.y += fs + padding;  // Move to the next action's position, ensuring space for text and padding
   }
 }
 }  // namespace Editor

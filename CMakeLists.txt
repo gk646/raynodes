@@ -9,7 +9,6 @@ set(OPENGL_VERSION "4.3" CACHE STRING "OpenGL Version to build raylib with")
 
 set(DEPENDENCIES_PATH "C:/Users/gk646/Documents/Libaries")
 
-message(${CMAKE_SOURCE_DIR})
 include_directories(
         "${DEPENDENCIES_PATH}/raylib-master/src"
         "${CMAKE_SOURCE_DIR}/../cxstructs/src"

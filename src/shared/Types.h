@@ -22,4 +22,10 @@ struct UpdateResource {
   bool isDraggingNode;
 };
 
+struct Point {
+  float x;
+  float y;
+};
+
+
 #endif  //RAYNODES_SRC_TYPES_TYPES_H_

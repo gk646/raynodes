@@ -8,11 +8,20 @@
 
 void TextInputField::draw(float x, float y, EditorContext& ec) {
   const auto rect = Rectangle{x, y, (float)width, (float)height};
+
   if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
     bool wasFocused = isFocused;
-    isFocused = CheckCollisionPointRec(ec.logic.worldMouse, rect);
-    showCursor = isFocused;
-    blinkCounter = 0;
+
+    //User clicked on textfield
+    if (CheckCollisionPointRec(ec.logic.worldMouse, rect)) {
+      isFocused = true;
+      blinkCounter = 0;
+      showCursor = true;
+    } else {
+      isFocused = false;
+      showCursor = false;
+    }
+
     if (wasFocused != isFocused) {
       if (isFocused) {
         onFocusGain();
@@ -23,32 +32,31 @@ void TextInputField::draw(float x, float y, EditorContext& ec) {
   }
 
   const auto& font = ec.display.editorFont;
-  constexpr float fs = 15;
+  const auto fs = ec.display.fontSize;
   const auto drawY = y + (height - fs) / 2.3F;
-
   const auto prefixWidth = MeasureTextEx(font, name, fs, 1.0F).x;
-  auto drawX = x - (prefixWidth + 3);
-  DrawTextEx(font, name, {drawX, drawY}, fs, 1.0, DARKGRAY);
-
-  DrawRectangleRec(rect, isFocused ? DARKGRAY : GRAY);
-  DrawRectangleLinesEx(rect, 1, BLACK);
-
-  // Clamp the cursor position
   cursorPos = cxstructs::clamp((int)cursorPos, 0, static_cast<int>(buffer.size()));
-  DrawTextEx(font, buffer.c_str(), {x + 3, drawY}, fs, 1.0F, WHITE);
-  const auto c = buffer[cursorPos];
-  buffer[cursorPos] = '\0';
 
+  //Measure cursor position
+  char charAtCursor = buffer[cursorPos];
+  buffer[cursorPos] = '\0';
   const auto beforeWidth = MeasureTextEx(font, buffer.c_str(), fs, 1.0F).x;
-  buffer[cursorPos] = c;
+  buffer[cursorPos] = charAtCursor;
+  auto drawX = x - (prefixWidth + 3);
+
+  //Label text
+  DrawTextEx(font, name, {drawX, drawY}, fs, 1.0, DARKGRAY);
+  //Main field
+  DrawRectangleRec(rect, isFocused ? DARKGRAY : GRAY);
+  //Draw the text
+  DrawTextEx(font, buffer.c_str(), {x + 3, drawY}, fs, 1.0F, WHITE);
+  //Draw cursor
   if (showCursor) {
     DrawTextEx(font, "|", {x + beforeWidth, drawY}, fs + 2, 1.0F, WHITE);
-  } else {
-    DrawTextEx(font, " ", {x + beforeWidth, drawY}, fs + 2, 1.0F, WHITE);
   }
 }
 
-void TextInputField::update(EditorContext& ec) {
+void TextInputField::update(float x, float y, EditorContext& ec) {
   if (isFocused && IsKeyPressed(KEY_ESCAPE)) {
     isFocused = false;
     onFocusLoss(ec);
@@ -98,6 +106,8 @@ void TextInputField::save(FILE* file) {
 void TextInputField::load(FILE* file) {
   cxstructs::io_load(file, buffer);
 }
+
+
 void TextInputField::onFocusGain() {
   if (currAction) {
     delete currAction;
@@ -109,13 +119,12 @@ void TextInputField::onFocusGain() {
 void TextInputField::onFocusLoss(EditorContext& ec) {
   if (currAction) {
     //TRANSFER OWNERSHIP
-    auto action = (TextAction*)currAction;
-    if (action->beforeState == buffer) {
+    if (currAction->beforeState == buffer) {
       delete currAction;
       currAction = nullptr;
       return;
     }
-    action->setAfter(buffer);
+    currAction->setAfter(buffer);
     ec.core.addEditorAction(currAction);
     currAction = nullptr;
   }

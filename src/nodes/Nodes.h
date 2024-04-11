@@ -111,7 +111,7 @@ inline const char* NodeToString(NodeType type) {
 
 struct Node {
   inline static Vector2 DRAG_OFFSET;
-  cxstructs::StackVector<Component*, 5> components;
+  cxstructs::StackVector<Component*, 5> components{};
   Vector2 position;
   Vector2 size;
   NodeID id;
@@ -143,7 +143,7 @@ struct Node {
 };
 
 /* |-----------------------------------------------------|
- * |          DEFINE YOUR OWN NODES HERE                 |
+ * |                DEFINE NODES HERE                    |
  * |-----------------------------------------------------|
  */
 

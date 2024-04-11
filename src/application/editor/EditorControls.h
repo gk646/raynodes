@@ -13,7 +13,6 @@ inline void PollControls(EditorContext& ec) {
 
   //Context menu
   if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
-
     contextMenuPos = mouse;
   }
 
@@ -36,6 +35,16 @@ inline void PollControls(EditorContext& ec) {
     isDragging = true;
   }
   if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+    auto& moveAction = ec.logic.currentMoveAction;
+    if (ec.logic.isDraggingNode && moveAction) {
+      const auto avgDist = moveAction->calculateDeltas(ec);
+      if(avgDist < 15){
+        delete moveAction;
+      }else{
+        ec.core.addEditorAction(moveAction);
+      }
+      moveAction = nullptr;
+    }
     isDragging = false;
   }
   if (isDragging) {
@@ -46,9 +55,9 @@ inline void PollControls(EditorContext& ec) {
 
   //Selecting
   if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !ec.logic.isAnyNodeHovered && !ec.logic.showContextMenu) {
+    ec.core.selectedNodes.clear();
     ec.logic.isSelecting = true;
-    selectRect.x = worldMouse.x;
-    selectRect.y = worldMouse.y;
+    ec.logic.selectPoint = worldMouse;
     selectRect.width = 0;
     selectRect.height = 0;
   }
@@ -59,22 +68,27 @@ inline void PollControls(EditorContext& ec) {
 
   //Shortcuts
   if (IsKeyPressed(KEY_DELETE)) {
-    for (auto pair : ec.core.selectedNodes) {
-      ec.core.removeNode(NodeID(pair.first));
-      delete pair.second;
+    //Skip if empty
+    if (!ec.core.selectedNodes.empty()) {
+      auto action = new NodeDeleteAction((int)ec.core.selectedNodes.size() + 1);
+      for (auto pair : ec.core.selectedNodes) {
+        ec.core.removeNode(NodeID(pair.first));
+        action->deletedNodes.push_back(pair.second);
+      }
+      ec.core.addEditorAction(action);
+      ec.core.selectedNodes.clear();
     }
-    ec.core.selectedNodes.clear();
+  }
+
+  //My keyboard...
+  //Redo
+  if ((IsKeyPressed(KEY_Z) || IsKeyPressedRepeat(KEY_Z)) && IsKeyDown(KEY_LEFT_CONTROL)) {
+    ec.core.redo(ec);
   }
 
   //Undo
-  if (IsKeyPressed(KEY_Z) && IsKeyDown(KEY_LEFT_CONTROL)) {
-
-    ec.core.undo();
-  }
-
-  //Redo
-  if (IsKeyPressed(KEY_Y) && IsKeyDown(KEY_LEFT_CONTROL)) {
-    ec.core.redo();
+  if ((IsKeyPressed(KEY_Y) || IsKeyPressedRepeat(KEY_Y)) && IsKeyDown(KEY_LEFT_CONTROL)) {
+    ec.core.undo(ec);
   }
 
   if (IsKeyDown(KEY_B)) {

@@ -3,14 +3,15 @@ raynodes - Software Design
 
 - Fully use my 1mb of stack for state data
 - No global state to allow for modularity if needed (and testability...)
-- move away from providing source code extensibility to in editor extensibility
+- Move away from providing source code extensibility to in editor extensibility
     - software isn't centered around code interaction but in editor interaction
 - 2 thread model - Logic and draw thread (remove logic time overhead and memory management from draw thread)
     - only minimal synchronization needed (with spin lock and only in EditorContext getters and setters)
+    - through clean code structure critical sections can easily be defined
 - Structured code through exporting big functions into headers
 
 
-Concepts
+## Concepts
 
 
 EditorContext - DataBackend
