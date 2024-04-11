@@ -1,7 +1,6 @@
 #ifndef RAYNODES_SRC_EDITOR_EDITORCONTROLS_H_
 #define RAYNODES_SRC_EDITOR_EDITORCONTROLS_H_
 
-#include "nodes/Nodes.h"
 
 namespace Editor {
 inline void PollControls(EditorContext& ec) {
@@ -15,6 +14,7 @@ inline void PollControls(EditorContext& ec) {
 
   //Context menu
   if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+
     contextMenuPos = mouse;
   }
 
@@ -42,7 +42,7 @@ inline void PollControls(EditorContext& ec) {
   if (isDragging) {
     camera.target.x -= (worldMouse.x - dragStart.x);
     camera.target.y -= (worldMouse.y - dragStart.y);
-    dragStart = GetScreenToWorld2D(GetMousePosition(), camera);;
+    dragStart = GetScreenToWorld2D(ec.logic.mouse, camera);
   }
 
   //Selecting
@@ -53,6 +53,7 @@ inline void PollControls(EditorContext& ec) {
     selectRect.width = 0;
     selectRect.height = 0;
   }
+
   if (IsMouseButtonReleased(MOUSE_BUTTON_RIGHT)) {
     ec.logic.isSelecting = false;
   }
@@ -60,48 +61,19 @@ inline void PollControls(EditorContext& ec) {
   //Shortcuts
   if (IsKeyPressed(KEY_DELETE)) {
     for (auto pair : ec.core.selectedNodes) {
-      //context.temporaryDelete(NodeID(pair.first));
+      ec.core.removeNode(NodeID(pair.first));
+      delete pair.second;
     }
     ec.core.selectedNodes.clear();
   }
-}
 
-inline void DrawContextMenu(EditorContext& ec) {
-  //Getters
-  const auto fs = ec.display.fontSize;
-  const auto pos = ec.logic.contextMenuPos;
-  const auto& font = ec.display.editorFont;
-
-  //Drawing
-  const auto padding = fs * 0.3F;
-  const auto height = (fs + padding) * (float)NodeType::TOTAL_SIZE;
-  const auto rect = Rectangle{pos.x, pos.y, 170, height};
-  DrawRectanglePro(rect, {0, 0}, 0, ColorAlpha(BLACK, 0.6));
-  auto drawPos = Vector2{pos.x + padding, pos.y + padding};
-
-  //Loop
-  for (int i = 0; i < (int)NodeType::TOTAL_SIZE; i++) {
-    const auto text = NodeToString(NodeType(i));
-    auto textDims = MeasureTextEx(font, text, fs, 1.0F);
-    const auto textRect = Rectangle{drawPos.x, drawPos.y, textDims.x, textDims.y};
-
-    //Check hover and click state
-    if (CheckCollisionPointRec(GetMousePosition(), textRect)) {
-      DrawRectanglePro(textRect, {0, 0}, 0, ColorAlpha(WHITE, 0.6F));
-      if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        ec.core.createNode(NodeType(i), GetScreenToWorld2D(pos, ec.display.camera));
-        ec.logic.showContextMenu = false;
-      }
-    }
-
-    DrawTextEx(font, text, drawPos, fs, 1.0F, WHITE);
-    drawPos.y += fs + padding;
-  }
-
-  if (!CheckCollisionPointRec(GetMousePosition(), rect)) {
-    ec.logic.showContextMenu = false;
+  if(IsKeyDown(KEY_B)){
+    ec.core.createNode(NodeType::HEADER,{(float)GetRandomValue(0,150),500});
+    printf("%d\n", (int)ec.core.UID);
   }
 }
+
+
 }  // namespace Editor
 
 #endif  //RAYNODES_SRC_EDITOR_EDITORCONTROLS_H_

@@ -9,6 +9,8 @@ class NodeEditor {
   EditorContext context;
   std::thread updateThread;
 
+  void update();
+
  public:
   explicit NodeEditor(const char* saveName);
   bool start();
