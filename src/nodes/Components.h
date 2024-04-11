@@ -11,7 +11,7 @@ struct Component {
   explicit Component(const char* name, uint16_t w = 0, uint16_t h = 0) : name(name), width(w), height(h) {}
   virtual Component* clone() = 0;
   virtual void draw(float x, float y, EditorContext&) = 0;
-  virtual void update(EditorContext&) = 0;
+  virtual void update(float x, float y,EditorContext&) = 0;
   virtual void save(FILE* file) = 0;
   virtual void load(FILE* file) = 0;
 

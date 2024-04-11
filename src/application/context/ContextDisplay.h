@@ -16,7 +16,7 @@ enum AnchorPos : uint8_t {
 struct Display {
   Camera2D camera = {0};
   Font editorFont = {0};
-  float fontSize = 16;
+  float fontSize = 17;
   Vector2 screenSize = {0};
   float gridSpacing = 20;
 

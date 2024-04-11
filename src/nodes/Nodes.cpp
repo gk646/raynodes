@@ -3,9 +3,11 @@
 #include <ostream>
 #include <cxutil/cxio.h>
 
-#include "shared/Types.h"
 #include "Components.h"
+#include "shared/Types.h"
 #include "application/EditorContext.h"
+#include "application/elements/Action.h"
+
 
 void Node::draw(EditorContext& ec) {
   const auto& font = ec.display.editorFont;
@@ -30,61 +32,75 @@ void Node::draw(EditorContext& ec) {
 }
 
 void Node::update(EditorContext& ec) {
-
-
   //Cache
   const auto rect = Rectangle{position.x, position.y, size.x, size.y};
   auto& selectedNodes = ec.core.selectedNodes;
   const auto worldMouse = ec.logic.worldMouse;
 
+  //Update components
+  float startX = position.x + 3;
+  float startY = position.y + 20 + 3;
+
+  for (auto c : components) {
+    c->update(startX, startY, ec);
+    if (c->getWidth() > size.x) {
+      size.x = c->getWidth() + 10;
+    }
+    startY += c->getHeight();
+  }
+
   if (ec.logic.isSelecting) {
     if (CheckCollisionRecs(rect, ec.logic.selectRect)) {
-      selectedNodes.insert({(uint16_t)id, this});
+      selectedNodes.insert({id, this});
       isHovered = true;
+    } else {
+      isHovered = false;
     }
     //User is selecting // Don't update movement
     return;
   }
 
   //Another node is hovered no point in updating this one
-  if (ec.logic.isDraggingNode && !isHovered) {
+  if (!isDragged && (ec.logic.isAnyNodeHovered || ec.logic.isDraggingNode)) {
     //Show as hovered when selected
-    isHovered = selectedNodes.contains((uint16_t)id);
+    isHovered = selectedNodes.contains(id);
     return;
-  }
-
-  //Update components
-  for (auto c : components) {
-    c->update(ec);
-    if (c->getWidth() > size.x) {
-      size.x = c->getWidth() + 10;
-    }
   }
 
   //Check if hovered
   isHovered = isDragged || CheckCollisionPointRec(worldMouse, rect);
 
-  if (isHovered) {
+  if (isHovered && !ec.logic.isAnyNodeHovered) {
     ec.logic.isAnyNodeHovered = true;
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-      if (IsKeyDown(KEY_LEFT_CONTROL)) {
-        selectedNodes.insert({(uint16_t)id, this});
-      }
-
-      if (!selectedNodes.contains((uint16_t)id)) {
+      if (!IsKeyDown(KEY_LEFT_CONTROL) && !selectedNodes.contains(id)) {
         selectedNodes.clear();
+      }
+      selectedNodes.insert({id, this});
+
+      auto& moveAction = ec.logic.currentMoveAction;
+      if (moveAction == nullptr) {
+        moveAction = new NodeMovedAction((int)selectedNodes.size() + 1);
+        for(auto pair : selectedNodes){
+          moveAction->movedNodes.emplace_back(pair.first, pair.second->position);
+        }
       }
 
       isDragged = true;
       DRAG_OFFSET = ec.logic.worldMouse;
       ec.logic.isDraggingNode = true;
+      ec.logic.draggedNode = this;
     }
+
+  } else {
+    isHovered = !selectedNodes.empty() && selectedNodes.contains(id);
   }
 
   if (isDragged) {
     ec.logic.isAnyNodeHovered = true;
+    ec.logic.draggedNode = this;
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-      Vector2 movementDelta = {worldMouse.x - DRAG_OFFSET.x,worldMouse.y - DRAG_OFFSET.y};
+      Vector2 movementDelta = {worldMouse.x - DRAG_OFFSET.x, worldMouse.y - DRAG_OFFSET.y};
       position.x += movementDelta.x;
       position.y += movementDelta.y;
 
@@ -105,11 +121,8 @@ void Node::update(EditorContext& ec) {
       ec.logic.isDraggingNode = false;
     }
   }
-
-  if (!isHovered) {
-    isHovered = !selectedNodes.empty() && selectedNodes.contains((uint16_t)id);
-  }
 }
+
 void Node::saveState(FILE* file) {
   cxstructs::io_save(file, (int)type);
   cxstructs::io_save(file, (int)color.r);
@@ -126,6 +139,7 @@ void Node::saveState(FILE* file) {
   }
 }
 void Node::loadState(FILE* file) {
+  //Node type was already parsed
   int r, g, b, a;
   cxstructs::io_load(file, r);
   cxstructs::io_load(file, g);
@@ -136,7 +150,6 @@ void Node::loadState(FILE* file) {
 
   cxstructs::io_load(file, position.x);
   cxstructs::io_load(file, position.y);
-
   cxstructs::io_load(file, size.x);
   cxstructs::io_load(file, size.y);
 

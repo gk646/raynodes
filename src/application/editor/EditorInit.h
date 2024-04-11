@@ -3,7 +3,7 @@
 
 namespace Editor {
 inline void SetupDisplay(EditorContext& ec) {
-  SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_WINDOW_RESIZABLE);
+  SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_ALWAYS_RUN);
 
   // Initialize the window with the initial size
   InitWindow(1280, 720, "raynodes");

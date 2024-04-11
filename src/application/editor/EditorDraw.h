@@ -12,20 +12,18 @@ inline void DrawBackGround(EditorContext& ec) {
 inline void DrawContent(EditorContext& ec) {
   auto& nodes = ec.core.nodes;
 
-
-  for (auto n : nodes) {
-    n->draw(ec);
+  //Critical section
+  ec.core.lock();
+  {
+    for (auto n : nodes) {
+      n->draw(ec);
+    }
   }
-
-  auto& selectRect = ec.logic.selectRect;
-  const auto worldMouse = ec.logic.worldMouse;
+  ec.core.unlock();
 
   if (ec.logic.isSelecting) {
-    selectRect.width = worldMouse.x - selectRect.x;
-    selectRect.height = worldMouse.y - selectRect.y;
-    DrawRectanglePro(selectRect, {0, 0}, 0, ColorAlpha(BLUE, 0.4F));
+    DrawRectanglePro(ec.logic.selectRect, {0, 0}, 0, ColorAlpha(BLUE, 0.4F));
   }
-
 }
 
 inline void DrawForeGround(EditorContext& ec) {
@@ -35,7 +33,10 @@ inline void DrawForeGround(EditorContext& ec) {
 
   Editor::DrawActions(ec);
 
-  Editor::PollControls(ec);
+  //Critical section // (Undo / Redo )
+  ec.core.lock();
+  { Editor::PollControls(ec); }
+  ec.core.unlock();
 
   char buff[8];
   snprintf(buff, 8, "%d", GetFPS());
