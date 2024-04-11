@@ -4,6 +4,11 @@
 
 In a lot of places it uses my C++ helper library [cxstructs](https://github.com/gk646/cxstructs).
 
+**1.** [Controls](#Controls)   
+**2.** [Features](#Features)   
+**3.** [Components!](#Expand-and-Contribute-with-Components)  
+**4.** [Software Design](#Software-Design)
+
 ### Controls
 
 - `CTRL+Z` / **Undo Action**
@@ -31,11 +36,23 @@ Actions have a generic interface and new ones can easily be added.
 ## Expand and Contribute with Components!
 
 Add your own Components to enable users to create nodes with them.
-A component is a simple struct that is drawn inside the node.
-It has a label:`name`, a `width` and `height`;
+A component is a simple struct that is drawn and update inside the node.
 Inside the update function you have full write and read access to the context and design and draw complex components.
 
-*This interface will be expanded with some event functions the component can react to*
+### Capabilities
+
+The capabilities are almost endless.
+Some powerful features include:
+
+- Access other nodes and their components from your component
+    - e.g. modify all nodes with a given label
+- Modify editor properties like resolution or camera zoom and position
+- Trigger function like saving or adding and removing nodes
+
+### One Rule to rule them all
+
+**All components are expected to stay within their bounds *(draw and update)*. Although they can freely change their
+dimensions...**
 
 ### Interface
 
@@ -61,6 +78,9 @@ virtual void* getData() { return nullptr; };
 [[nodiscard]] inline float getHeight() const { return height; }
 };
 ```
+
+*This interface will be expanded with some event functions the component can react to*
+It has a label:`name`, a `width` and `height`;
 
 ### Loading and saving
 
