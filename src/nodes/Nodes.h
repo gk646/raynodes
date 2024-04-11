@@ -109,7 +109,6 @@ inline const char* NodeToString(NodeType type) {
   }
 }
 
-
 struct Node {
   inline static Vector2 DRAG_OFFSET;
   cxstructs::StackVector<Component*, 5> components;
@@ -120,25 +119,27 @@ struct Node {
   NodeType type;
   bool isHovered = false;
   bool isDragged = false;
-  Node(NodeID id, NodeType type, Vector2 position = {0, 0},
-       Color color = {255, 255, 255, 255})
+  Node(NodeID id, NodeType type, Vector2 position = {0, 0}, Color color = {255, 255, 255, 255})
       : id(id), type(type), color(color), position(position), size({100, 100}) {}
   Node(const Node& n, NodeID id) : id(id), type(n.type), position(n.position), color(n.color), size(n.size) {
     for (auto c : n.components) {
       components.push_back(c->clone());
     }
   }
-  Component* getComponent(const char* name);
-  void addComponent(Component* comp);
-  void update(UpdateResource&);
+
+  //-----------CORE-----------//
+  void update(EditorContext&);
+  void draw(EditorContext&);
   void saveState(FILE* file);
   void loadState(FILE* file);
-  void draw(DrawResource&);
 
+  //-----------COMPONENTS-----------//
+  Component* getComponent(const char* name);
+  void addComponent(Component* comp);
   //-----------VIRTUALS-----------//
   virtual ~Node() = default;
   virtual Node* clone(NodeID nid) { return new Node(*this, nid); }
-  virtual void exportToMQQS(std::ostream& out){};
+  virtual void exportToMQQS(std::ostream& out) {};
 };
 
 /* |-----------------------------------------------------|

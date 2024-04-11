@@ -9,6 +9,9 @@ inline int Exit(EditorContext& ec) {
   cxstructs::Constraint<true> c;
 
   c + ec.persist.saveToFile(ec);
+  ec.core.logicThreadRunning = false;
+
+  CloseWindow();
 
   return c.exitcode();
 }

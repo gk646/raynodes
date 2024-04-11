@@ -2,9 +2,9 @@
 #define RAYNODES_SRC_APPLICATION_EDITOR_EDITORUI_H_
 
 #include "nodes/Nodes.h"
-
+#include "application/elements/Action.h"
 namespace Editor {
-void DrawGrid(EditorContext& ec) {
+inline void DrawGrid(EditorContext& ec) {
   constexpr Color color{58, 68, 102, 255};
   float baseGridSpacing = ec.display.gridSpacing;
   const auto& camera = ec.display.camera;
@@ -36,7 +36,6 @@ void DrawGrid(EditorContext& ec) {
     DrawLineV(start, end, color);
   }
 }
-
 inline void DrawContextMenu(EditorContext& ec) {
   //Getters
   const auto fs = ec.display.fontSize;
@@ -71,6 +70,29 @@ inline void DrawContextMenu(EditorContext& ec) {
 
   if (!CheckCollisionPointRec(GetMousePosition(), rect)) {
     ec.logic.showContextMenu = false;
+  }
+}
+inline void DrawActions(EditorContext& ec) {
+  const auto width = ec.display.getSpace(0.20);
+  const auto height = ec.display.getSpace(0.20);
+  const auto anchor = ec.display.getAnchor(RIGHT_TOP, 0.03, width, height);
+  const auto& font = ec.display.editorFont;
+  const auto fs = ec.display.fontSize;
+  const auto currActionIdx = ec.core.currentActionIndex;
+
+  auto rect = Rectangle{anchor.x, anchor.y, width, height};
+
+  DrawRectangleRec(rect, ColorAlpha(GRAY, 0.7F));
+
+  // Determine the range of actions to display
+  int start = std::max(0, currActionIdx - 5);
+  int end = std::min(currActionIdx + 5, (int)ec.core.actionQueue.size() - 1);
+
+  for (int i = start; i <= end; ++i) {
+    auto& action = ec.core.actionQueue[i];
+    Color color = i <= currActionIdx ? RAYWHITE : GRAY; // Gray out undone actions
+    DrawTextEx(font, action->toString(), {rect.x, rect.y}, fs, 1.0F, color);
+    rect.y += height / 10.0F; // Move to the next action's position
   }
 }
 }  // namespace Editor

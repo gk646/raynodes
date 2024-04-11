@@ -19,6 +19,7 @@ inline void StartUpdateTick(EditorContext& ec) {
   auto mouse = GetMousePosition();
   ec.logic.worldMouse = GetScreenToWorld2D(mouse, camera);
   ec.logic.mouse = mouse;
+  ec.logic.isAnyNodeHovered = false;  // Reset each tick
 }
 }  // namespace
 
@@ -26,14 +27,10 @@ namespace Editor {
 
 inline void UpdateTick(EditorContext& ec) {
   StartUpdateTick(ec);
-  UpdateResource ur = ec.getUpdateResource();
 
   for (auto c : ec.core.nodes) {
-    c->update(ur);
+    c->update(ec);
   }
-
-  ec.logic.isAnyNodeHovered = ur.anyNodeHovered;
-  ec.logic.isDraggingNode = ur.isDraggingNode;
 }
 
 }  // namespace Editor

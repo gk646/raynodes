@@ -1,7 +1,6 @@
 #ifndef RAYNODES_SRC_EDITOR_EDITORCONTROLS_H_
 #define RAYNODES_SRC_EDITOR_EDITORCONTROLS_H_
 
-
 namespace Editor {
 inline void PollControls(EditorContext& ec) {
   const auto mouse = ec.logic.mouse;
@@ -67,12 +66,22 @@ inline void PollControls(EditorContext& ec) {
     ec.core.selectedNodes.clear();
   }
 
-  if(IsKeyDown(KEY_B)){
-    ec.core.createNode(NodeType::HEADER,{(float)GetRandomValue(0,150),500});
+  //Undo
+  if (IsKeyPressed(KEY_Z) && IsKeyDown(KEY_LEFT_CONTROL)) {
+
+    ec.core.undo();
+  }
+
+  //Redo
+  if (IsKeyPressed(KEY_Y) && IsKeyDown(KEY_LEFT_CONTROL)) {
+    ec.core.redo();
+  }
+
+  if (IsKeyDown(KEY_B)) {
+    ec.core.createNode(NodeType::HEADER, {(float)GetRandomValue(0, 150), 500});
     printf("%d\n", (int)ec.core.UID);
   }
 }
-
 
 }  // namespace Editor
 

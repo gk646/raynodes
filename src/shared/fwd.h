@@ -8,5 +8,4 @@ enum NodeID : uint16_t;
 struct Node;
 struct Action;
 struct EditorContext;
-
 #endif  //RAYNODES_SRC_SHARED_FWD_H_

@@ -14,6 +14,12 @@ NodeEditor::NodeEditor(const char* saveName) : context(saveName) {
   Editor::SetupCamera(context);
 }
 
+NodeEditor::~NodeEditor() {
+  if (updateThread.joinable()) {
+    updateThread.join();
+  }
+}
+
 //TODO start logic thread
 bool NodeEditor::start() {
   cxstructs::Constraint<true> c;
@@ -51,7 +57,7 @@ int NodeEditor::run() {
 void NodeEditor::update() {
   using namespace std::chrono;
   using namespace std::this_thread;
-  constexpr auto tickDuration = microseconds(1'000'000 / 144);
+  constexpr auto tickDuration = microseconds(1'000'000 / Core::targetLogicTicks);
   auto lastTime = steady_clock::now();
   microseconds accumulator(0);
   while (context.core.logicThreadRunning) {
@@ -59,15 +65,14 @@ void NodeEditor::update() {
     auto passedTime = duration_cast<microseconds>(now - lastTime);
     lastTime = now;
     accumulator += passedTime;
-    if(accumulator >= tickDuration  ){
+    if (accumulator >= tickDuration) {
       const auto startTime = steady_clock::now();
 
       //Logic Tick
       { Editor::UpdateTick(context); }
 
       const auto tickTime = steady_clock::now() - startTime;
-      context.core.logicTickDuration = (int)tickTime.count();
-      printf("%d\n", context.core.logicTickDuration);
+      context.core.logicTickTime = (int)tickTime.count();
       accumulator = milliseconds(0);
     }
 
