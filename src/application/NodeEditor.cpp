@@ -4,8 +4,8 @@
 
 #include "application/editor/EditorInit.h"
 #include "application/editor/EditorUI.h"
-#include "application/editor/EditorUpdate.h"
 #include "application/editor/EditorControls.h"
+#include "application/editor/EditorUpdate.h"
 #include "application/editor/EditorDraw.h"
 #include "application/editor/EditorExit.h"
 
@@ -21,7 +21,9 @@ bool NodeEditor::start() {
   c + context.display.loadFont();
   c + context.persist.loadFromFile(context);
 
-  return true;
+  updateThread = std::thread(&NodeEditor::update, this);
+
+  return c.holds();
 }
 
 //TODO add custom frame control
@@ -43,6 +45,32 @@ int NodeEditor::run() {
     EndDrawing();
   }
 
-
   return Editor::Exit(context);
+}
+
+void NodeEditor::update() {
+  using namespace std::chrono;
+  using namespace std::this_thread;
+  constexpr auto tickDuration = microseconds(1'000'000 / 144);
+  auto lastTime = steady_clock::now();
+  microseconds accumulator(0);
+  while (context.core.logicThreadRunning) {
+    auto now = steady_clock::now();
+    auto passedTime = duration_cast<microseconds>(now - lastTime);
+    lastTime = now;
+    accumulator += passedTime;
+    if(accumulator >= tickDuration  ){
+      const auto startTime = steady_clock::now();
+
+      //Logic Tick
+      { Editor::UpdateTick(context); }
+
+      const auto tickTime = steady_clock::now() - startTime;
+      context.core.logicTickDuration = (int)tickTime.count();
+      printf("%d\n", context.core.logicTickDuration);
+      accumulator = milliseconds(0);
+    }
+
+    sleep_for(microseconds(1));
+  }
 }

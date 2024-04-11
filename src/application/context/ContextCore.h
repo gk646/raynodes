@@ -11,6 +11,9 @@ struct Core {
   std::unordered_map<NodeID, Node*> nodeMap;
   std::stack<Action*> actionStack;
   NodeID UID = NodeID(1);
+  bool logicThreadRunning = true;
+  int logicTickDuration = 0;
+  int targetFPS = 144;
 
   Core() {
     selectedNodes.reserve(200);

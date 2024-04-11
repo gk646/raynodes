@@ -55,7 +55,7 @@ bool Persist::loadFromFile(EditorContext& ec) const {
 
   if (!file) {
     fprintf(stderr, "Unable to open file %s\n", openedFile);
-    return false;
+    return true;
   }
 
   int count = 0;
