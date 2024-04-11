@@ -20,25 +20,6 @@ struct EditorContext {
   Persist persist{};
 
   EditorContext(const char* openedFile) { persist.openedFile = openedFile; };
-
-  DrawResource getDrawResource() {
-    DrawResource dr;
-    dr.font = display.editorFont;
-    dr.fontSize = display.fontSize;
-    dr.worldMouse = GetScreenToWorld2D(logic.mouse, display.camera);
-    return dr;
-  }
-
-  UpdateResource getUpdateResource() {
-    UpdateResource ur;
-    ur.worldMouse = GetScreenToWorld2D(logic.mouse, display.camera);
-    ur.selectedNodes = &core.selectedNodes;
-    ur.selectRect = logic.selectRect;
-    ur.isSelecting = logic.isSelecting;
-    ur.anyNodeHovered = false;  //reset each cycle
-    ur.isDraggingNode = logic.isDraggingNode;
-    return ur;
-  }
 };
 
 #endif  //RAYNODES_SRC_EDITOR_EDITORCONTEXT_H_

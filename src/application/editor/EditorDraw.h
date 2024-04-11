@@ -12,10 +12,9 @@ inline void DrawBackGround(EditorContext& ec) {
 inline void DrawContent(EditorContext& ec) {
   auto& nodes = ec.core.nodes;
 
-  DrawResource dr = ec.getDrawResource();
 
   for (auto n : nodes) {
-    n->draw(dr);
+    n->draw(ec);
   }
 
   auto& selectRect = ec.logic.selectRect;
@@ -34,7 +33,7 @@ inline void DrawForeGround(EditorContext& ec) {
     Editor::DrawContextMenu(ec);
   }
 
-
+  Editor::DrawActions(ec);
 
   Editor::PollControls(ec);
 

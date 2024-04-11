@@ -13,6 +13,7 @@ class NodeEditor {
 
  public:
   explicit NodeEditor(const char* saveName);
+  ~NodeEditor();
   bool start();
   int run();
 };

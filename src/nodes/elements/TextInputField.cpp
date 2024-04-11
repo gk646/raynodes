@@ -1,20 +1,28 @@
-#include "Components.h"
+#include "nodes/Components.h"
 
-#include <raylib.h>
 #include <cxutil/cxmath.h>
 #include <cxutil/cxio.h>
 
-#include "shared/Types.h"
+#include "application/EditorContext.h"
+#include "application/elements/Action.h"
 
-void TextInputField::draw(float x, float y, DrawResource& dr) {
-  const auto rect = Rectangle{x, y, static_cast<float>(width), static_cast<float>(height)};
+void TextInputField::draw(float x, float y, EditorContext& ec) {
+  const auto rect = Rectangle{x, y, (float)width, (float)height};
   if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-    isFocused = CheckCollisionPointRec(dr.worldMouse, rect);
+    bool wasFocused = isFocused;
+    isFocused = CheckCollisionPointRec(ec.logic.worldMouse, rect);
     showCursor = isFocused;
     blinkCounter = 0;
+    if (wasFocused != isFocused) {
+      if (isFocused) {
+        onFocusGain();
+      } else {
+        onFocusLoss(ec);
+      }
+    }
   }
 
-  const auto& font = dr.font;
+  const auto& font = ec.display.editorFont;
   constexpr float fs = 15;
   const auto drawY = y + (height - fs) / 2.3F;
 
@@ -40,9 +48,10 @@ void TextInputField::draw(float x, float y, DrawResource& dr) {
   }
 }
 
-void TextInputField::update(UpdateResource& ur) {
+void TextInputField::update(EditorContext& ec) {
   if (isFocused && IsKeyPressed(KEY_ESCAPE)) {
     isFocused = false;
+    onFocusLoss(ec);
     // ConsumeKeyState(); //Non existent in standard raylib
   }
 
@@ -88,4 +97,26 @@ void TextInputField::save(FILE* file) {
 }
 void TextInputField::load(FILE* file) {
   cxstructs::io_load(file, buffer);
+}
+void TextInputField::onFocusGain() {
+  if (currAction) {
+    delete currAction;
+    currAction = nullptr;
+  }
+  currAction = new TextAction(buffer, buffer);
+}
+
+void TextInputField::onFocusLoss(EditorContext& ec) {
+  if (currAction) {
+    //TRANSFER OWNERSHIP
+    auto action = (TextAction*)currAction;
+    if (action->beforeState == buffer) {
+      delete currAction;
+      currAction = nullptr;
+      return;
+    }
+    action->setAfter(buffer);
+    ec.core.addEditorAction(currAction);
+    currAction = nullptr;
+  }
 }
