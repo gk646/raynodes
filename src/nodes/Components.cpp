@@ -1,8 +1,10 @@
 #include "Components.h"
 
-#include <persist/PropertySaver.h>
-#include <graphics/ComponentRenderer.h>
+#include <raylib.h>
 #include <cxutil/cxmath.h>
+#include <cxutil/cxio.h>
+
+#include "shared/Types.h"
 
 void TextInputField::draw(float x, float y, DrawResource& dr) {
   const auto rect = Rectangle{x, y, static_cast<float>(width), static_cast<float>(height)};
@@ -32,9 +34,9 @@ void TextInputField::draw(float x, float y, DrawResource& dr) {
   const auto beforeWidth = MeasureTextEx(font, buffer.c_str(), fs, 1.0F).x;
   buffer[cursorPos] = c;
   if (showCursor) {
-    DrawTextEx(font, "|", {x + beforeWidth, drawY}, fs+2, 1.0F, WHITE);
+    DrawTextEx(font, "|", {x + beforeWidth, drawY}, fs + 2, 1.0F, WHITE);
   } else {
-    DrawTextEx(font, " ",{x  + beforeWidth, drawY}, fs+2, 1.0F, WHITE);
+    DrawTextEx(font, " ", {x + beforeWidth, drawY}, fs + 2, 1.0F, WHITE);
   }
 }
 
@@ -65,14 +67,13 @@ void TextInputField::update(UpdateResource& ur) {
     buffer.erase(buffer.begin() + cursorPos);
   }
 
-  if (IsKeyPressed(KEY_RIGHT) || IsKeyPressedRepeat(KEY_RIGHT) && cursorPos < buffer.length()) {
+  if (cursorPos < buffer.length() && (IsKeyPressed(KEY_RIGHT) || IsKeyPressedRepeat(KEY_RIGHT))) {
     cursorPos++;
   }
 
-  if (IsKeyPressed(KEY_LEFT) || IsKeyPressedRepeat(KEY_LEFT) && cursorPos > 0) {
+  if (cursorPos > 0 && (IsKeyPressed(KEY_LEFT) || IsKeyPressedRepeat(KEY_LEFT))) {
     cursorPos--;
   }
-
 
   // Handle blinking cursor
   blinkCounter++;
@@ -83,8 +84,8 @@ void TextInputField::update(UpdateResource& ur) {
 }
 
 void TextInputField::save(FILE* file) {
-  addSaveProperty(file, buffer.c_str());
+  cxstructs::io_save(file, buffer.c_str());
 }
-void TextInputField::load(char** serializedState) {
-  loadProperty(serializedState, buffer);
+void TextInputField::load(FILE* file) {
+  cxstructs::io_load(file, buffer);
 }

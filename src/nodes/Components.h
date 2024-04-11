@@ -15,7 +15,7 @@ struct Component {
   virtual void draw(float x, float y, DrawResource&) = 0;
   virtual void update(UpdateResource&) = 0;
   virtual void save(FILE* file) = 0;
-  virtual void load(char** serializedState) = 0;
+  virtual void load(FILE* file) = 0;
 
   //Getters
   virtual const char* getString() { return nullptr; };
@@ -38,7 +38,7 @@ struct TextInputField final : public Component {
   Component* clone() final { return new TextInputField(*this); }
   void draw(float x, float y, DrawResource&) final;
   void update(UpdateResource&) final;
-  void load(char** serializedState) final;
+  void load(FILE* file) final;
   void save(FILE* file) final;
   const char* getString() final { return buffer.c_str(); }
 };

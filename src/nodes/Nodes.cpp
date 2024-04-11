@@ -1,47 +1,44 @@
 #include "Nodes.h"
 
-#include <raygui.h>
-#include <persist/PropertySaver.h>
-#include <graphics/ComponentRenderer.h>
+#include <ostream>
+#include <cxutil/cxio.h>
+
+#include "shared/Types.h"
 #include "Components.h"
 
 void Node::saveState(FILE* file) {
-  addSaveProperty(file, static_cast<int>(type));
-  addSaveProperty(file, color.r);
-  addSaveProperty(file, color.g);
-  addSaveProperty(file, color.b);
-  addSaveProperty(file, color.a);
-  addSaveProperty(file, position.x);
-  addSaveProperty(file, position.y);
-  addSaveProperty(file, size.x);
-  addSaveProperty(file, size.y);
+  cxstructs::io_save(file, (int)type);
+  cxstructs::io_save(file, (int)color.r);
+  cxstructs::io_save(file, (int)color.g);
+  cxstructs::io_save(file, (int)color.b);
+  cxstructs::io_save(file, (int)color.a);
+  cxstructs::io_save(file, (int)position.x);
+  cxstructs::io_save(file, (int)position.y);
+  cxstructs::io_save(file, (int)size.x);
+  cxstructs::io_save(file, (int)size.y);
 
   for (auto c : components) {
     c->save(file);
   }
 }
 
-void Node::loadState(char** serializedState) {
-  int typeInt;
-  loadProperty(serializedState, typeInt);
-  type = static_cast<NodeType>(typeInt);
-
+void Node::loadState(FILE* file) {
   int r, g, b, a;
-  loadProperty(serializedState, r);
-  loadProperty(serializedState, g);
-  loadProperty(serializedState, b);
-  loadProperty(serializedState, a);
+  cxstructs::io_load(file, r);
+  cxstructs::io_load(file, g);
+  cxstructs::io_load(file, b);
+  cxstructs::io_load(file, a);
   color = {static_cast<unsigned char>(r), static_cast<unsigned char>(g), static_cast<unsigned char>(b),
            static_cast<unsigned char>(a)};
 
-  loadProperty(serializedState, position.x);
-  loadProperty(serializedState, position.y);
+  cxstructs::io_load(file, position.x);
+  cxstructs::io_load(file, position.y);
 
-  loadProperty(serializedState, size.x);
-  loadProperty(serializedState, size.y);
+  cxstructs::io_load(file, size.x);
+  cxstructs::io_load(file, size.y);
 
   for (auto c : components) {
-    c->load(serializedState);
+    c->load(file);
   }
 }
 
@@ -68,6 +65,7 @@ void Node::draw(DrawResource& dr) {
 }
 
 void Node::update(UpdateResource& ur) {
+  //Update components
   for (auto c : components) {
     c->update(ur);
     if (c->getWidth() > size.x) {
@@ -77,27 +75,78 @@ void Node::update(UpdateResource& ur) {
 
   const auto rect = Rectangle{position.x, position.y, size.x, size.y};
 
-  isHovered = CheckCollisionPointRec(ur.worldMouse, rect);
+  if (ur.isSelecting) {
+    if (CheckCollisionRecs(rect, ur.selectRect)) {
+      ur.selectedNodes->insert({(uint16_t)id, this});
+      isHovered = true;
+    }
+    //User is selecting // Don't update movement
+    return;
+  }
 
-  if (isHovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-    isDragged = true;
-    DRAG_OFFSET = {ur.worldMouse.x - position.x, ur.worldMouse.y - position.y};
+  //Another node is hovered no point in updating this one
+  if (ur.isDraggingNode && !isHovered) {
+    //Show as hovered when selected
+    isHovered = ur.selectedNodes->contains((uint16_t)id);
+    return;
+  }
+
+
+  //Check if hovered
+  isHovered =  isDragged || CheckCollisionPointRec(ur.worldMouse, rect);
+
+
+
+  if (isHovered) {
+    ur.anyNodeHovered = true;
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+      if (IsKeyDown(KEY_LEFT_CONTROL)) {
+        ur.selectedNodes->insert({(uint16_t)id, this});
+      }
+
+      if (!ur.selectedNodes->contains((uint16_t)id)) {
+        ur.selectedNodes->clear();
+      }
+
+      isDragged = true;
+      DRAG_OFFSET = ur.worldMouse;
+      ur.isDraggingNode = true;
+    }
   }
 
   if (isDragged) {
+    ur.anyNodeHovered = true;
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-      position.x = ur.worldMouse.x - DRAG_OFFSET.x;
-      position.y = ur.worldMouse.y - DRAG_OFFSET.y;
+      Vector2 movementDelta = {ur.worldMouse.x - DRAG_OFFSET.x, ur.worldMouse.y - DRAG_OFFSET.y};
+      position.x += movementDelta.x;
+      position.y += movementDelta.y;
+
+      //Update selected nodes
+      if (!ur.selectedNodes->empty()) {
+        for (auto pair : *ur.selectedNodes) {
+          Node* node = pair.second;
+          if (node != this) {  // Avoid moving this node again
+            // Apply the same movement to all selected nodes
+            node->position.x += movementDelta.x;
+            node->position.y += movementDelta.y;
+          }
+        }
+      }
+      DRAG_OFFSET = ur.worldMouse;
     } else {
       isDragged = false;
+      ur.isDraggingNode = false;
     }
+  }
+
+  if (!isHovered) {
+    isHovered = !ur.selectedNodes->empty() && ur.selectedNodes->contains((uint16_t)id);
   }
 }
 
 void Node::addComponent(Component* comp) {
   components.push_back(comp);
 }
-
 Component* Node::getComponent(const char* name) {
   for (auto c : components) {
     if (c->name == name) return c;

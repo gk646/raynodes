@@ -44,4 +44,4 @@ add_subdirectory(src)
 
 add_executable(${PROJECT_NAME} src/main.cpp)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC raylib winmm user32 editor nodes graphics)
+target_link_libraries(${PROJECT_NAME} PUBLIC raylib winmm user32 editor nodes)

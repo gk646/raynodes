@@ -1,14 +1,8 @@
+#include "application/NodeEditor.h"
 
-#define RAYGUI_IMPLEMENTATION
-#include <raygui.h>
-
-#include "editor/NodeEditor.h"
-
-
-int main() {
-  auto* editor = new NodeEditor();
+int main(int argc, char* argv[]) {
+  auto* editor = new NodeEditor("saves/FirstQuest.rn");
   if (editor->start()) {
     return editor->run();
   }
 }
-
