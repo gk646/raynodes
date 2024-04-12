@@ -15,21 +15,24 @@ inline void DrawContent(EditorContext& ec) {
   //Critical section
   ec.core.lock();
   {
-    for (auto n : nodes) {
-      n->draw(ec);
-    }
+    for (auto n : nodes)
+      {
+        n->draw(ec);
+      }
   }
   ec.core.unlock();
 
-  if (ec.logic.isSelecting) {
-    DrawRectanglePro(ec.logic.selectRect, {0, 0}, 0, ColorAlpha(BLUE, 0.4F));
-  }
+  if (ec.logic.isSelecting)
+    {
+      DrawRectanglePro(ec.logic.selectRect, {0, 0}, 0, ColorAlpha(BLUE, 0.4F));
+    }
 }
 
 inline void DrawForeGround(EditorContext& ec) {
-  if (ec.logic.showContextMenu) {
-    Editor::DrawContextMenu(ec);
-  }
+  if (ec.logic.showContextMenu)
+    {
+      Editor::DrawContextMenu(ec);
+    }
 
   Editor::DrawActions(ec);
 

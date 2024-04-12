@@ -5,7 +5,8 @@
 
 #include "EditorContext.h"
 
-class NodeEditor {
+class NodeEditor
+{
   EditorContext context;
   std::thread updateThread;
 

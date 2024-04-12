@@ -11,7 +11,8 @@ inline void DrawGrid(EditorContext& ec) {
   const auto& camera = ec.display.camera;
   // Calculate the visible world area
   Vector2 topLeft = GetScreenToWorld2D({0, 0}, camera);
-  Vector2 bottomRight = GetScreenToWorld2D({(float)GetScreenWidth(), (float)GetScreenHeight()}, camera);
+  Vector2 bottomRight =
+      GetScreenToWorld2D({(float)GetScreenWidth(), (float)GetScreenHeight()}, camera);
 
   // Calculate the starting points for drawing grid lines, adjusted for zoom
   float startX = floor(topLeft.x / baseGridSpacing) * baseGridSpacing;
@@ -22,21 +23,24 @@ inline void DrawGrid(EditorContext& ec) {
   float endY = ceil(bottomRight.y / baseGridSpacing) * baseGridSpacing;
 
   // Draw vertical grid lines
-  for (float x = startX; x <= endX; x += baseGridSpacing) {
-    // Convert world coordinates to screen coordinates for drawing
-    Vector2 start = GetWorldToScreen2D({x, topLeft.y}, camera);
-    Vector2 end = GetWorldToScreen2D({x, bottomRight.y}, camera);
-    DrawLineV(start, end, color);
-  }
+  for (float x = startX; x <= endX; x += baseGridSpacing)
+    {
+      // Convert world coordinates to screen coordinates for drawing
+      Vector2 start = GetWorldToScreen2D({x, topLeft.y}, camera);
+      Vector2 end = GetWorldToScreen2D({x, bottomRight.y}, camera);
+      DrawLineV(start, end, color);
+    }
 
   // Draw horizontal grid lines
-  for (float y = startY; y <= endY; y += baseGridSpacing) {
-    // Convert world coordinates to screen coordinates for drawing
-    Vector2 start = GetWorldToScreen2D({topLeft.x, y}, camera);
-    Vector2 end = GetWorldToScreen2D({bottomRight.x, y}, camera);
-    DrawLineV(start, end, color);
-  }
+  for (float y = startY; y <= endY; y += baseGridSpacing)
+    {
+      // Convert world coordinates to screen coordinates for drawing
+      Vector2 start = GetWorldToScreen2D({topLeft.x, y}, camera);
+      Vector2 end = GetWorldToScreen2D({bottomRight.x, y}, camera);
+      DrawLineV(start, end, color);
+    }
 }
+
 inline void DrawContextMenu(EditorContext& ec) {
   //Getters
   const auto fs = ec.display.fontSize;
@@ -51,31 +55,37 @@ inline void DrawContextMenu(EditorContext& ec) {
   auto drawPos = Vector2{pos.x + padding, pos.y + padding};
 
   //Loop
-  for (int i = 0; i < (int)NodeType::TOTAL_SIZE; i++) {
-    const auto text = NodeToString(NodeType(i));
-    auto textDims = MeasureTextEx(font, text, fs, 1.0F);
-    const auto textRect = Rectangle{drawPos.x, drawPos.y, textDims.x, textDims.y};
+  for (int i = 0; i < (int)NodeType::TOTAL_SIZE; i++)
+    {
+      const auto text = NodeToString(NodeType(i));
+      auto textDims = MeasureTextEx(font, text, fs, 1.0F);
+      const auto textRect = Rectangle{drawPos.x, drawPos.y, textDims.x, textDims.y};
 
-    //Check hover and click state
-    if (CheckCollisionPointRec(GetMousePosition(), textRect)) {
-      DrawRectanglePro(textRect, {0, 0}, 0, ColorAlpha(WHITE, 0.6F));
-      if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        auto action = new NodeCreateAction(2);
-        auto newN = ec.core.createNode(NodeType(i), GetScreenToWorld2D(pos, ec.display.camera));
-        action->createdNodes.push_back(newN);
-        ec.core.addEditorAction(action);
-        ec.logic.showContextMenu = false;
-      }
+      //Check hover and click state
+      if (CheckCollisionPointRec(GetMousePosition(), textRect))
+        {
+          DrawRectanglePro(textRect, {0, 0}, 0, ColorAlpha(WHITE, 0.6F));
+          if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+            {
+              auto action = new NodeCreateAction(2);
+              auto newN =
+                  ec.core.createNode(NodeType(i), GetScreenToWorld2D(pos, ec.display.camera));
+              action->createdNodes.push_back(newN);
+              ec.core.addEditorAction(action);
+              ec.logic.showContextMenu = false;
+            }
+        }
+
+      DrawTextEx(font, text, drawPos, fs, 1.0F, WHITE);
+      drawPos.y += fs + padding;
     }
 
-    DrawTextEx(font, text, drawPos, fs, 1.0F, WHITE);
-    drawPos.y += fs + padding;
-  }
-
-  if (!CheckCollisionPointRec(GetMousePosition(), rect)) {
-    ec.logic.showContextMenu = false;
-  }
+  if (!CheckCollisionPointRec(GetMousePosition(), rect))
+    {
+      ec.logic.showContextMenu = false;
+    }
 }
+
 inline void DrawActions(EditorContext& ec) {
   constexpr int visibleActions = 10;  // Number of actions you want to display at a time
   const auto width = ec.display.getSpace(0.17);
@@ -98,26 +108,32 @@ inline void DrawActions(EditorContext& ec) {
 
   rect.y += padding;
 
-  for (int i = start; i <= end; ++i) {
-    auto action = ec.core.actionQueue[i];
-    bool isCurrentAction = i == currActionIdx;
-    bool isCurrentOrBelow = i >= currActionIdx;
-    bool isCurrentOrAbove = i <= currActionIdx;
+  for (int i = start; i <= end; ++i)
+    {
+      auto action = ec.core.actionQueue[i];
+      bool isCurrentAction = i == currActionIdx;
+      bool isCurrentOrBelow = i >= currActionIdx;
+      bool isCurrentOrAbove = i <= currActionIdx;
 
-    Color textColor = isCurrentOrAbove ? RAYWHITE : BLACK;  // Highlight current action in black, past in gray
-    Color highLightColor = isCurrentAction ? BLUE : GRAY;   // Highlight background of current action in blue
+      Color textColor =
+          isCurrentOrAbove ? RAYWHITE : BLACK;  // Highlight current action in black, past in gray
+      Color highLightColor =
+          isCurrentAction ? BLUE : GRAY;  // Highlight background of current action in blue
 
-    // Draw background highlight for the current action
-    if (isCurrentOrBelow) {
-      DrawRectangleRec({rect.x + padding, rect.y, width - 2 * padding, fs + padding},
-                       ColorAlpha(highLightColor, 0.4F));
+      // Draw background highlight for the current action
+      if (isCurrentOrBelow)
+        {
+          DrawRectangleRec({rect.x + padding, rect.y, width - 2 * padding, fs + padding},
+                           ColorAlpha(highLightColor, 0.4F));
+        }
+
+      // Draw action text
+      DrawTextEx(font, action->toString(), {rect.x + padding, rect.y + padding / 2}, fs, 1.0F,
+                 textColor);
+
+      rect.y +=
+          fs + padding;  // Move to the next action's position, ensuring space for text and padding
     }
-
-    // Draw action text
-    DrawTextEx(font, action->toString(), {rect.x + padding, rect.y + padding / 2}, fs, 1.0F, textColor);
-
-    rect.y += fs + padding;  // Move to the next action's position, ensuring space for text and padding
-  }
 }
 }  // namespace Editor
 #endif  //RAYNODES_SRC_APPLICATION_EDITOR_EDITORUI_H_
