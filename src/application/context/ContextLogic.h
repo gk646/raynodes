@@ -2,7 +2,9 @@
 #define RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTLOGIC_H_
 
 struct NodeMovedAction;
-struct Logic {
+
+struct Logic
+{
   Rectangle selectRect = {0};                    //Current selection rectangle
   NodeMovedAction* currentMoveAction = nullptr;  //All move actions are sequential
   Node* draggedNode = nullptr;                   //Currently dragged node

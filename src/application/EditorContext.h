@@ -4,15 +4,16 @@
 #include <raylib.h>
 
 #include "shared/fwd.h"
+#include "shared/Types.h"
 
 #include "context/ContextInfo.h"
 #include "context/ContextCore.h"
 #include "context/ContextDisplay.h"
 #include "context/ContextLogic.h"
 #include "context/ContextPersist.h"
-#include "shared/Types.h"
 
-struct EditorContext {
+struct EditorContext
+{
   Info info{};
   Display display{};
   Core core{};

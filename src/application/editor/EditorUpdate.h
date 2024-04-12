@@ -28,52 +28,63 @@ namespace Editor {
 inline void UpdateTick(EditorContext& ec) {
   StartUpdateTick(ec);
 
-  //Critical section
+  // Critical section
   ec.core.lock();
   {
     auto& nodes = ec.core.nodes;
-    for (auto it = nodes.rbegin(); it != nodes.rend(); ++it) {
-      (*it)->update(ec);
-    }
+    for (auto it = nodes.rbegin(); it != nodes.rend(); ++it)
+      {
+        (*it)->update(ec);
+      }
   }
   ec.core.unlock();
 
-  if (ec.logic.isSelecting) {
-    auto& selectRect = ec.logic.selectRect;
-    auto& selectPoint = ec.logic.selectPoint;
-    const auto worldMouse = ec.logic.worldMouse;
+  if (ec.logic.isSelecting)
+    {
+      auto& selectRect = ec.logic.selectRect;
+      auto& selectPoint = ec.logic.selectPoint;
+      const auto worldMouse = ec.logic.worldMouse;
 
-    if (worldMouse.x < selectPoint.x) {
-      if (worldMouse.y > selectPoint.y) {
-        //Mouse is left bottom
-        selectRect.x = worldMouse.x;
-        selectRect.y = worldMouse.y - (worldMouse.y - selectPoint.y);
-        selectRect.width = selectPoint.x - worldMouse.x;
-        selectRect.height = worldMouse.y - selectPoint.y;
-      } else {
-        //Mouse is left top
-        selectRect.x = worldMouse.x;
-        selectRect.y = worldMouse.y;
-        selectRect.width = selectPoint.x - worldMouse.x;
-        selectRect.height = selectPoint.y - worldMouse.y;
-      }
-    } else {
-      if (worldMouse.y > selectPoint.y) {
-        //Mouse is right bottom
-        selectRect.x = selectPoint.x;
-        selectRect.y = selectPoint.y;
-        selectRect.width = worldMouse.x - selectPoint.x;
-        selectRect.height = worldMouse.y - selectPoint.y;
-      } else {
-        //Mouse is right top
-        selectRect.x = selectPoint.x;
-        selectRect.y = selectPoint.y - (selectPoint.y - worldMouse.y);
-        selectRect.width = worldMouse.x - selectPoint.x;
-        selectRect.height = selectPoint.y - worldMouse.y;
-      }
+      if (worldMouse.x < selectPoint.x)
+        {
+          if (worldMouse.y > selectPoint.y)
+            {
+              // Mouse is left bottom
+              selectRect.x = worldMouse.x;
+              selectRect.y = worldMouse.y - (worldMouse.y - selectPoint.y);
+              selectRect.width = selectPoint.x - worldMouse.x;
+              selectRect.height = worldMouse.y - selectPoint.y;
+            }
+          else
+            {
+              // Mouse is left top
+              selectRect.x = worldMouse.x;
+              selectRect.y = worldMouse.y;
+              selectRect.width = selectPoint.x - worldMouse.x;
+              selectRect.height = selectPoint.y - worldMouse.y;
+            }
+        }
+      else
+        {
+          if (worldMouse.y > selectPoint.y)
+            {
+              // Mouse is right bottom
+              selectRect.x = selectPoint.x;
+              selectRect.y = selectPoint.y;
+              selectRect.width = worldMouse.x - selectPoint.x;
+              selectRect.height = worldMouse.y - selectPoint.y;
+            }
+          else
+            {
+              // Mouse is right top
+              selectRect.x = selectPoint.x;
+              selectRect.y = selectPoint.y - (selectPoint.y - worldMouse.y);
+              selectRect.width = worldMouse.x - selectPoint.x;
+              selectRect.height = selectPoint.y - worldMouse.y;
+            }
+        }
     }
-  }
 }
 
 }  // namespace Editor
-#endif  //RAYNODES_SRC_APPLICATION_EDITOR_EDITORUPDATE_H_
+#endif  // RAYNODES_SRC_APPLICATION_EDITOR_EDITORUPDATE_H_

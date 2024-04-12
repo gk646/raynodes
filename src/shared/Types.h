@@ -6,14 +6,16 @@
 
 #include "shared/fwd.h"
 
-struct DrawResource {
+struct DrawResource
+{
   float fontSize;
   Vector2 mousePos;
   Vector2 worldMouse;
   Font font;
 };
 
-struct UpdateResource {
+struct UpdateResource
+{
   Rectangle selectRect;
   Vector2 worldMouse;
   bool anyNodeHovered;
@@ -22,10 +24,10 @@ struct UpdateResource {
   bool isDraggingNode;
 };
 
-struct Point {
+struct Point
+{
   float x;
   float y;
 };
-
 
 #endif  //RAYNODES_SRC_TYPES_TYPES_H_
