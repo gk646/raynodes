@@ -16,13 +16,13 @@ AllowShortLoopsOnASingleLine: false
 AlwaysBreakAfterReturnType: None
 AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: true
-BreakBeforeBraces: Custom
+BreakBeforeBraces: Attach
 BraceWrapping:
   AfterCaseLabel: true
   AfterClass: true
-  AfterStruct: true
-  AfterControlStatement: true
-  AfterEnum: true
+  AfterStruct: false
+  AfterControlStatement: false
+  AfterEnum: false
   AfterFunction: false
   AfterNamespace: false
   AfterUnion: true
@@ -30,7 +30,7 @@ BraceWrapping:
   BeforeCatch: true
   BeforeElse: true
   BeforeLambdaBody: true
-  IndentBraces: true
+  IndentBraces: false
   SplitEmptyFunction: true
   SplitEmptyRecord: true
   SplitEmptyNamespace: true
@@ -56,7 +56,7 @@ ObjCSpaceAfterProperty: false
 ObjCSpaceBeforeProtocolList: true
 PointerAlignment: Left
 ReflowComments: false
-SeparateDefinitionBlocks: Always
+SeparateDefinitionBlocks: Leave
 SpaceAfterCStyleCast: false
 SpaceAfterLogicalNot: false
 SpaceAfterTemplateKeyword: true

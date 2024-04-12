@@ -6,7 +6,7 @@ inline void SetupDisplay(EditorContext& ec) {
   SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_ALWAYS_RUN);
 
   // Initialize the window with the initial size
-  InitWindow(1280, 720, "raynodes");
+  InitWindow(1280, 720, Info::applicationName);
 
   // Get the current monitor size
   int m = GetCurrentMonitor();
@@ -29,7 +29,7 @@ inline void SetupDisplay(EditorContext& ec) {
   // Center the window on the screen
   SetWindowPosition((monitorWidth - screenWidth) / 2, (monitorHeight - screenHeight) / 2);
 
-  SetTargetFPS(ec.core.targetFPS);
+  SetTargetFPS(ec.core.TARGET_FPS);
   SetExitKey(0);
   SetTraceLogLevel(LOG_WARNING);
   DisableEventWaiting();

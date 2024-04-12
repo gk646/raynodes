@@ -4,9 +4,7 @@
 #include <thread>
 
 #include "EditorContext.h"
-
-class NodeEditor
-{
+class NodeEditor {
   EditorContext context;
   std::thread updateThread;
 
@@ -18,5 +16,4 @@ class NodeEditor
   bool start();
   int run();
 };
-
 #endif  //RAYNODES_SRC_NODEEDITOR_H_
