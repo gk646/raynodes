@@ -3,8 +3,7 @@
 
 struct EditorContext;
 
-struct Persist
-{
+struct Persist {
   const char* openedFile;
   bool loadFromFile(EditorContext& ec) const;
   bool saveToFile(EditorContext& ec) const;

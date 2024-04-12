@@ -1,2 +1,2 @@
 file(GLOB_RECURSE NODE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
-add_library(nodes STATIC ${NODE_FILES})
+add_library(node STATIC ${NODE_FILES})

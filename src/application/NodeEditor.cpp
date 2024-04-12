@@ -3,14 +3,14 @@
 #include <cxstructs/Constraint.h>
 
 #include "application/elements/Action.h"
-#include "nodes/Nodes.h"
+#include "node/Node.h"
 
 #include "application/editor/EditorControls.h"
 #include "application/editor/EditorUI.h"
-#include "application/editor/EditorDraw.h"
 #include "application/editor/EditorExit.h"
 #include "application/editor/EditorInit.h"
 #include "application/editor/EditorUpdate.h"
+#include "application/editor/EditorDraw.h"
 
 NodeEditor::NodeEditor(const char* saveName) : context(saveName) {
   Editor::SetupDisplay(context);
@@ -18,20 +18,18 @@ NodeEditor::NodeEditor(const char* saveName) : context(saveName) {
 }
 
 NodeEditor::~NodeEditor() {
-  if (updateThread.joinable())
-    {
-      updateThread.join();
-    }
+  if (updateThread.joinable()) {
+    updateThread.join();
+  }
 }
 
-// TODO start logic thread
 bool NodeEditor::start() {
   cxstructs::Constraint<true> c;
 
   c + context.display.loadFont();
   c + context.persist.loadFromFile(context);
 
-  updateThread = std::thread(&NodeEditor::update, this);
+  //updateThread = std::thread(&NodeEditor::update, this);
 
   return c.holds();
 }
@@ -40,21 +38,20 @@ bool NodeEditor::start() {
 int NodeEditor::run() {
   const auto& camera = context.display.camera;
 
-  while (!WindowShouldClose())
+  while (!WindowShouldClose()) {
+    BeginDrawing();
+    ClearBackground({90, 105, 136});
     {
-      BeginDrawing();
-      ClearBackground({90, 105, 136});
+      Editor::DrawBackGround(context);
       {
-        Editor::DrawBackGround(context);
-        {
-          BeginMode2D(camera);
-          { Editor::DrawContent(context); }
-          EndMode2D();
-        }
-        Editor::DrawForeGround(context);
+        BeginMode2D(camera);
+        { Editor::DrawContent(context); }
+        EndMode2D();
       }
-      EndDrawing();
+      Editor::DrawForeGround(context);
     }
+    EndDrawing();
+  }
 
   return Editor::Exit(context);
 }
@@ -65,24 +62,22 @@ void NodeEditor::update() {
   constexpr auto tickDuration = microseconds(1'000'000 / Core::targetLogicTicks);
   auto lastTime = steady_clock::now();
   microseconds accumulator(0);
-  while (context.core.logicThreadRunning)
-    {
-      auto now = steady_clock::now();
-      auto passedTime = duration_cast<microseconds>(now - lastTime);
-      lastTime = now;
-      accumulator += passedTime;
-      if (accumulator >= tickDuration)
-        {
-          const auto startTime = steady_clock::now();
+  while (context.core.logicThreadRunning) {
+    auto now = steady_clock::now();
+    auto passedTime = duration_cast<microseconds>(now - lastTime);
+    lastTime = now;
+    accumulator += passedTime;
+    if (accumulator >= tickDuration) {
+      const auto startTime = steady_clock::now();
 
-          // Logic Tick
-          { Editor::UpdateTick(context); }
+      // Logic Tick
+      { Editor::UpdateTick(context); }
 
-          const auto tickTime = steady_clock::now() - startTime;
-          context.core.logicTickTime = (int)tickTime.count();
-          accumulator = milliseconds(0);
-        }
-
-      sleep_for(microseconds(1));
+      const auto tickTime = steady_clock::now() - startTime;
+      context.core.logicTickTime = (int)tickTime.count();
+      accumulator = milliseconds(0);
     }
+
+    sleep_for(microseconds(1));
+  }
 }

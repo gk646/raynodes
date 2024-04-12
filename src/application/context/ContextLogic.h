@@ -3,8 +3,8 @@
 
 struct NodeMovedAction;
 
-struct Logic
-{
+struct Logic {
+  static constexpr int MIN_DIST_THRESHOLD = 5;
   Rectangle selectRect = {0};                    //Current selection rectangle
   NodeMovedAction* currentMoveAction = nullptr;  //All move actions are sequential
   Node* draggedNode = nullptr;                   //Currently dragged node
@@ -17,7 +17,7 @@ struct Logic
   bool showContextMenu = false;
   bool isSelecting = false;  //Is user currently selecting
   bool isAnyNodeHovered = false;
-  bool isDraggingNode = false;
+  bool isAnyNodeDragged = false;
 };
 
 #endif  //RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTLOGIC_H_

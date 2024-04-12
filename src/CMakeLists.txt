@@ -1,2 +1,3 @@
 add_subdirectory(application)
-add_subdirectory(nodes)
+add_subdirectory(node)
+add_subdirectory(component)

@@ -11,16 +11,16 @@
 #include "context/ContextDisplay.h"
 #include "context/ContextLogic.h"
 #include "context/ContextPersist.h"
+#include "context/ContextInput.h"
 
-struct EditorContext
-{
-  Info info{};
-  Display display{};
+struct EditorContext {
   Core core{};
+  Display display{};
   Logic logic{};
   Persist persist{};
+  Input input{};
+  Info info{};
 
   EditorContext(const char* openedFile) { persist.openedFile = openedFile; };
 };
-
 #endif  //RAYNODES_SRC_EDITOR_EDITORCONTEXT_H_
