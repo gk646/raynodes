@@ -2,11 +2,11 @@
 #define RAYNODES_SRC_APPLICATION_EDITOR_EDITORUPDATE_H_
 
 namespace {
-inline void StartUpdateTick(EditorContext& ec) {
+void StartUpdateTick(EditorContext& ec) {
   auto& camera = ec.display.camera;
 
-  ec.display.screenSize.x = GetScreenWidth();
-  ec.display.screenSize.y = GetScreenHeight();
+  ec.display.screenSize.x = static_cast<float>(GetScreenWidth());
+  ec.display.screenSize.y = static_cast<float>(GetScreenHeight());
 
   camera.offset = {ec.display.screenSize.x / 2.0f, ec.display.screenSize.y / 2.0f};
 
@@ -14,13 +14,13 @@ inline void StartUpdateTick(EditorContext& ec) {
   camera.zoom = (camera.zoom > 3.0f) ? 3.0f : camera.zoom;
   camera.zoom = (camera.zoom < 0.1f) ? 0.1f : camera.zoom;
 
-  auto mouse = GetMousePosition();
+  const auto mouse = GetMousePosition();
   ec.logic.worldMouse = GetScreenToWorld2D(mouse, camera);
   ec.logic.mouse = mouse;
   ec.logic.isAnyNodeHovered = false;  // Reset each tick
   ec.input.reset();                   //Reset input for tick
 }
-inline void FormatSelectRectangle(EditorContext& ec) {
+void FormatSelectRectangle(EditorContext& ec) {
   {
     auto& selectRect = ec.logic.selectRect;
     auto& selectPoint = ec.logic.selectPoint;

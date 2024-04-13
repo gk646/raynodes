@@ -4,7 +4,7 @@
 //#include <raylib.h> // raylib include is assumed / We don't force it
 #include <cmath>
 
-inline float GetDistManhattan(Vector2 a, Vector2 b) {
+inline float GetDistManhattan(const Vector2 a, const Vector2 b) {
   return std::abs(a.x - b.x) + std::abs(a.y - b.y);
 }
 

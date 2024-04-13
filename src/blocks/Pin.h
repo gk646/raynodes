@@ -35,6 +35,7 @@ struct Pin {
       case PinType::DATA:
         return PURPLE;
     }
+    return RED;
   }
 };
 #endif  //RAYNODES_SRC_NODE_PIN_H_

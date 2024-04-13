@@ -57,9 +57,9 @@ struct Component {
   virtual void* getData() { return nullptr; }
 
   // Default getters
-  [[nodiscard]] inline float getWidth() const { return width; }
-  [[nodiscard]] inline float getHeight() const { return height; }
-  [[nodiscard]] inline const char* getName() const { return name; }
+  [[nodiscard]] float getWidth() const { return width; }
+  [[nodiscard]] float getHeight() const { return height; }
+  [[nodiscard]] const char* getName() const { return name; }
 };
 
 enum ComponentType : uint8_t {

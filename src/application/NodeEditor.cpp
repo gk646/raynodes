@@ -74,7 +74,7 @@ void NodeEditor::update() {
       { Editor::UpdateTick(context); }
 
       const auto tickTime = steady_clock::now() - startTime;
-      context.core.logicTickTime = (int)tickTime.count();
+      context.core.logicTickTime = static_cast<int>(tickTime.count());
       accumulator = milliseconds(0);
     }
 

@@ -9,19 +9,19 @@ inline void SetupDisplay(EditorContext& ec) {
   InitWindow(1280, 720, Info::applicationName);
 
   // Get the current monitor size
-  int m = GetCurrentMonitor();
-  auto monitorWidth = static_cast<float>(GetMonitorWidth(m));
-  auto monitorHeight = static_cast<float>(GetMonitorHeight(m));
+  const int m = GetCurrentMonitor();
+  const auto monitorWidth = static_cast<float>(GetMonitorWidth(m));
+  const auto monitorHeight = static_cast<float>(GetMonitorHeight(m));
 
   // Calculate the scale to fit the window in the monitor with some padding
-  float scale = fminf(monitorWidth / 1280.0f, monitorHeight / 720.0f) * 0.75f;
+  const float scale = fminf(monitorWidth / 1280.0f, monitorHeight / 720.0f) * 0.75f;
 
   // Calculate the new window size
-  int screenWidth = static_cast<int>(1280.0f * scale);
-  int screenHeight = static_cast<int>(720.0f * scale);
+  const int screenWidth = static_cast<int>(1280.0f * scale);
+  const int screenHeight = static_cast<int>(720.0f * scale);
 
-  ec.display.screenSize.x = screenWidth;
-  ec.display.screenSize.y = screenHeight;
+  ec.display.screenSize.x = static_cast<float>(screenWidth);
+  ec.display.screenSize.y = static_cast<float>(screenHeight);
 
   // Set the new window size
   SetWindowSize(screenWidth, screenHeight);

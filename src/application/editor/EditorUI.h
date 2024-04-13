@@ -2,14 +2,14 @@
 #define RAYNODES_SRC_APPLICATION_EDITOR_EDITORUI_H_
 
 namespace Editor {
-inline void DrawGrid(EditorContext& ec) {
+inline void DrawGrid(const EditorContext& ec) {
   constexpr Color color{58, 68, 102, 255};
-  float baseGridSpacing = ec.display.gridSpacing;
+  const float baseGridSpacing = ec.display.gridSpacing;
   const auto& camera = ec.display.camera;
   // Calculate the visible world area
   Vector2 topLeft = GetScreenToWorld2D({0, 0}, camera);
   Vector2 bottomRight =
-      GetScreenToWorld2D({(float)GetScreenWidth(), (float)GetScreenHeight()}, camera);
+      GetScreenToWorld2D({ec.display.screenSize.x, ec.display.screenSize.y}, camera);
 
   // Calculate the starting points for drawing grid lines, adjusted for zoom
   float startX = floor(topLeft.x / baseGridSpacing) * baseGridSpacing;
@@ -81,33 +81,36 @@ inline void DrawActions(EditorContext& ec) {
   const auto width = ec.display.getSpace(0.17);
   const auto padding = width * 0.03F;
   const auto height = visibleActions * ec.display.getSpace(0.022);
-  const auto anchor = ec.display.getAnchor(RIGHT_TOP, 0.03, width, height);
+  const auto [x, y] = ec.display.getAnchor(RIGHT_TOP, 0.03, width, height);
   const auto fs = ec.display.fontSize;
   const auto currActionIdx = ec.core.currentActionIndex;
   const auto& font = ec.display.editorFont;
 
-  auto rect = Rectangle{anchor.x, anchor.y, width, height};
+  auto rect = Rectangle{x, y, width, height};
 
   DrawRectangleRec(rect, ColorAlpha(DARKGRAY, 0.7F));
   DrawRectangleLinesEx(rect, padding / 4.0F, ColorAlpha(GRAY, 0.7F));
 
   // Adjust the start index to ensure the current action is always on screen
-  int totalActions = ec.core.actionQueue.size();
-  int start = std::max(0, std::min(currActionIdx, totalActions - visibleActions));
-  int end = std::min(start + visibleActions - 1, totalActions - 1);
+  const int totalActions = static_cast<int>(ec.core.actionQueue.size());
+  const int start = std::max(0, std::min(currActionIdx, totalActions - visibleActions));
+  const int end = std::min(start + visibleActions - 1, totalActions - 1);
 
   rect.y += padding;
 
-  for (int i = start; i <= end; ++i) {
-    auto action = ec.core.actionQueue[i];
-    bool isCurrentAction = i == currActionIdx;
-    bool isCurrentOrBelow = i >= currActionIdx;
-    bool isCurrentOrAbove = i <= currActionIdx;
+  //Coloring scheme is inspired by paint.net
 
-    Color textColor =
-        isCurrentOrAbove ? RAYWHITE : BLACK;  // Highlight current action in black, past in gray
-    Color highLightColor =
-        isCurrentAction ? BLUE : GRAY;  // Highlight background of current action in blue
+  for (int i = start; i <= end; ++i) {
+    const auto action = ec.core.actionQueue[i];
+    const bool isCurrentAction = i == currActionIdx;
+    const bool isCurrentOrBelow = i >= currActionIdx;
+    const bool isCurrentOrAbove = i <= currActionIdx;
+
+    // All text is white expect past actions
+    const Color textColor = isCurrentOrAbove ? RAYWHITE : BLACK;
+
+    // Only current events is blue, past ones gray
+    const Color highLightColor = isCurrentAction ? BLUE : GRAY;
 
     // Draw background highlight for the current action
     if (isCurrentOrBelow) {
@@ -119,8 +122,8 @@ inline void DrawActions(EditorContext& ec) {
     DrawTextEx(font, action->toString(), {rect.x + padding, rect.y + padding / 2}, fs, 1.0F,
                textColor);
 
-    rect.y +=
-        fs + padding;  // Move to the next action's position, ensuring space for text and padding
+    // Move to the next action's position, ensuring space for text and padding
+    rect.y += fs + padding;
   }
 }
 }  // namespace Editor

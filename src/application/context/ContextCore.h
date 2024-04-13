@@ -7,9 +7,9 @@
 #include <vector>
 
 struct Core {
-  inline static constexpr int TARGET_FPS = 100;
-  inline static constexpr int targetLogicTicks = 120;
-  inline static constexpr int MAX_ACTIONS = 50;
+  static constexpr int TARGET_FPS = 100;
+  static constexpr int targetLogicTicks = 120;
+  static constexpr int MAX_ACTIONS = 50;
 
   std::unordered_map<NodeID, Node*> selectedNodes;
   std::unordered_map<NodeID, Node*> nodeMap;
@@ -20,7 +20,7 @@ struct Core {
   int logicTickTime = 0;    //Not needed
   int drawTickTime = 0;
   int currentActionIndex = -1;
-  NodeID UID = NodeID(1);
+  NodeID UID = static_cast<NodeID>(1);
   bool logicThreadRunning = true;
 
   Core();

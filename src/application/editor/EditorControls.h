@@ -73,10 +73,10 @@ inline void PollControls(EditorContext& ec) {
   if (ec.input.isKeyPressed(KEY_DELETE)) {
     //Skip if empty
     if (!ec.core.selectedNodes.empty()) {
-      auto action = new NodeDeleteAction((int)ec.core.selectedNodes.size() + 1);
-      for (auto pair : ec.core.selectedNodes) {
-        ec.core.removeNode(ec, NodeID(pair.first));
-        action->deletedNodes.push_back(pair.second);
+      const auto action = new NodeDeleteAction(static_cast<int>(ec.core.selectedNodes.size()) + 1);
+      for (auto [id, node] : ec.core.selectedNodes) {
+        ec.core.removeNode(ec,id);
+        action->deletedNodes.push_back(node);
       }
       ec.core.addEditorAction(action);
       ec.core.selectedNodes.clear();

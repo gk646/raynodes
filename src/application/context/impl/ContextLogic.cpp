@@ -13,8 +13,7 @@ void Logic::handleDroppedPin(EditorContext& ec) {
     //Exactly as in Node::draw()
     auto& hNode = *hoveredNode;
     const float startX = hNode.position.x + Node::PADDING;
-    const float startY =
-        hNode.position.y + Node::PADDING + Node::OFFSET_Y + hNode.contentHeight + 10;
+    float startY = hNode.position.y + Node::PADDING + Node::OFFSET_Y + hNode.contentHeight + 10;
 
     auto bounds = Rectangle{startX, startY, Pin::PIN_SIZE, Pin::PIN_SIZE};
 
@@ -26,19 +25,20 @@ void Logic::handleDroppedPin(EditorContext& ec) {
       if (CheckCollisionPointRec(worldMouse, bounds)) {
         //Create the connection
         //Assigns the data pointers internally to pins
-        auto conn = Connection(from, out, hNode, pin);
+        const auto conn = Connection(from, out, hNode, pin);
         ec.core.connections.push_back(conn);
 
         //Call the event functions
-        for (auto c : from.components) {
+        for (const auto c : from.components) {
           c->onConnectionAdded(ec, conn);
         }
-        for (auto c : hNode.components) {
+        for (const auto c : hNode.components) {
           c->onConnectionAdded(ec, conn);
         }
 
         break;  //Done
       }
+      bounds.x += Pin::PIN_SIZE + Node::PADDING * 2.0F;
     }
   }
 

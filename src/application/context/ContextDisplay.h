@@ -1,5 +1,6 @@
 #ifndef RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTDISPLAY_H_
 #define RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTDISPLAY_H_
+
 enum AnchorPos : uint8_t {
   LEFT_TOP,
   LEFT_CENTER,
@@ -11,20 +12,21 @@ enum AnchorPos : uint8_t {
   RIGHT_MID,
   RIGHT_BOTTOM
 };
+
 struct Display {
-  Camera2D camera = {0};
-  Font editorFont = {0};
+  Camera2D camera = {};
+  Font editorFont = {};
   float fontSize = 17;
-  Vector2 screenSize = {0};
+  Vector2 screenSize = {};
   float gridSpacing = 20;
-  inline bool loadFont() {
+  bool loadFont() {
     editorFont = LoadFont("res/monogram.ttf");
     return editorFont.texture.id != 0;
   }
-  inline Vector2 getAnchor(AnchorPos a, float relativeInset, float w, float h) {
+  [[nodiscard]] Vector2 getAnchor(const AnchorPos a, const float relativeInset, const float w,
+                                  const float h) const {
     Vector2 position;
-
-    float inset = getSpace(relativeInset);
+    const float inset = getSpace(relativeInset);
 
     switch (a) {
       case LEFT_TOP:
@@ -60,8 +62,8 @@ struct Display {
     }
     return position;
   }
-  float getSpace(float size) {
-    float minDimension = (screenSize.x < screenSize.y) ? screenSize.x : screenSize.y;
+  [[nodiscard]] float getSpace(const float size) const {
+    const float minDimension = (screenSize.x < screenSize.y) ? screenSize.x : screenSize.y;
     return minDimension * size;
   }
 };

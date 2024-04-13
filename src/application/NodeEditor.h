@@ -4,6 +4,7 @@
 #include <thread>
 
 #include "EditorContext.h"
+
 class NodeEditor {
   EditorContext context;
   std::thread updateThread;
