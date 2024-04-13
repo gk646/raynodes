@@ -8,9 +8,10 @@
 struct ConnectionData {
   union {
     char* string;
-    int integer;
+    int64_t integer;
+    uint64_t unsignedInt;
     bool boolean;
-    float floating;
+    double floating;
     void* data;
     char pad[8];
   };
@@ -28,17 +29,28 @@ struct ConnectionData {
     } else if constexpr (pt == PinType::DATA) {
       return data;
     } else {
-      static_assert(false, "Unsupported PinType");
+      static_assert(pt == PinType::STRING, "Unsupported PinType");
     }
   }
 };
 
+
 struct Connection {
+  //Source
   Node& from;
+  Pin& out;
+  //Destination
   Node& to;
   Pin& in;
-  Pin& out;
   ConnectionData data;
+  Connection(Node& from, Pin& out, Node& to, Pin& in)
+      : from(from), out(out), to(to), in(in), data() {
+    out.connection = this;
+    in.connection = this;
+  }
+  Vector2 getFromPos() const;
+  Vector2 getToPos()const;
+  Color getConnectionColor() const;
 };
 
 #endif  //RAYNODES_SRC_NODE_CONNECTION_H_

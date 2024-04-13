@@ -36,6 +36,7 @@ inline void PollControls(EditorContext& ec) {
   }
 
   if (ec.input.isMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+    ec.logic.handleDroppedPin(ec);
     auto& moveAction = ec.logic.currentMoveAction;
     if (moveAction != nullptr) {
       const auto avgDist = moveAction->calculateDeltas(ec);

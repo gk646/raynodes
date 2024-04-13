@@ -14,5 +14,7 @@ struct Pin;
 struct Node;
 struct Action;
 struct EditorContext;
+struct Color;
+struct Vector2;
 
 #endif  //RAYNODES_SRC_SHARED_FWD_H_

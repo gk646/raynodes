@@ -6,6 +6,8 @@
 #include "shared/fwd.h"
 #include "shared/Types.h"
 
+#include "blocks/Connection.h"
+
 #include "context/ContextInfo.h"
 #include "context/ContextCore.h"
 #include "context/ContextDisplay.h"

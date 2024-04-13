@@ -57,30 +57,45 @@ dimensions...**
 ### Interface
 
 ```cpp
-struct Component {
-const char* name;
-uint16_t width;
-uint16_t height;
-explicit Component(const char* name, uint16_t w = 0, uint16_t h = 0) : name(name), width(w), height(h) {}
-virtual Component* clone() = 0;
-virtual void draw(float x, float y, EditorContext&) = 0;
-virtual void update(float x, float y,EditorContext&) = 0;
-virtual void save(FILE* file) = 0;
-virtual void load(FILE* file) = 0;
+  //-----------CORE-----------//
+  //Necessary to copy the component
+  virtual Component* clone() = 0;
+  virtual void draw(float x, float y, EditorContext& ec, Node& parent) = 0;
+  virtual void update(float x, float y, EditorContext& ec, Node& parent) = 0;
+  //Use the symmetric helpers : cx_save(file,myFloat)...
+  virtual void save(FILE* file) = 0;
+  //Use the symmetric helpers : cx_load(file,myFloat)...
+  virtual void load(FILE* file) = 0;
 
-//Getters
-virtual const char* getString() { return nullptr; };
-virtual int getInt() { return 0; };
-virtual float getFloat() { return 0.0F; };
-virtual void* getData() { return nullptr; };
+  //-----------EVENTS-----------//
+  // All called once, guaranteed before update() is called
+  virtual void onMouseEnter(EditorContext& ec) {}
+  virtual void onMouseLeave(EditorContext& ec) {}
+  virtual void onFocusGain(EditorContext& ec) {}
+  virtual void onFocusLoss(EditorContext& ec) {}
 
-[[nodiscard]] inline float getWidth() const { return width; }
-[[nodiscard]] inline float getHeight() const { return height; }
-};
+  //-----------LIFE CYCLE-----------//
+  //Called once at creation time
+  virtual void onCreate(EditorContext& ec, Node& parent) {}
+  //IMPORTANT: Only called when the node is destroyed (only happens after its delete action is destroyed)
+  virtual void onDestruction(Node& parent) {}
+  //Called whenever component is removed from the screen (delete/cut)
+  virtual void onRemovedFromScreen(EditorContext& ec, Node& parent) {}
+  //Called whenever component is added to the screen (paste)
+  virtual void onAddedToScreen(EditorContext& ec, Node& parent) {}
+
+  //-----------CONNECTIONS-----------//
+  virtual void onConnectionAdded(EditorContext& ec, const Connection& con) {}
+  virtual void onConnectionRemoved(EditorContext& ec, const Connection& con) {}
+
+  // Abstract data getters for external access
+  virtual const char* getString() { return nullptr; }
+  virtual int getInt() { return 0; }
+  virtual float getFloat() { return 0.0F; }
+  virtual void* getData() { return nullptr; }
 ```
+The interface is quite expansive and abstract allowing an implementation to react to a multitude of events.
 
-*This interface will be expanded with some event functions the component can react to*
-It has a label:`name`, a `width` and `height`;
 
 ### Loading and saving
 

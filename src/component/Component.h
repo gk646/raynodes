@@ -36,7 +36,8 @@ struct Component {
   //-----------LIFE CYCLE-----------//
   //Called once at creation time
   virtual void onCreate(EditorContext& ec, Node& parent) {}
-  //IMPORTANT: Only called when the node is destroyed (only happens after its delete action is destroyed)
+  //IMPORTANT: Only called once when the node is finally destroyed (only happens after its delete action is destroyed)
+  //This may happen very delayed or even never!
   virtual void onDestruction(Node& parent) {}
   //Called whenever component is removed from the screen (delete/cut)
   virtual void onRemovedFromScreen(EditorContext& ec, Node& parent) {}
@@ -44,7 +45,9 @@ struct Component {
   virtual void onAddedToScreen(EditorContext& ec, Node& parent) {}
 
   //-----------CONNECTIONS-----------//
+  //Called once when a new connection is added
   virtual void onConnectionAdded(EditorContext& ec, const Connection& con) {}
+  //Called once when an existing connection is removed
   virtual void onConnectionRemoved(EditorContext& ec, const Connection& con) {}
 
   // Abstract data getters for external access

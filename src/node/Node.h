@@ -3,7 +3,9 @@
 
 #include <raylib.h>
 #include <cxstructs/StackVector.h>
+
 #include "shared/fwd.h"
+#include "blocks/Pin.h"
 #include "component/components/TextInputField.h"
 
 enum class NodeType : uint8_t {
@@ -113,16 +115,18 @@ struct Node {
   static constexpr float PADDING = 3;
   static constexpr float OFFSET_Y = 20;
   inline static Vector2 DRAG_OFFSET;
+  cxstructs::StackVector<Pin, 5> pins;
   cxstructs::StackVector<Component*, 7> components{};
   Vector2 position;
   Vector2 size;
-  NodeID id;
   Color color;
+  NodeID id;
   NodeType type;
+  uint16_t contentHeight = 0;  //Current height of the content
   bool isHovered = false;
   bool isDragged = false;
 
-  Node(NodeID id, NodeType type, Vector2 position = {0, 0}, Color color = {255, 255, 255, 255})
+  Node(NodeID id, NodeType type, Vector2 position = {0, 0}, Color color = {0, 0, 0, 255})
       : id(id), type(type), color(color), position(position), size({100, 100}) {}
   Node(const Node& n, NodeID id)
       : id(id), type(n.type), position(n.position), color(n.color), size(n.size) {
@@ -140,10 +144,17 @@ struct Node {
   //Components
   Component* getComponent(const char* name);
   void addComponent(Component* comp);
+  void addPin(PinType pt, Direction dir);
 
   //Virtuals
   virtual Node* clone(NodeID nid) { return new Node(*this, nid); }
   virtual void exportToMQQS(std::ostream& out) {};
+
+  //Helpers
+   [[nodiscard]] Vector2 getPinPosition(uint8_t idx) const {
+    return {position.x + PADDING + (Pin::PIN_SIZE + PADDING * 2) * idx,
+            position.y + PADDING + OFFSET_Y + 10 + contentHeight};
+  }
 };
 
 /* |-----------------------------------------------------|
@@ -159,6 +170,8 @@ struct HeaderNode final : public Node {
     addComponent(new TextInputField("blue"));
     addComponent(new TextInputField("bli"));
     addComponent(new TextInputField("blup"));
+
+    addPin(PinType::BOOLEAN, Direction::OUTPUT);
   }
   HeaderNode(const HeaderNode& n, NodeID id) : Node(n, id) {}
   Node* clone(NodeID nid) final { return new HeaderNode(*this, nid); }
