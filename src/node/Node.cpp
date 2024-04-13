@@ -62,19 +62,37 @@ inline void HandleSelection(Node& n, EditorContext& ec, const Rectangle bounds,
   }
 }
 
+inline bool HandlePinSelection(EditorContext& ec, Node& n, float startY) {
+  //Left mouse button press has already been checked ->true
+  startY += 10;  //Same as in Node::draw();
+  auto rect = Rectangle{n.position.x + Node::PADDING * 2, startY, Pin::PIN_SIZE, Pin::PIN_SIZE};
+  for (auto& p : n.pins) {
+    if (CheckCollisionPointRec(ec.logic.worldMouse, rect)) {
+      ec.logic.assignDraggedPin(rect.x + Pin::PIN_SIZE / 2, rect.y + Pin::PIN_SIZE, p, n);
+      return true;
+    }
+    rect.x += Pin::PIN_SIZE + Node::PADDING * 2.0F;
+  }
+  return false;
+}
+
 //selectedNodes is std::unordered_map
-inline void HandleHover(Node& n, EditorContext& ec, auto& selectedNodes) {
+inline void HandleHover(EditorContext& ec, Node& n, auto& selectedNodes, float startY) {
   ec.logic.isAnyNodeHovered = true;
+  ec.logic.hoveredNode = &n;
   if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
     if (!ec.input.isKeyDown(KEY_LEFT_CONTROL) && !selectedNodes.contains(n.id)) {
-      selectedNodes
-          .clear();  //Clear selection when an unselected node is clicked / unless control is held
+      //Clear selection when an unselected node is clicked / unless control is held
+      selectedNodes.clear();
     }
 
     selectedNodes.insert({n.id, &n});  //Node is clicked = selected
 
+    //If pin is clicked still allow selection but not dragging
+    if (HandlePinSelection(ec, n, startY)) return;
+
     auto& moveAction = ec.logic.currentMoveAction;  //Start a move action
-    if (moveAction == nullptr) {
+    if (moveAction == nullptr) {                    //Let's not leak too much...
       moveAction = new NodeMovedAction((int)selectedNodes.size() + 1);
       for (auto pair : selectedNodes) {
         moveAction->movedNodes.emplace_back(pair.first, pair.second->position);
@@ -124,28 +142,44 @@ Node::~Node() {
   }
 }
 void Node::draw(EditorContext& ec) {
+  //Cache
   const auto& font = ec.display.editorFont;
   const auto fs = ec.display.fontSize;
+  const auto worldMouse = ec.logic.worldMouse;
 
-  const auto rect = Rectangle{position.x, position.y, size.x, size.y};
+  const auto bounds = Rectangle{position.x, position.y, size.x, size.y};
 
-  DrawRectanglePro(rect, {0, 0}, 0, color);
+  DrawRectangleRec(bounds, color);
 
   if (isHovered) {
-    DrawRectangleLinesEx(rect, 1, ColorAlpha(YELLOW, 0.7));
+    DrawRectangleLinesEx(bounds, 1, ColorAlpha(YELLOW, 0.7));
   }
 
-  DrawTextEx(font, NodeToString(type), {position.x + PADDING, position.y + PADDING}, fs, 1.0F,
-             WHITE);
+  const auto headerPos = Vector2{position.x + PADDING, position.y + PADDING};
+  DrawTextEx(font, NodeToString(type), headerPos, fs, 1.0F, WHITE);
 
   float startX = position.x + PADDING;
-  float startY = position.y + OFFSET_Y + PADDING;
+  float startY = position.y + PADDING + OFFSET_Y;
+  float beforeY = startY;
+
   for (auto c : components) {
     c->draw(startX, startY, ec, *this);
     startY += c->getHeight() + PADDING;
   }
 
-  size.y = (startY - position.y) + 10;
+  contentHeight = startY - beforeY;
+
+  startY += 10;
+  auto rect = Rectangle{startX + PADDING, startY, Pin::PIN_SIZE, Pin::PIN_SIZE};
+  for (const auto& p : pins) {
+    DrawRectangleRec(rect, LIGHTGRAY);
+    if (CheckCollisionPointRec(worldMouse, rect)) {
+      DrawRectangleLinesEx(rect, 1, YELLOW);
+    }
+    rect.x += Pin::PIN_SIZE + PADDING * 2;
+  }
+
+  size.y = (startY - position.y) + Pin::PIN_SIZE + PADDING;
 }
 void Node::update(EditorContext& ec) {
   //Cache
@@ -157,6 +191,7 @@ void Node::update(EditorContext& ec) {
   float startX = position.x + PADDING;
   float startY = position.y + OFFSET_Y + PADDING;
 
+  //Always update components to allow for continuous ones (not just when focused)
   for (auto c : components) {
     UpdateComponent(startX, startY, c, ec, *this);
     if (c->getWidth() > size.x) {
@@ -182,7 +217,7 @@ void Node::update(EditorContext& ec) {
 
   //Its hovered - what's going to happen?
   if (isHovered && !ec.logic.isAnyNodeHovered) {
-    HandleHover(*this, ec, selectedNodes);
+    HandleHover(ec, *this, selectedNodes, startY);
   } else {
     isHovered = !selectedNodes.empty() && selectedNodes.contains(id);
   }
@@ -239,6 +274,9 @@ Component* Node::getComponent(const char* name) {
     if (strcmp(name, c->getName()) == 0) return c;
   }
   return nullptr;
+}
+void Node::addPin(PinType pt, Direction dir) {
+  pins.push_back({nullptr, pt, dir, (uint8_t)pins.size()});
 }
 
 //Export
