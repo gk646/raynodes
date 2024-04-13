@@ -8,14 +8,14 @@
 #include "application/elements/Action.h"
 
 namespace {
-inline void UpdateComponent(float& x, float& y, Component* c, EditorContext& ec, Node& n) {
+void UpdateComponent(const float x, const float y, Component* c, EditorContext& ec, Node& n) {
   const auto width = c->getWidth();
   const auto height = c->getHeight();
   const auto compRect = Rectangle{x, y, width, height};
 
   //Mouse Enter
-  bool previousHovered = c->isHovered;
-  auto compHovered = CheckCollisionPointRec(ec.logic.worldMouse, compRect);
+  const bool previousHovered = c->isHovered;
+  const auto compHovered = CheckCollisionPointRec(ec.logic.worldMouse, compRect);
   c->isHovered = compHovered;
 
   if (previousHovered != compHovered) {
@@ -24,7 +24,7 @@ inline void UpdateComponent(float& x, float& y, Component* c, EditorContext& ec,
   }
 
   //Focus Gain
-  bool previousFocused = c->isFocused;
+  const bool previousFocused = c->isFocused;
   if (!previousFocused) {
     c->isFocused = compHovered && ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT);
   } else {
@@ -51,8 +51,7 @@ inline void UpdateComponent(float& x, float& y, Component* c, EditorContext& ec,
 }
 
 //selectedNodes is std::unordered_map
-inline void HandleSelection(Node& n, EditorContext& ec, const Rectangle bounds,
-                            auto& selectedNodes) {
+void HandleSelection(Node& n, EditorContext& ec, const Rectangle bounds, auto& selectedNodes) {
   if (CheckCollisionRecs(bounds, ec.logic.selectRect)) {
     selectedNodes.insert({n.id, &n});
     n.isHovered = true;
@@ -62,7 +61,7 @@ inline void HandleSelection(Node& n, EditorContext& ec, const Rectangle bounds,
   }
 }
 
-inline bool HandlePinSelection(EditorContext& ec, Node& n, float startY) {
+bool HandlePinSelection(EditorContext& ec, Node& n, float startY) {
   //Left mouse button press has already been checked ->true
   startY += 10;  //Same as in Node::draw();
   auto rect = Rectangle{n.position.x + Node::PADDING * 2, startY, Pin::PIN_SIZE, Pin::PIN_SIZE};
@@ -77,7 +76,7 @@ inline bool HandlePinSelection(EditorContext& ec, Node& n, float startY) {
 }
 
 //selectedNodes is std::unordered_map
-inline void HandleHover(EditorContext& ec, Node& n, auto& selectedNodes, float startY) {
+void HandleHover(EditorContext& ec, Node& n, auto& selectedNodes, const float startY) {
   ec.logic.isAnyNodeHovered = true;
   ec.logic.hoveredNode = &n;
   if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -93,7 +92,7 @@ inline void HandleHover(EditorContext& ec, Node& n, auto& selectedNodes, float s
 
     auto& moveAction = ec.logic.currentMoveAction;  //Start a move action
     if (moveAction == nullptr) {                    //Let's not leak too much...
-      moveAction = new NodeMovedAction((int)selectedNodes.size() + 1);
+      moveAction = new NodeMovedAction(static_cast<int>(selectedNodes.size()) + 1);
       for (auto pair : selectedNodes) {
         moveAction->movedNodes.emplace_back(pair.first, pair.second->position);
       }
@@ -107,7 +106,7 @@ inline void HandleHover(EditorContext& ec, Node& n, auto& selectedNodes, float s
 }
 
 //selectedNodes is std::unordered_map
-inline void HandleDrag(Node& n, EditorContext& ec, auto& selectedNodes, auto worldMouse) {
+void HandleDrag(Node& n, EditorContext& ec, auto& selectedNodes, auto worldMouse) {
   ec.logic.isAnyNodeHovered = true;
   ec.logic.draggedNode = &n;
   if (ec.input.isMouseButtonDown(MOUSE_BUTTON_LEFT)) {
@@ -158,20 +157,20 @@ void Node::draw(EditorContext& ec) {
   const auto headerPos = Vector2{position.x + PADDING, position.y + PADDING};
   DrawTextEx(font, NodeToString(type), headerPos, fs, 1.0F, WHITE);
 
-  float startX = position.x + PADDING;
-  float startY = position.y + PADDING + OFFSET_Y;
-  float beforeY = startY;
+  const auto startX = position.x + PADDING;
+  auto startY = position.y + PADDING + OFFSET_Y;
+  const auto beforeY = startY;
 
-  for (auto c : components) {
+  for (const auto c : components) {
     c->draw(startX, startY, ec, *this);
     startY += c->getHeight() + PADDING;
   }
 
-  contentHeight = startY - beforeY;
+  contentHeight = static_cast<uint16_t>(startY - beforeY);
 
   startY += 10;
   auto rect = Rectangle{startX + PADDING, startY, Pin::PIN_SIZE, Pin::PIN_SIZE};
-  for (const auto& p : pins) {
+  for (int i = 0; i < pins.size(); ++i) {
     DrawRectangleRec(rect, LIGHTGRAY);
     if (CheckCollisionPointRec(worldMouse, rect)) {
       DrawRectangleLinesEx(rect, 1, YELLOW);
@@ -179,8 +178,9 @@ void Node::draw(EditorContext& ec) {
     rect.x += Pin::PIN_SIZE + PADDING * 2;
   }
 
-  size.y = (startY - position.y) + Pin::PIN_SIZE + PADDING;
+  size.y = startY - position.y + Pin::PIN_SIZE + PADDING;
 }
+
 void Node::update(EditorContext& ec) {
   //Cache
   const auto bounds = Rectangle{position.x, position.y, size.x, size.y};
@@ -228,17 +228,17 @@ void Node::update(EditorContext& ec) {
   }
 }
 void Node::saveState(FILE* file) {
-  cxstructs::io_save(file, (int)type);
-  cxstructs::io_save(file, (int)color.r);
-  cxstructs::io_save(file, (int)color.g);
-  cxstructs::io_save(file, (int)color.b);
-  cxstructs::io_save(file, (int)color.a);
-  cxstructs::io_save(file, (int)position.x);
-  cxstructs::io_save(file, (int)position.y);
-  cxstructs::io_save(file, (int)size.x);
-  cxstructs::io_save(file, (int)size.y);
+  cxstructs::io_save(file, static_cast<int>(type));
+  cxstructs::io_save(file, color.r);
+  cxstructs::io_save(file, color.g);
+  cxstructs::io_save(file, color.b);
+  cxstructs::io_save(file, color.a);
+  cxstructs::io_save(file, static_cast<int>(position.x));
+  cxstructs::io_save(file, static_cast<int>(position.y));
+  cxstructs::io_save(file, static_cast<int>(size.x));
+  cxstructs::io_save(file, static_cast<int>(size.y));
 
-  for (auto c : components) {
+  for (const auto c : components) {
     c->save(file);
   }
 }
@@ -257,7 +257,7 @@ void Node::loadState(FILE* file) {
   cxstructs::io_load(file, size.x);
   cxstructs::io_load(file, size.y);
 
-  for (auto c : components) {
+  for (const auto c : components) {
     c->load(file);
   }
 }
@@ -266,17 +266,19 @@ void Node::loadState(FILE* file) {
 void Node::addComponent(Component* comp) {
   components.push_back(comp);
 }
+
 Component* Node::getComponent(const char* name) {
-  for (auto c : components) {
+  for (const auto c : components) {
     if (c->getName() == name) return c;
   }
-  for (auto c : components) {
+  for (const auto c : components) {
     if (strcmp(name, c->getName()) == 0) return c;
   }
   return nullptr;
 }
-void Node::addPin(PinType pt, Direction dir) {
-  pins.push_back({nullptr, pt, dir, (uint8_t)pins.size()});
+
+void Node::addPin(const PinType pt, const Direction dir) {
+  pins.push_back({nullptr, pt, dir, static_cast<uint8_t>(pins.size())});
 }
 
 //Export

@@ -115,7 +115,7 @@ struct Node {
   static constexpr float PADDING = 3;
   static constexpr float OFFSET_Y = 20;
   inline static Vector2 DRAG_OFFSET;
-  cxstructs::StackVector<Pin, 5> pins;
+  cxstructs::StackVector<Pin, 5> pins{};
   cxstructs::StackVector<Component*, 7> components{};
   Vector2 position;
   Vector2 size;
@@ -126,9 +126,10 @@ struct Node {
   bool isHovered = false;
   bool isDragged = false;
 
-  Node(NodeID id, NodeType type, Vector2 position = {0, 0}, Color color = {0, 0, 0, 255})
+  Node(const NodeID id, const NodeType type, const Vector2 position = {0, 0},
+       const Color color = {1, 1, 1, 255})
       : id(id), type(type), color(color), position(position), size({100, 100}) {}
-  Node(const Node& n, NodeID id)
+  Node(const Node& n, const NodeID id)
       : id(id), type(n.type), position(n.position), color(n.color), size(n.size) {
     for (auto c : n.components) {
       components.push_back(c->clone());
@@ -147,11 +148,11 @@ struct Node {
   void addPin(PinType pt, Direction dir);
 
   //Virtuals
-  virtual Node* clone(NodeID nid) { return new Node(*this, nid); }
-  virtual void exportToMQQS(std::ostream& out) {};
+  virtual Node* clone(const NodeID nid) { return new Node(*this, nid); }
+  virtual void exportToMQQS(std::ostream& out){};
 
   //Helpers
-   [[nodiscard]] Vector2 getPinPosition(uint8_t idx) const {
+  [[nodiscard]] Vector2 getPinPosition(const uint8_t idx) const {
     return {position.x + PADDING + (Pin::PIN_SIZE + PADDING * 2) * idx,
             position.y + PADDING + OFFSET_Y + 10 + contentHeight};
   }
@@ -163,7 +164,7 @@ struct Node {
  */
 
 struct HeaderNode final : public Node {
-  HeaderNode(NodeID nid, Vector2 position) : Node(nid, NodeType::HEADER, position) {
+  HeaderNode(const NodeID nid, const Vector2 position) : Node(nid, NodeType::HEADER, position) {
     addComponent(new TextInputField("Description"));
     addComponent(new TextInputField("Input"));
     addComponent(new TextInputField("Bla"));
@@ -173,12 +174,12 @@ struct HeaderNode final : public Node {
 
     addPin(PinType::BOOLEAN, Direction::OUTPUT);
   }
-  HeaderNode(const HeaderNode& n, NodeID id) : Node(n, id) {}
-  Node* clone(NodeID nid) final { return new HeaderNode(*this, nid); }
-  void exportToMQQS(std::ostream& out) final;
+  HeaderNode(const HeaderNode& n, const NodeID id) : Node(n, id) {}
+  Node* clone(const NodeID nid) override { return new HeaderNode(*this, nid); }
+  void exportToMQQS(std::ostream& out) override;
 };
 
-inline Node* CreateNode(NodeID uid, NodeType type, Vector2 position) {
+inline Node* CreateNode(const NodeID uid, const NodeType type, const Vector2 position) {
 
   switch (type) {
     case NodeType::HEADER:

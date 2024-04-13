@@ -1,7 +1,5 @@
 #include "Action.h"
 
-#include "shared/rayutils.h"
-
 #include "application/EditorContext.h"
 #include "node/Node.h"
 
@@ -14,7 +12,7 @@ void TextAction::redo(EditorContext& ec) {
 }
 
 //-----------NODE_DELETE-----------//
-NodeDeleteAction::NodeDeleteAction(int size) : Action(DELETE_NODE) {
+NodeDeleteAction::NodeDeleteAction(const int size) : Action(DELETE_NODE) {
   deletedNodes.reserve(size);
 }
 
@@ -40,7 +38,7 @@ void NodeDeleteAction::redo(EditorContext& ec) {
 }
 
 //-----------NODE_CREATE-----------//
-NodeCreateAction::NodeCreateAction(int size) : Action(CREATE_NODE) {
+NodeCreateAction::NodeCreateAction(const int size) : Action(CREATE_NODE) {
   createdNodes.reserve(size);
 }
 
@@ -66,7 +64,7 @@ void NodeCreateAction::redo(EditorContext& ec) {
 }
 
 //-----------NODE_MOVE-----------//
-NodeMovedAction::NodeMovedAction(int size) : Action(MOVE_NODE) {
+NodeMovedAction::NodeMovedAction(const int size) : Action(MOVE_NODE) {
   movedNodes.reserve(size);
 }
 

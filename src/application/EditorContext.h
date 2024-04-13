@@ -23,6 +23,6 @@ struct EditorContext {
   Input input{};
   Info info{};
 
-  EditorContext(const char* openedFile) { persist.openedFile = openedFile; };
+  explicit EditorContext(const char* openedFile) { persist.openedFile = openedFile; };
 };
 #endif  //RAYNODES_SRC_EDITOR_EDITORCONTEXT_H_
