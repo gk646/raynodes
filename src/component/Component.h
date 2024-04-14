@@ -1,28 +1,35 @@
 #ifndef RAYNODES_SRC_NODES_COMPONENT_H_
 #define RAYNODES_SRC_NODES_COMPONENT_H_
 
-#include <cstdio>
 #include "shared/fwd.h"
+
+#include <cstdio>
+#include <cxstructs/StackVector.h>
+
+#include "blocks/Pin.h"
 
 //Abstract interface to create dynamic components
 //Rule 1: Stay within bounds and fit them to the component
 //
-//Rule 2: Use the provided input functions over raylibs:
+//Rule 2: Use the provided input functions over raylib's:
 //  - EditorContext::Input::isMouse___(int key);
 //  - if(ec.input.isMousePressed(MOUSE_BUTTON_LEFT){
 //
 //  These functions respect the ui layers, otherwise you will get weird interactions
 
 struct Component {
+  cxstructs::StackVector<Pin, 5> inputs{};
+  cxstructs::StackVector<Pin, 5> outputs{};
   const char* const name;
-  float x = 0;      //Internal state (dont change, only read)
-  float y = 0;      //Internal state (dont change, only read)
+  float x = 0;      //Internal state (don't change, only read)
+  float y = 0;      //Internal state (don't change, only read)
   uint16_t width;   //Dynamically adjustable
   uint16_t height;  //Dynamically adjustable
   const ComponentType type;
-  bool isFocused = false;     //Internal state (dont change, only read)
-  bool isHovered = false;     //Internal state (dont change, only read)
+  bool isFocused = false;     //Internal state (don't change, only read)
+  bool isHovered = false;     //Internal state (don't change, only read)
   bool internalLabel = true;  //If the label should be drawn or the component handles it
+
   explicit Component(const char* name, const ComponentType type, const uint16_t w = 0, const uint16_t h = 0)
       : name(name), width(w), height(h), type(type) {}
   virtual ~Component() = default;

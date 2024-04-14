@@ -32,7 +32,6 @@ class TextInputField final : public Component {
 
  private:
   [[nodiscard]] uint16_t getIndexFromPos(const Font& font, float fs, Vector2 mouse) const;
-  void updateBounds();
 };
 
 #endif  //RAYNODES_SRC_NODES_ELEMENTS_TEXTINPUTFIELD_H_

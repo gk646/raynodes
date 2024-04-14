@@ -33,13 +33,13 @@ inline void DrawContent(EditorContext& ec) {
 }
 
 inline void DrawForeGround(EditorContext& ec) {
+  Editor::UpdateTick(ec);
+
   if (ec.logic.showContextMenu) {
     Editor::DrawContextMenu(ec);
   }
 
   Editor::DrawActions(ec);
-
-  Editor::UpdateTick(ec);
 
   //Critical section // (Undo / Redo )
   ec.core.lock();

@@ -3,44 +3,56 @@
 #include "node/Node.h"
 #include "blocks/Connection.h"
 
+namespace {
+void AssignConnection(EditorContext& ec, Node& from, Pin& out, Node& to, Pin& in) {
+  if(!out.isConnectable(in)) return;
+  const auto conn = Connection(from, out, to, in);
+
+  printf("Connection assigned \n");
+
+  ec.core.connections.push_back(conn);
+
+  //Call the event functions
+  for (const auto c : from.components) {
+    c->onConnectionAdded(ec, conn);
+  }
+  for (const auto c : to.components) {
+    c->onConnectionAdded(ec, conn);
+  }
+}
+
+void FindDropPin(EditorContext& ec, Node& from, Pin& out) {
+  const auto worldMouse = ec.logic.worldMouse;
+  const auto radius = Pin::PIN_SIZE /2.0F;
+  for (const auto n : ec.core.nodes) {
+    //Extended Bound check on the node
+    const auto nodeBounds = n->getExtendedBounds(Pin::PIN_SIZE);
+
+    if (CheckCollisionPointRec(worldMouse, nodeBounds)) [[unlikely]] {
+      auto posX = n->position.x;
+      for (auto* c : n->components) {
+        for (auto& p : c->inputs) {
+          if (CheckCollisionPointCircle(worldMouse, {posX, (float)p.yPos}, radius)) {
+            AssignConnection(ec, from, out, *n, p);
+            return;
+          }
+        }
+      }
+    }
+  }
+}
+
+}  // namespace
+
 void Logic::handleDroppedPin(EditorContext& ec) {
   if (!isMakingConnection) return;
 
-  //Connection failed
-  if (hoveredNode != nullptr) {
-    //This is done because saving pin dimension costs space
-    //They are all placed deterministic at the bottom of the node
-    //Exactly as in Node::draw()
-    auto& hNode = *hoveredNode;
-    const float startX = hNode.position.x + Node::PADDING;
-    float startY = hNode.position.y + Node::PADDING + Node::OFFSET_Y + hNode.contentHeight + 10;
+  //Cache with correct names
+  auto& from = *draggedPinStartNode;
+  auto& out = *draggedPin;
 
-    auto bounds = Rectangle{startX, startY, Pin::PIN_SIZE, Pin::PIN_SIZE};
-
-    //Cache with correct names
-    auto& from = *draggedPinStartNode;
-    auto& out = *draggedPin;
-
-    for (auto& pin : hNode.pins) {
-      if (CheckCollisionPointRec(worldMouse, bounds)) {
-        //Create the connection
-        //Assigns the data pointers internally to pins
-        const auto conn = Connection(from, out, hNode, pin);
-        ec.core.connections.push_back(conn);
-
-        //Call the event functions
-        for (const auto c : from.components) {
-          c->onConnectionAdded(ec, conn);
-        }
-        for (const auto c : hNode.components) {
-          c->onConnectionAdded(ec, conn);
-        }
-
-        break;  //Done
-      }
-      bounds.x += Pin::PIN_SIZE + Node::PADDING * 2.0F;
-    }
-  }
+  //Reset regardless if a pin is found
+  FindDropPin(ec, from, out);
 
   //Correct order to give strong guarantee when "isMakingConnection" holds
   isMakingConnection = false;

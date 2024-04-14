@@ -5,7 +5,7 @@
 
 enum class NodeType : uint8_t;
 enum class PinType : uint8_t;
-enum class Direction : bool;
+enum Direction : bool;
 enum ComponentType : uint8_t;
 enum NodeID : uint16_t;
 struct Connection;

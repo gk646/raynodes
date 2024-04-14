@@ -15,12 +15,51 @@ Node::~Node() {
 }
 
 namespace {
-void UpdateComponent(Component* c, EditorContext& ec, Node& n) {
+bool CheckPinCollisions(EditorContext& ec, Node& n, Component* c) {
+  const auto worldMouse = ec.logic.worldMouse;
+  float radius = Pin::PIN_SIZE / 2.0F;
+  float posX = n.position.x;
+
+  //Inputs on the left
+  for (auto& p : c->inputs) {
+    if (CheckCollisionPointCircle(worldMouse, {posX, p.yPos}, radius)) {
+      ec.logic.assignDraggedPin(posX, p.yPos, p, n);
+      return true;
+    }
+  }
+
+  //Outputs on the right
+  posX += n.size.x;
+  for (auto& p : c->outputs) {
+    if (CheckCollisionPointCircle(worldMouse, {posX, p.yPos}, radius)) {
+      ec.logic.assignDraggedPin(posX, p.yPos, p, n);
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void UpdateComponent(EditorContext& ec, Node& n, Component* c) {
   const auto compRect = c->getBounds();
+  const auto worldMouse = ec.logic.worldMouse;
+
+  //Pins are partly outside so need to check them regardless of hover state
+  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+    //First check if the mouse is close to the rect and mouse is pressed
+    //TODO this is done for all components / only needs to be done once
+    if (CheckCollisionPointRec(worldMouse, n.getExtendedBounds(Pin::PIN_SIZE))) {
+      if (CheckPinCollisions(ec, n, c)) {
+        //Consume input already
+        ec.input.consumeKeyboard();
+        ec.input.consumeMouse();
+      }
+    }
+  }
 
   //Mouse Enter
   const bool previousHovered = c->isHovered;
-  const auto compHovered = CheckCollisionPointRec(ec.logic.worldMouse, compRect);
+  const auto compHovered = CheckCollisionPointRec(worldMouse, compRect);
   c->isHovered = compHovered;
 
   if (previousHovered != compHovered) {
@@ -68,20 +107,6 @@ void HandleSelection(Node& n, EditorContext& ec, const Rectangle bounds, auto& s
   }
 }
 
-bool HandlePinSelection(EditorContext& ec, Node& n) {
-  //Left mouse button press has already been checked ->true
-  const auto pinY = n.position.y + Node::PADDING + Node::OFFSET_Y + n.contentHeight + 10;
-  auto rect = Rectangle{n.position.x + Node::PADDING * 2, pinY, Pin::PIN_SIZE, Pin::PIN_SIZE};
-  for (auto& p : n.pins) {
-    if (CheckCollisionPointRec(ec.logic.worldMouse, rect)) {
-      ec.logic.assignDraggedPin(rect.x + Pin::PIN_SIZE / 2, rect.y + Pin::PIN_SIZE, p, n);
-      return true;
-    }
-    rect.x += Pin::PIN_SIZE + Node::PADDING * 2.0F;
-  }
-  return false;
-}
-
 //selectedNodes is std::unordered_map
 void HandleHover(EditorContext& ec, Node& n, auto& selectedNodes) {
   ec.logic.isAnyNodeHovered = true;
@@ -93,9 +118,6 @@ void HandleHover(EditorContext& ec, Node& n, auto& selectedNodes) {
     }
 
     selectedNodes.insert({n.id, &n});  //Node is clicked = selected
-
-    //If pin is clicked still allow selection but not dragging
-    if (HandlePinSelection(ec, n)) return;
 
     auto& moveAction = ec.logic.currentMoveAction;  //Start a move action
     if (moveAction == nullptr) {                    //Let's not leak too much...
@@ -138,54 +160,80 @@ void HandleDrag(Node& n, EditorContext& ec, auto& selectedNodes, auto worldMouse
     ec.logic.isAnyNodeDragged = false;
   }
 }
+
+void DrawComponent(EditorContext& ec, Node& n, Component& c, float dx, float& dy, float width) {
+  constexpr float pinRadius = Pin::PIN_SIZE / 2.0f;
+  int maxPins = std::max(c.inputs.size(), c.outputs.size());
+  float componentHeight = c.getHeight();
+
+  // Calculate the total height needed for pins on the side with the maximum number
+  float totalPinHeight = maxPins * Pin::PIN_SIZE;
+  float maxVerticalSpace = std::max(totalPinHeight, componentHeight);
+
+  // Calculate starting positions for pins and component to be vertically centered
+  float startYInputs = dy + (maxVerticalSpace - totalPinHeight) / 2.0f;
+  float startYOutputs = startYInputs;  // Symmetrical layout
+  float componentStartY = dy + (maxVerticalSpace - componentHeight) / 2.0f;
+
+  // Draw Input Pins
+  float currentY = startYInputs;
+  for (auto& p : c.inputs) {
+    DrawCircleV({dx, currentY + pinRadius}, pinRadius, p.getColor());
+    p.yPos = currentY + pinRadius;
+    currentY += Pin::PIN_SIZE;
+  }
+
+  // Draw Output Pins
+  currentY = startYOutputs;
+  float outputX = dx + width;  // Pins on the right edge
+  for (auto& p : c.outputs) {
+    DrawCircleV({outputX, currentY + pinRadius}, pinRadius, p.getColor());
+    p.yPos = currentY + pinRadius;
+    currentY += Pin::PIN_SIZE;
+  }
+
+  c.x = dx + Node::PADDING * 2;
+  c.y = componentStartY;
+  // Draw the component itself, centered
+  c.draw(ec, n);
+
+  // Update dy for the next component
+  dy += maxVerticalSpace + Node::PADDING;
+}
 }  // namespace
 
 void Node::draw(EditorContext& ec) {
-  //Cache
-  const auto& font = ec.display.editorFont;
-  const auto fs = ec.display.fontSize;
-  const auto worldMouse = ec.logic.worldMouse;
-
+  const auto& display = ec.display;
   const auto bounds = Rectangle{position.x, position.y, size.x, size.y};
+  const auto headerPos = Vector2{position.x + PADDING, position.y + PADDING};
+  float startY = position.y + PADDING + OFFSET_Y;
 
+  // Draw node body
   DrawRectangleRec(bounds, color);
 
+  // Draw hover outline
   if (isHovered) {
     DrawRectangleLinesEx(bounds, 1, ColorAlpha(YELLOW, 0.7));
   }
 
-  const auto headerPos = Vector2{position.x + PADDING, position.y + PADDING};
-  DrawTextEx(font, NodeToString(type), headerPos, fs, 1.0F, WHITE);
+  // Draw header text
+  DrawTextEx(display.editorFont, NodeToString(type), headerPos, display.fontSize, 1.0F, WHITE);
 
-  const auto startX = position.x + PADDING;
-  auto startY = position.y + PADDING + OFFSET_Y;
-  const auto beforeY = startY;
-
-  for (const auto c : components) {
-    if (!c->internalLabel) {
-      DrawTextEx(font, c->name, {startX, startY}, fs, 0.0F, WHITE);
-      startY += fs;
+  // Iterate over components and draw them
+  const float initialY = startY;
+  for (const auto& component : components) {
+    if (!component->internalLabel) {
+      Vector2 textPos = {position.x + PADDING, startY};
+      DrawTextEx(display.editorFont, component->name, textPos, display.fontSize, 0.0F, WHITE);
+      startY += display.fontSize;
     }
-    c->x = startX;
-    c->y = startY;
-    c->draw(ec, *this);
-    startY += c->getHeight() + PADDING;
+    DrawComponent(ec, *this, *component, position.x, startY, size.x);
   }
 
-  contentHeight = static_cast<uint16_t>(startY - beforeY);
-
-  startY += 10;
-  auto rect = Rectangle{startX + PADDING, startY, Pin::PIN_SIZE, Pin::PIN_SIZE};
-  for (int i = 0; i < pins.size(); ++i) {
-    DrawRectangleRec(rect, LIGHTGRAY);
-    if (CheckCollisionPointRec(worldMouse, rect)) {
-      DrawRectangleLinesEx(rect, 1, YELLOW);
-    }
-    rect.x += Pin::PIN_SIZE + PADDING * 2;
-  }
-
+  contentHeight = static_cast<uint16_t>(startY - initialY);
   size.y = startY - position.y + Pin::PIN_SIZE + PADDING;
 }
+
 void Node::update(EditorContext& ec) {
   //Cache
   const auto bounds = Rectangle{position.x, position.y, size.x, size.y};
@@ -194,13 +242,13 @@ void Node::update(EditorContext& ec) {
 
   //Always update components to allow for continuous ones (not just when focused)
   float biggestWidth = FLT_MIN;
-  for (const auto c : components) {
-    UpdateComponent(c, ec, *this);
+  for (auto* c : components) {
+    UpdateComponent(ec, *this, c);
     if (c->getWidth() > biggestWidth) {
       biggestWidth = static_cast<float>(c->width);
     }
   }
-  size.x = biggestWidth + 10.0F;
+  size.x = biggestWidth + Node::PADDING * 4.0F;  // Components are drawn with 2*PADDING inset
 
   //User is selecting -> no dragging
   if (ec.logic.isSelecting) {
@@ -276,10 +324,6 @@ Component* Node::getComponent(const char* name) {
     if (strcmp(name, c->getName()) == 0) return c;
   }
   return nullptr;
-}
-
-void Node::addPin(const PinType pt, const Direction dir) {
-  pins.push_back({nullptr, pt, dir, static_cast<uint8_t>(pins.size())});
 }
 
 //Export
