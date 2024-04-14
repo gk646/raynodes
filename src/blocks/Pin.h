@@ -13,15 +13,24 @@ enum class PinType : uint8_t {
   FLOAT,
 };
 
-enum class Direction : bool { INPUT, OUTPUT };
+enum Direction : bool { INPUT, OUTPUT };
 
 struct Pin {
-  static constexpr float PIN_SIZE = 20.0F;  //Should be to be cleanly divisible by 2
-  Connection* connection;
+  static constexpr float PIN_SIZE = 8.0F;  //Should be to be cleanly divisible by 2
+  Connection* connection = nullptr;
+  float yPos = 0;
   PinType pinType;
   Direction direction;
-  uint8_t idx;  //The index of the pin inside its node
 
+  Pin() = default;
+  Pin(PinType pt, Direction dir) : pinType(pt), direction(dir) {}
+  bool isConnectable(Pin& other) const {
+    if (direction == INPUT) {
+      return other.direction == OUTPUT && other.pinType == pinType;
+    } else {
+      return other.direction == INPUT && other.pinType == pinType && other.connection == nullptr;
+    }
+  }
   [[nodiscard]] Color getColor() const {
     switch (pinType) {
       case PinType::BOOLEAN:

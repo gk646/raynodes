@@ -130,7 +130,9 @@ void TextInputField::onFocusLoss(EditorContext& ec) {
 }
 
 void TextInputField::onCreate(EditorContext& ec, Node& parent) {
-  internalLabel = false;  //We dont want to draw our label
+  internalLabel = false;  //We don't want to draw our label
+  inputs.push_back({PinType::STRING,INPUT});
+  outputs.push_back({PinType::STRING,OUTPUT});
 }
 
 void TextInputField::save(FILE* file) {

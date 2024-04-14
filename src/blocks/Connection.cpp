@@ -4,10 +4,11 @@
 
 #include "node/Node.h"
 
+
 Vector2 Connection::getFromPos() const {
-  return from.getPinPosition(out.idx);
+  return {from.position.x+from.size.x,out.yPos};
 }
 
 Vector2 Connection::getToPos() const {
-  return to.getPinPosition(in.idx);
+  return {to.position.x ,in.yPos};
 }
