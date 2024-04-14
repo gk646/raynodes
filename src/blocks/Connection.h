@@ -3,7 +3,13 @@
 
 #include "shared/fwd.h"
 
-#include "Pin.h"
+enum class PinType : uint8_t {
+  BOOLEAN,
+  STRING,
+  INTEGER,
+  DATA,
+  FLOAT,
+};
 
 struct ConnectionData {
   union {
@@ -37,17 +43,13 @@ struct ConnectionData {
 
 struct Connection {
   //Source
-  Node& from;
+  Component& from;
   Pin& out;
   //Destination
-  Node& to;
+  Component& to;
   Pin& in;
   ConnectionData data;
-  Connection(Node& from, Pin& out, Node& to, Pin& in)
-      : from(from), out(out), to(to), in(in), data() {
-    out.connection = this;
-    in.connection = this;
-  }
+  Connection(Component& from, Pin& out, Component& to, Pin& in);
   Vector2 getFromPos() const;
   Vector2 getToPos()const;
   Color getConnectionColor() const;

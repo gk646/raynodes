@@ -11,6 +11,7 @@ set(DEPENDENCIES_PATH "C:/Users/gk646/Documents/Libaries")
 
 include_directories(
         "${DEPENDENCIES_PATH}/raylib-master/src"
+        "${DEPENDENCIES_PATH}/raygui-4.0/src"
         "${CMAKE_SOURCE_DIR}/../cxstructs/src" #Just supply a clone of cxstructs/include here
         "${CMAKE_SOURCE_DIR}/src"
 )

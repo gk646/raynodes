@@ -21,10 +21,10 @@ struct Component {
   cxstructs::StackVector<Pin, 5> inputs{};
   cxstructs::StackVector<Pin, 5> outputs{};
   const char* const name;
-  float x = 0;      //Internal state (don't change, only read)
-  float y = 0;      //Internal state (don't change, only read)
-  uint16_t width;   //Dynamically adjustable
-  uint16_t height;  //Dynamically adjustable
+  float x = 0;           //Internal state (don't change, only read)
+  float y = 0;           //Internal state (don't change, only read)
+  uint16_t width = 50;   //Dynamically adjustable
+  uint16_t height = 20;  //Dynamically adjustable
   const ComponentType type;
   bool isFocused = false;     //Internal state (don't change, only read)
   bool isHovered = false;     //Internal state (don't change, only read)
@@ -85,10 +85,11 @@ struct Component {
 
 enum ComponentType : uint8_t {
   INPUT_FIELD_TEXT,
-  INPUT_FIELD_TEXT_MULTILINE,
   INPUT_FIELD_INTEGER,
   INPUT_FIELD_BOOLEAN,
   INPUT_FIELD_FLOAT,
+  MATH_OPERATION,
+  STRING_TO_NUMBER,
 };
 
 #endif  //RAYNODES_SRC_NODES_COMPONENT_H_

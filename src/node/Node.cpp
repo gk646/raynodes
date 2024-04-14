@@ -6,6 +6,7 @@
 
 #include "application/EditorContext.h"
 #include "application/elements/Action.h"
+#include "shared/rayutils.h"
 
 Node::~Node() {
   for (const auto c : components) {
@@ -23,7 +24,7 @@ bool CheckPinCollisions(EditorContext& ec, Node& n, Component* c) {
   //Inputs on the left
   for (auto& p : c->inputs) {
     if (CheckCollisionPointCircle(worldMouse, {posX, p.yPos}, radius)) {
-      ec.logic.assignDraggedPin(posX, p.yPos, p, n);
+      ec.logic.assignDraggedPin(posX, p.yPos, p, *c);
       return true;
     }
   }
@@ -32,7 +33,7 @@ bool CheckPinCollisions(EditorContext& ec, Node& n, Component* c) {
   posX += n.size.x;
   for (auto& p : c->outputs) {
     if (CheckCollisionPointCircle(worldMouse, {posX, p.yPos}, radius)) {
-      ec.logic.assignDraggedPin(posX, p.yPos, p, n);
+      ec.logic.assignDraggedPin(posX, p.yPos, p, *c);
       return true;
     }
   }
@@ -161,6 +162,40 @@ void HandleDrag(Node& n, EditorContext& ec, auto& selectedNodes, auto worldMouse
   }
 }
 
+void DrawComponentPins(EditorContext& ec, Component& c, float dx, float startIn, float startOut, float w) {
+  constexpr float pinRadius = Pin::PIN_SIZE / 2.0f;
+
+  // Draw Input Pins
+  float currentY = startIn;
+  bool isAltDown = ec.input.isKeyDown(KEY_LEFT_ALT);
+  for (auto& p : c.inputs) {
+    const auto middlePos = Vector2{dx, currentY + pinRadius};
+    if (isAltDown) {
+      auto txt = PinTypeToString(p.pinType);
+      const auto textPos = Vector2{middlePos.x - Pin::PIN_SIZE, middlePos.y - Pin::PIN_SIZE};
+      DrawCenteredText(ec.display.editorFont, txt, textPos, Pin::PIN_SIZE, 1.0F, WHITE);
+    }
+    DrawCircleV({dx, currentY + pinRadius}, pinRadius, p.getColor());
+    p.yPos = currentY + pinRadius;
+    currentY += Pin::PIN_SIZE;
+  }
+
+  // Draw Output Pins
+  currentY = startOut;
+  float outputX = dx + w;  // Pins on the right edge
+  for (auto& p : c.outputs) {
+    const auto middlePos = Vector2{outputX, currentY + pinRadius};
+    if (isAltDown) {
+      auto txt = PinTypeToString(p.pinType);
+      const auto textPos = Vector2{middlePos.x + Pin::PIN_SIZE, middlePos.y - Pin::PIN_SIZE};
+      DrawCenteredText(ec.display.editorFont, txt, textPos, Pin::PIN_SIZE, 1.0F, WHITE);
+    }
+    DrawCircleV({outputX, currentY + pinRadius}, pinRadius, p.getColor());
+    p.yPos = currentY + pinRadius;
+    currentY += Pin::PIN_SIZE;
+  }
+}
+
 void DrawComponent(EditorContext& ec, Node& n, Component& c, float dx, float& dy, float width) {
   constexpr float pinRadius = Pin::PIN_SIZE / 2.0f;
   int maxPins = std::max(c.inputs.size(), c.outputs.size());
@@ -175,22 +210,7 @@ void DrawComponent(EditorContext& ec, Node& n, Component& c, float dx, float& dy
   float startYOutputs = startYInputs;  // Symmetrical layout
   float componentStartY = dy + (maxVerticalSpace - componentHeight) / 2.0f;
 
-  // Draw Input Pins
-  float currentY = startYInputs;
-  for (auto& p : c.inputs) {
-    DrawCircleV({dx, currentY + pinRadius}, pinRadius, p.getColor());
-    p.yPos = currentY + pinRadius;
-    currentY += Pin::PIN_SIZE;
-  }
-
-  // Draw Output Pins
-  currentY = startYOutputs;
-  float outputX = dx + width;  // Pins on the right edge
-  for (auto& p : c.outputs) {
-    DrawCircleV({outputX, currentY + pinRadius}, pinRadius, p.getColor());
-    p.yPos = currentY + pinRadius;
-    currentY += Pin::PIN_SIZE;
-  }
+  DrawComponentPins(ec, c, dx, startYInputs, startYOutputs, width);
 
   c.x = dx + Node::PADDING * 2;
   c.y = componentStartY;

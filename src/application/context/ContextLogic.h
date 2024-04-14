@@ -9,7 +9,7 @@ struct Logic {
   NodeMovedAction* currentMoveAction = nullptr;  //All move actions are sequential
   Node* draggedNode = nullptr;                   //Currently dragged node
   Node* hoveredNode = nullptr;                   //Currently hovered node
-  Node* draggedPinStartNode = nullptr;           //Only assigned if "isMakingConnection" holds
+  Component* draggedPinComponent = nullptr;      //Only assigned if "isMakingConnection" holds
   Vector2 dragStart = {0.0f, 0.0f};
   Vector2 selectPoint = {0.0f, 0.0f};
   Vector2 mouse = {};       //Mouse pos in screen space
@@ -25,8 +25,8 @@ struct Logic {
   bool isAnyNodeHovered = false;
   bool isAnyNodeDragged = false;
 
-  void assignDraggedPin(const float x, const float y, Pin& p, Node& n) {
-    draggedPinStartNode = &n;
+  void assignDraggedPin(const float x, const float y, Pin& p, Component& c) {
+    draggedPinComponent = &c;
     draggedPin = &p;
     draggedPinPos = {x, y};
     isMakingConnection = true;
