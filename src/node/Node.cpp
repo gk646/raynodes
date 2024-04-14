@@ -7,11 +7,16 @@
 #include "application/EditorContext.h"
 #include "application/elements/Action.h"
 
+Node::~Node() {
+  for (const auto c : components) {
+    c->onDestruction(*this);
+    delete c;
+  }
+}
+
 namespace {
-void UpdateComponent(const float x, const float y, Component* c, EditorContext& ec, Node& n) {
-  const auto width = c->getWidth();
-  const auto height = c->getHeight();
-  const auto compRect = Rectangle{x, y, width, height};
+void UpdateComponent(Component* c, EditorContext& ec, Node& n) {
+  const auto compRect = c->getBounds();
 
   //Mouse Enter
   const bool previousHovered = c->isHovered;
@@ -30,9 +35,9 @@ void UpdateComponent(const float x, const float y, Component* c, EditorContext& 
   } else {
     cxstructs::Constraint<false> con;  //Constraint holds when all are false
 
-    con += ec.logic.isAnyNodeDragged && !n.isDragged;
-    con += ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT) && !compHovered;
-    con += ec.input.isMouseButtonPressed(KEY_ESCAPE);
+    con += ec.logic.isAnyNodeDragged;
+    con += IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !compHovered;
+    con += IsMouseButtonPressed(KEY_ESCAPE);
 
     c->isFocused = con.holds();
   }
@@ -42,8 +47,9 @@ void UpdateComponent(const float x, const float y, Component* c, EditorContext& 
     else c->onFocusLoss(ec);
   }
 
-  c->update(x, y, ec, n);
+  c->update(ec, n);
 
+  //Consume input after update
   if (c->isFocused) {
     ec.input.consumeKeyboard();
     ec.input.consumeMouse();
@@ -56,15 +62,16 @@ void HandleSelection(Node& n, EditorContext& ec, const Rectangle bounds, auto& s
     selectedNodes.insert({n.id, &n});
     n.isHovered = true;
     ec.logic.isAnyNodeHovered = true;
+    ec.logic.hoveredNode = &n;
   } else {
     n.isHovered = false;
   }
 }
 
-bool HandlePinSelection(EditorContext& ec, Node& n, float startY) {
+bool HandlePinSelection(EditorContext& ec, Node& n) {
   //Left mouse button press has already been checked ->true
-  startY += 10;  //Same as in Node::draw();
-  auto rect = Rectangle{n.position.x + Node::PADDING * 2, startY, Pin::PIN_SIZE, Pin::PIN_SIZE};
+  const auto pinY = n.position.y + Node::PADDING + Node::OFFSET_Y + n.contentHeight + 10;
+  auto rect = Rectangle{n.position.x + Node::PADDING * 2, pinY, Pin::PIN_SIZE, Pin::PIN_SIZE};
   for (auto& p : n.pins) {
     if (CheckCollisionPointRec(ec.logic.worldMouse, rect)) {
       ec.logic.assignDraggedPin(rect.x + Pin::PIN_SIZE / 2, rect.y + Pin::PIN_SIZE, p, n);
@@ -76,7 +83,7 @@ bool HandlePinSelection(EditorContext& ec, Node& n, float startY) {
 }
 
 //selectedNodes is std::unordered_map
-void HandleHover(EditorContext& ec, Node& n, auto& selectedNodes, const float startY) {
+void HandleHover(EditorContext& ec, Node& n, auto& selectedNodes) {
   ec.logic.isAnyNodeHovered = true;
   ec.logic.hoveredNode = &n;
   if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -88,7 +95,7 @@ void HandleHover(EditorContext& ec, Node& n, auto& selectedNodes, const float st
     selectedNodes.insert({n.id, &n});  //Node is clicked = selected
 
     //If pin is clicked still allow selection but not dragging
-    if (HandlePinSelection(ec, n, startY)) return;
+    if (HandlePinSelection(ec, n)) return;
 
     auto& moveAction = ec.logic.currentMoveAction;  //Start a move action
     if (moveAction == nullptr) {                    //Let's not leak too much...
@@ -110,8 +117,7 @@ void HandleDrag(Node& n, EditorContext& ec, auto& selectedNodes, auto worldMouse
   ec.logic.isAnyNodeHovered = true;
   ec.logic.draggedNode = &n;
   if (ec.input.isMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-    Vector2 movementDelta = {worldMouse.x - Node::DRAG_OFFSET.x,
-                             worldMouse.y - Node::DRAG_OFFSET.y};
+    const Vector2 movementDelta = {worldMouse.x - Node::DRAG_OFFSET.x, worldMouse.y - Node::DRAG_OFFSET.y};
     n.position.x += movementDelta.x;
     n.position.y += movementDelta.y;
 
@@ -134,12 +140,6 @@ void HandleDrag(Node& n, EditorContext& ec, auto& selectedNodes, auto worldMouse
 }
 }  // namespace
 
-Node::~Node() {
-  for (auto c : components) {
-    c->onDestruction(*this);
-    delete c;
-  }
-}
 void Node::draw(EditorContext& ec) {
   //Cache
   const auto& font = ec.display.editorFont;
@@ -162,7 +162,13 @@ void Node::draw(EditorContext& ec) {
   const auto beforeY = startY;
 
   for (const auto c : components) {
-    c->draw(startX, startY, ec, *this);
+    if (!c->internalLabel) {
+      DrawTextEx(font, c->name, {startX, startY}, fs, 0.0F, WHITE);
+      startY += fs;
+    }
+    c->x = startX;
+    c->y = startY;
+    c->draw(ec, *this);
     startY += c->getHeight() + PADDING;
   }
 
@@ -180,25 +186,21 @@ void Node::draw(EditorContext& ec) {
 
   size.y = startY - position.y + Pin::PIN_SIZE + PADDING;
 }
-
 void Node::update(EditorContext& ec) {
   //Cache
   const auto bounds = Rectangle{position.x, position.y, size.x, size.y};
   const auto worldMouse = ec.logic.worldMouse;
   auto& selectedNodes = ec.core.selectedNodes;
 
-  //Update components
-  float startX = position.x + PADDING;
-  float startY = position.y + OFFSET_Y + PADDING;
-
   //Always update components to allow for continuous ones (not just when focused)
-  for (auto c : components) {
-    UpdateComponent(startX, startY, c, ec, *this);
-    if (c->getWidth() > size.x) {
-      size.x = c->getWidth() + 10;
+  float biggestWidth = FLT_MIN;
+  for (const auto c : components) {
+    UpdateComponent(c, ec, *this);
+    if (c->getWidth() > biggestWidth) {
+      biggestWidth = static_cast<float>(c->width);
     }
-    startY += c->getHeight() + PADDING;
   }
+  size.x = biggestWidth + 10.0F;
 
   //User is selecting -> no dragging
   if (ec.logic.isSelecting) {
@@ -217,7 +219,7 @@ void Node::update(EditorContext& ec) {
 
   //Its hovered - what's going to happen?
   if (isHovered && !ec.logic.isAnyNodeHovered) {
-    HandleHover(ec, *this, selectedNodes, startY);
+    HandleHover(ec, *this, selectedNodes);
   } else {
     isHovered = !selectedNodes.empty() && selectedNodes.contains(id);
   }
@@ -249,8 +251,8 @@ void Node::loadState(FILE* file) {
   cxstructs::io_load(file, g);
   cxstructs::io_load(file, b);
   cxstructs::io_load(file, a);
-  color = {static_cast<unsigned char>(r), static_cast<unsigned char>(g),
-           static_cast<unsigned char>(b), static_cast<unsigned char>(a)};
+  color = {static_cast<unsigned char>(r), static_cast<unsigned char>(g), static_cast<unsigned char>(b),
+           static_cast<unsigned char>(a)};
 
   cxstructs::io_load(file, position.x);
   cxstructs::io_load(file, position.y);
@@ -266,7 +268,6 @@ void Node::loadState(FILE* file) {
 void Node::addComponent(Component* comp) {
   components.push_back(comp);
 }
-
 Component* Node::getComponent(const char* name) {
   for (const auto c : components) {
     if (c->getName() == name) return c;

@@ -57,7 +57,7 @@ dimensions...**
 ### Interface
 
 ```cpp
-  //-----------CORE-----------//
+//-----------CORE-----------//
   //Necessary to copy the component
   virtual Component* clone() = 0;
   virtual void draw(float x, float y, EditorContext& ec, Node& parent) = 0;
@@ -77,7 +77,8 @@ dimensions...**
   //-----------LIFE CYCLE-----------//
   //Called once at creation time
   virtual void onCreate(EditorContext& ec, Node& parent) {}
-  //IMPORTANT: Only called when the node is destroyed (only happens after its delete action is destroyed)
+  //IMPORTANT: Only called once when the node is finally destroyed (only happens after its delete action is destroyed)
+  //This may happen very delayed or even never!
   virtual void onDestruction(Node& parent) {}
   //Called whenever component is removed from the screen (delete/cut)
   virtual void onRemovedFromScreen(EditorContext& ec, Node& parent) {}
@@ -85,14 +86,10 @@ dimensions...**
   virtual void onAddedToScreen(EditorContext& ec, Node& parent) {}
 
   //-----------CONNECTIONS-----------//
+  //Called once when a new connection is added
   virtual void onConnectionAdded(EditorContext& ec, const Connection& con) {}
+  //Called once when an existing connection is removed
   virtual void onConnectionRemoved(EditorContext& ec, const Connection& con) {}
-
-  // Abstract data getters for external access
-  virtual const char* getString() { return nullptr; }
-  virtual int getInt() { return 0; }
-  virtual float getFloat() { return 0.0F; }
-  virtual void* getData() { return nullptr; }
 ```
 The interface is quite expansive and abstract allowing an implementation to react to a multitude of events.
 

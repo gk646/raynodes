@@ -128,10 +128,10 @@ struct Node {
 
   Node(const NodeID id, const NodeType type, const Vector2 position = {0, 0},
        const Color color = {1, 1, 1, 255})
-      : id(id), type(type), color(color), position(position), size({100, 100}) {}
+      : position(position), size({100, 100}), color(color), id(id), type(type) {}
   Node(const Node& n, const NodeID id)
-      : id(id), type(n.type), position(n.position), color(n.color), size(n.size) {
-    for (auto c : n.components) {
+      : position(n.position), size(n.size), color(n.color), id(id), type(n.type) {
+    for (const auto c : n.components) {
       components.push_back(c->clone());
     }
   }

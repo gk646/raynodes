@@ -11,7 +11,7 @@ set(DEPENDENCIES_PATH "C:/Users/gk646/Documents/Libaries")
 
 include_directories(
         "${DEPENDENCIES_PATH}/raylib-master/src"
-        "${CMAKE_SOURCE_DIR}/../cxstructs/src"
+        "${CMAKE_SOURCE_DIR}/../cxstructs/src" #Just supply a clone of cxstructs/include here
         "${CMAKE_SOURCE_DIR}/src"
 )
 
@@ -42,4 +42,4 @@ add_subdirectory(src)
 
 add_executable(${PROJECT_NAME} src/main.cpp)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC raylib  user32 editor node component blocks)
+target_link_libraries(${PROJECT_NAME} PUBLIC raylib user32 editor node component blocks)

@@ -16,5 +16,6 @@ struct Action;
 struct EditorContext;
 struct Color;
 struct Vector2;
+struct Rectangle;
 
 #endif  //RAYNODES_SRC_SHARED_FWD_H_

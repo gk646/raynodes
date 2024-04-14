@@ -75,7 +75,7 @@ inline void PollControls(EditorContext& ec) {
     if (!ec.core.selectedNodes.empty()) {
       const auto action = new NodeDeleteAction(static_cast<int>(ec.core.selectedNodes.size()) + 1);
       for (auto [id, node] : ec.core.selectedNodes) {
-        ec.core.removeNode(ec,id);
+        ec.core.removeNode(ec, id);
         action->deletedNodes.push_back(node);
       }
       ec.core.addEditorAction(action);
@@ -94,6 +94,11 @@ inline void PollControls(EditorContext& ec) {
   if ((ec.input.isKeyPressed(KEY_Y) || ec.input.isKeyPressedRepeat(KEY_Y))
       && ec.input.isKeyDown(KEY_LEFT_CONTROL)) {
     ec.core.undo(ec);
+  }
+
+  if (ec.input.isKeyDown(KEY_B)) {
+    ec.core.createNode(ec, NodeType::HEADER, {(float)GetRandomValue(0, 1000), (float)GetRandomValue(0, 1000)});
+    printf("%d\n", static_cast<int>(ec.core.nodes.size()));
   }
 }
 
