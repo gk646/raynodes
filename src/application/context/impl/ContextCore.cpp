@@ -12,16 +12,16 @@ Core::Core() {
 }
 
 //-----------NODES-----------//
-Node* Core::createNode(EditorContext& ec, NodeType type, Vector2 worldPos) {
+Node* Core::createNode(EditorContext& ec, const NodeType type, const Vector2 worldPos) {
   auto newNode = CreateNode(UID, type, worldPos);
 
   if (!newNode) return nullptr;
 
   nodes.push_back(newNode);
   nodeMap.insert({UID, newNode});
-  UID = NodeID((int)UID + 1);
+  UID = static_cast<NodeID>(static_cast<uint16_t>(UID) + 1);
 
-  for (auto c : newNode->components) {
+  for (const auto c : newNode->components) {
     c->onCreate(ec, *newNode);
   }
 

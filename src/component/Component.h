@@ -1,26 +1,39 @@
 #ifndef RAYNODES_SRC_NODES_COMPONENT_H_
 #define RAYNODES_SRC_NODES_COMPONENT_H_
 
-#include "shared/fwd.h"
 #include <cstdio>
+#include "shared/fwd.h"
+
+//Abstract interface to create dynamic components
+//Rule 1: Stay within bounds and fit them to the component
+//
+//Rule 2: Use the provided input functions over raylibs:
+//  - EditorContext::Input::isMouse___(int key);
+//  - if(ec.input.isMousePressed(MOUSE_BUTTON_LEFT){
+//
+//  These functions respect the ui layers, otherwise you will get weird interactions
 
 struct Component {
-  const char* name;
-  uint16_t width;
-  uint16_t height;
+  const char* const name;
+  float x = 0;      //Internal state (dont change, only read)
+  float y = 0;      //Internal state (dont change, only read)
+  uint16_t width;   //Dynamically adjustable
+  uint16_t height;  //Dynamically adjustable
   const ComponentType type;
-  bool isFocused = false;
-  bool isHovered = false;
-
-  explicit Component(const char* name, ComponentType type, uint16_t w = 0, uint16_t h = 0)
+  bool isFocused = false;     //Internal state (dont change, only read)
+  bool isHovered = false;     //Internal state (dont change, only read)
+  bool internalLabel = true;  //If the label should be drawn or the component handles it
+  explicit Component(const char* name, const ComponentType type, const uint16_t w = 0, const uint16_t h = 0)
       : name(name), width(w), height(h), type(type) {}
   virtual ~Component() = default;
 
   //-----------CORE-----------//
   //Necessary to copy the component
   virtual Component* clone() = 0;
-  virtual void draw(float x, float y, EditorContext& ec, Node& parent) = 0;
-  virtual void update(float x, float y, EditorContext& ec, Node& parent) = 0;
+  //Called once each tick (on the main thread)
+  virtual void draw(EditorContext& ec, Node& parent) = 0;
+  //Guaranteed to be called once per tick (on the main thread) (not just when focused)
+  virtual void update(EditorContext& ec, Node& parent) = 0;
   //Use the symmetric helpers : cx_save(file,myFloat)...
   virtual void save(FILE* file) = 0;
   //Use the symmetric helpers : cx_load(file,myFloat)...
@@ -34,7 +47,7 @@ struct Component {
   virtual void onFocusLoss(EditorContext& ec) {}
 
   //-----------LIFE CYCLE-----------//
-  //Called once at creation time
+  //Called once at creation time after the constructor
   virtual void onCreate(EditorContext& ec, Node& parent) {}
   //IMPORTANT: Only called once when the node is finally destroyed (only happens after its delete action is destroyed)
   //This may happen very delayed or even never!
@@ -56,10 +69,11 @@ struct Component {
   virtual float getFloat() { return 0.0F; }
   virtual void* getData() { return nullptr; }
 
-  // Default getters
+  // Getters
+  [[nodiscard]] const char* getName() const { return name; }
   [[nodiscard]] float getWidth() const { return width; }
   [[nodiscard]] float getHeight() const { return height; }
-  [[nodiscard]] const char* getName() const { return name; }
+  [[nodiscard]] Rectangle getBounds() const;
 };
 
 enum ComponentType : uint8_t {
@@ -69,4 +83,5 @@ enum ComponentType : uint8_t {
   INPUT_FIELD_BOOLEAN,
   INPUT_FIELD_FLOAT,
 };
+
 #endif  //RAYNODES_SRC_NODES_COMPONENT_H_

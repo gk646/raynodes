@@ -6,25 +6,33 @@
 #include <string>
 
 struct TextAction;
-
+struct Font;
 class TextInputField final : public Component {
   inline static uint8_t BLINK_DELAY = 45;
   std::string buffer;
   TextAction* currAction = nullptr;
+  uint16_t cursorPos{};
+  uint16_t selectionStart = 0;
+  uint16_t selectionEnd = 0;
+  bool isDragging = false;
   bool showCursor = false;
-  uint8_t cursorPos{};
   uint8_t blinkCounter = 0;
 
  public:
   explicit TextInputField(const char* name) : Component(name, INPUT_FIELD_TEXT, 250, 20) {}
-  Component* clone() final { return new TextInputField(*this); }
-  void draw(float x, float y, EditorContext& ec, Node& parent) final;
-  void update(float x, float y, EditorContext&, Node& parent) final;
-  void load(FILE* file) final;
-  void save(FILE* file) final;
-  const char* getString() final { return buffer.c_str(); }
-  void onFocusGain(EditorContext&) final;
-  void onFocusLoss(EditorContext&) final;
+  Component* clone() override { return new TextInputField(*this); }
+  void draw(EditorContext& ec, Node& parent) override;
+  void update(EditorContext&, Node& parent) override;
+  void load(FILE* file) override;
+  void save(FILE* file) override;
+  void onFocusGain(EditorContext&) override;
+  void onFocusLoss(EditorContext&) override;
+  void onCreate(EditorContext& ec, Node& parent) override;
+  const char* getString() override { return buffer.c_str(); }
+
+ private:
+  [[nodiscard]] uint16_t getIndexFromPos(const Font& font, float fs, Vector2 mouse) const;
+  void updateBounds();
 };
 
 #endif  //RAYNODES_SRC_NODES_ELEMENTS_TEXTINPUTFIELD_H_
