@@ -7,45 +7,15 @@
 #include "shared/fwd.h"
 #include "blocks/Pin.h"
 #include "component/components/TextInputField.h"
+#include "component/components/MathC.h"
 
-enum class NodeType : uint8_t {
-  HEADER,
-  GOTO,
-  GOTO_PROXIMITY,
-  KILL,
-  SPAWN,
-  SPEAK,
-  SET_QUEST_ZONE,
-  SCRIPTED_NODE,
-  COLLECT,
-  COMBAT_TRIGGER,
-  REMOVE_ITEM,
-  SET_QUEST_SHOWN,
-  SWITCH_ALTERNATIVE,
-  SET_NPC_POS,
-  REQUIRE,
-  FINISH_QUEST,
-  DESPAWN_NPC,
-  WAIT,
-  PROTECT,
-  CHOICE_DIALOGUE,
-  ESCORT,
-  MIX,
-  NPC_MOVE,
-  NPC_SAY,
-  NPC_SAY_PROXIMITY,
-  CHOICE_DIALOGUE_SIMPLE,
-  TILE_ACTION,
-  PLAYER_THOUGHT,
-  OPTIONAL_POSITION,
-  SKIP,
-  TOTAL_SIZE
-};
+enum class NodeType : uint8_t { HEADER, MATH, TOTAL_SIZE };
 
 inline const char* NodeToString(NodeType type) {
   switch (type) {
     case NodeType::HEADER:
       return "HEADER";
+      /*
     case NodeType::GOTO:
       return "GOTO";
     case NodeType::GOTO_PROXIMITY:
@@ -106,6 +76,9 @@ inline const char* NodeToString(NodeType type) {
       return "SKIP";
     case NodeType::TOTAL_SIZE:
       return "TOTAL_SIZE";
+       */
+    case NodeType::MATH:
+      return "Math Operation";
     default:
       return "Unknown";
   }
@@ -175,11 +148,22 @@ struct HeaderNode final : public Node {
   void exportToMQQS(std::ostream& out) override;
 };
 
-inline Node* CreateNode(const NodeID uid, const NodeType type, const Vector2 position) {
+struct MathNode final : public Node {
+  MathNode(const NodeID nid, const Vector2 position) : Node(nid, NodeType::MATH, position) {
+    addComponent(new MathC("Operation"));
+  }
+  MathNode(const MathNode& n, const NodeID id) : Node(n, id) {}
+  Node* clone(const NodeID nid) override { return new MathNode(*this, nid); }
+  void exportToMQQS(std::ostream& out) override {};
+};
 
+inline Node* CreateNode(const NodeID uid, const NodeType type, const Vector2 position) {
   switch (type) {
     case NodeType::HEADER:
       return new HeaderNode(uid, position);
+    case NodeType::MATH:
+      return new MathNode(uid, position);
+      /*
     case NodeType::GOTO:
       break;
     case NodeType::GOTO_PROXIMITY:
@@ -240,6 +224,7 @@ inline Node* CreateNode(const NodeID uid, const NodeType type, const Vector2 pos
       break;
     case NodeType::TOTAL_SIZE:
       break;
+       */
   }
   return nullptr;
 }

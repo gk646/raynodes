@@ -3,48 +3,63 @@
 
 #include "shared/fwd.h"
 
-#include <raylib.h>
+#include "blocks/Connection.h"
 
-enum class PinType : uint8_t {
-  BOOLEAN,
-  STRING,
-  INTEGER,
-  DATA,
-  FLOAT,
-};
+inline const char* PinTypeToString(PinType pt) {
+  switch (pt) {
+    case PinType::BOOLEAN:
+      return "Boolean";
+    case PinType::STRING:
+      return "String";
+    case PinType::INTEGER:
+      return "Integer";
+    case PinType::DATA:
+      return "Data";
+    case PinType::FLOAT:
+      return "Float";
+    default:
+      return "Unknown Type";
+  }
+}
 
 enum Direction : bool { INPUT, OUTPUT };
 
 struct Pin {
-  static constexpr float PIN_SIZE = 8.0F;  //Should be to be cleanly divisible by 2
+  static constexpr float PIN_SIZE = 10.0F;  //Should be to be cleanly divisible by 2
   Connection* connection = nullptr;
-  float yPos = 0;
+  float yPos;
   PinType pinType;
   Direction direction;
 
   Pin() = default;
   Pin(PinType pt, Direction dir) : pinType(pt), direction(dir) {}
-  bool isConnectable(Pin& other) const {
+  [[nodiscard]] auto isConnectable(Pin& other) const -> bool {
     if (direction == INPUT) {
       return other.direction == OUTPUT && other.pinType == pinType;
     } else {
       return other.direction == INPUT && other.pinType == pinType && other.connection == nullptr;
     }
   }
-  [[nodiscard]] Color getColor() const {
-    switch (pinType) {
-      case PinType::BOOLEAN:
-        return BLUE;
-      case PinType::STRING:
-        return ORANGE;
-      case PinType::INTEGER:
-        return RED;
-      case PinType::FLOAT:
-        return SKYBLUE;
-      case PinType::DATA:
-        return PURPLE;
+  [[nodiscard]] auto getColor() const -> Color;
+  template <PinType pt>
+  [[nodiscard]] auto getData() const {
+    if (connection) {
+      return connection->data.get<pt>();
+    } else {
+      if constexpr (pt == PinType::STRING) {
+        return "";
+      } else if constexpr (pt == PinType::INTEGER) {
+        return 0;
+      } else if constexpr (pt == PinType::BOOLEAN) {
+        return false;
+      } else if constexpr (pt == PinType::FLOAT) {
+        return 0.0;
+      } else if constexpr (pt == PinType::DATA) {
+        return nullptr;
+      } else {
+        static_assert(pt == PinType::STRING, "Unsupported PinType");
+      }
     }
-    return RED;
   }
 };
 #endif  //RAYNODES_SRC_NODE_PIN_H_
