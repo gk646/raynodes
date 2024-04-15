@@ -60,8 +60,10 @@ dimensions...**
 //-----------CORE-----------//
   //Necessary to copy the component
   virtual Component* clone() = 0;
-  virtual void draw(float x, float y, EditorContext& ec, Node& parent) = 0;
-  virtual void update(float x, float y, EditorContext& ec, Node& parent) = 0;
+  //Called once each tick (on the main thread)
+  virtual void draw(EditorContext& ec, Node& parent) = 0;
+  //Guaranteed to be called once per tick (on the main thread) (not just when focused)
+  virtual void update(EditorContext& ec, Node& parent) = 0;
   //Use the symmetric helpers : cx_save(file,myFloat)...
   virtual void save(FILE* file) = 0;
   //Use the symmetric helpers : cx_load(file,myFloat)...
@@ -75,7 +77,7 @@ dimensions...**
   virtual void onFocusLoss(EditorContext& ec) {}
 
   //-----------LIFE CYCLE-----------//
-  //Called once at creation time
+  //Called once at creation time after the constructor
   virtual void onCreate(EditorContext& ec, Node& parent) {}
   //IMPORTANT: Only called once when the node is finally destroyed (only happens after its delete action is destroyed)
   //This may happen very delayed or even never!

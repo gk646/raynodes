@@ -35,6 +35,11 @@ void TextInputField::draw(EditorContext& ec, Node& parent) {
 }
 
 void TextInputField::update(EditorContext& ec, Node& parent) {
+  if (inputs[0].isConnected()) {
+    buffer = inputs[0].getData<PinType::STRING>();
+    outputs[0].setData<PinType::STRING>(buffer.c_str());
+    return;
+  }
   if (!isFocused) return;
 
   if (isDragging) {
@@ -131,8 +136,8 @@ void TextInputField::onFocusLoss(EditorContext& ec) {
 
 void TextInputField::onCreate(EditorContext& ec, Node& parent) {
   internalLabel = false;  //We don't want to draw our label
-  inputs.push_back({PinType::STRING,INPUT});
-  outputs.push_back({PinType::STRING,OUTPUT});
+  addInput(PinType::STRING);
+  addOutput(PinType::STRING);
 }
 
 void TextInputField::save(FILE* file) {
@@ -160,4 +165,8 @@ uint16_t TextInputField::getIndexFromPos(const Font& font, const float fs, const
   }
   if (relX > accu) return static_cast<uint16_t>(buffer.size());
   return 0;
+}
+void TextInputField::onConnectionAdded(EditorContext& ec, const Connection& con) {
+
+  outputs[0].setData<PinType::STRING>(buffer.c_str());
 }

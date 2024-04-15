@@ -2,6 +2,7 @@
 #define RAYNODES_SRC_COMPONENT_COMPONENTS_MATHC_H_
 
 #include "component/Component.h"
+#include "graphics/DropDown.h"
 
 enum MOperation : uint8_t {
   ADD,       // Addition
@@ -29,7 +30,7 @@ enum MOperation : uint8_t {
 
 struct MathC final : Component {
   int selectedMode = ADD;
-  inline static char dropDownBuff[1024];
+  DropDown dropDown;
   explicit MathC(const char* name) : Component(name, MATH_OPERATION, 250, 20) {}
   Component* clone() override { return new MathC(*this); };
   void draw(EditorContext& ec, Node& parent) override;

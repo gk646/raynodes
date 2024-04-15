@@ -70,6 +70,22 @@ struct Component {
   //Called once when an existing connection is removed
   virtual void onConnectionRemoved(EditorContext& ec, const Connection& con) {}
 
+  //-----------PINS-----------//
+  bool addInput(PinType pt) {
+    if (inputs.size() < inputs.capacity()) {
+      inputs.push_back({pt, INPUT});
+      return true;
+    }
+    return false;
+  }
+  bool addOutput(PinType pt) {
+    if (outputs.size() < outputs.capacity()) {
+      outputs.push_back({pt, OUTPUT});
+      return true;
+    }
+    return false;
+  }
+
   // Abstract data getters for external access
   virtual const char* getString() { return nullptr; }
   virtual int getInt() { return 0; }
@@ -90,6 +106,7 @@ enum ComponentType : uint8_t {
   INPUT_FIELD_FLOAT,
   MATH_OPERATION,
   STRING_TO_NUMBER,
+  DISPLAY,
 };
 
 #endif  //RAYNODES_SRC_NODES_COMPONENT_H_
