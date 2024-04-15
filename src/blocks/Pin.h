@@ -47,9 +47,9 @@ struct Pin {
       return connection->data.get<pt>();
     } else {
       if constexpr (pt == PinType::STRING) {
-        return "";
+        return static_cast<const char*>(nullptr);
       } else if constexpr (pt == PinType::INTEGER) {
-        return 0;
+        return 0LL;
       } else if constexpr (pt == PinType::BOOLEAN) {
         return false;
       } else if constexpr (pt == PinType::FLOAT) {
@@ -61,5 +61,12 @@ struct Pin {
       }
     }
   }
+  template <PinType pt>
+  void setData(auto data) const {
+    if (connection) {
+      connection->data.set<pt>(data);
+    }
+  }
+  [[nodiscard]] bool isConnected() const { return connection != nullptr; }
 };
 #endif  //RAYNODES_SRC_NODE_PIN_H_

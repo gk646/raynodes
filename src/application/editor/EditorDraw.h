@@ -19,8 +19,8 @@ inline void DrawContent(EditorContext& ec) {
   }
   ec.core.unlock();
 
-  for (const auto& con : connections) {
-    DrawLineBezier(con.getFromPos(), con.getToPos(), 2, con.out.getColor());
+  for (const auto con : connections) {
+    DrawLineBezier(con->getFromPos(), con->getToPos(), 2, con->out.getColor());
   }
 
   if (ec.logic.isSelecting) {

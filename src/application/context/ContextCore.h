@@ -15,7 +15,7 @@ struct Core {
   std::unordered_map<NodeID, Node*> nodeMap;
   std::deque<Action*> actionQueue;
   std::vector<Node*> nodes;
-  std::vector<Connection> connections;
+  std::vector<Connection*> connections;
   std::atomic_flag flag{};  //Not needed currently
   int logicTickTime = 0;    //Not needed
   int drawTickTime = 0;

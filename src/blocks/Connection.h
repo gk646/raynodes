@@ -13,7 +13,7 @@ enum class PinType : uint8_t {
 
 struct ConnectionData {
   union {
-    char* string;
+    const char* string;
     int64_t integer;
     uint64_t unsignedInt;
     bool boolean;
@@ -38,8 +38,23 @@ struct ConnectionData {
       static_assert(pt == PinType::STRING, "Unsupported PinType");
     }
   }
+  template <PinType pt>
+  void set(auto val) {
+    if constexpr (pt == PinType::STRING) {
+      string = val;
+    } else if constexpr (pt == PinType::INTEGER) {
+      integer = val;
+    } else if constexpr (pt == PinType::BOOLEAN) {
+      boolean = val;
+    } else if constexpr (pt == PinType::FLOAT) {
+      floating = val;
+    } else if constexpr (pt == PinType::DATA) {
+      data = val;
+    } else {
+      static_assert(pt == PinType::STRING, "Unsupported PinType");
+    }
+  }
 };
-
 
 struct Connection {
   //Source
@@ -51,7 +66,7 @@ struct Connection {
   ConnectionData data;
   Connection(Component& from, Pin& out, Component& to, Pin& in);
   Vector2 getFromPos() const;
-  Vector2 getToPos()const;
+  Vector2 getToPos() const;
   Color getConnectionColor() const;
 };
 

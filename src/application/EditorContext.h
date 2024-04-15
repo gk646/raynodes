@@ -14,6 +14,9 @@
 #include "context/ContextLogic.h"
 #include "context/ContextPersist.h"
 #include "context/ContextInput.h"
+#include "context/ContextTemplates.h"
+#include "context/ContextTemplates.h"
+#include "context/ContextString.h"
 
 struct EditorContext {
   Core core{};
@@ -22,6 +25,8 @@ struct EditorContext {
   Persist persist{};
   Input input{};
   Info info{};
+  Templates templates{};
+  String string{};
 
   explicit EditorContext(const char* openedFile) { persist.openedFile = openedFile; };
 };

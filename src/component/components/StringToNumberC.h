@@ -4,7 +4,7 @@
 #include "component/Component.h"
 
 struct StringToNumberC final : Component {
-  explicit StringToNumberC(const char* name) : Component(name, MATH_OPERATION, 250, 20) {}
+  explicit StringToNumberC(const char* name) : Component(name, STRING_TO_NUMBER, 50, 20) {}
   Component* clone() override { return new StringToNumberC(*this); };
   void draw(EditorContext& ec, Node& parent) override;
   void update(EditorContext& ec, Node& parent) override;

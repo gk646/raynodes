@@ -6,15 +6,20 @@
 namespace {
 void AssignConnection(EditorContext& ec, Component& from, Pin& out, Component& to, Pin& in) {
   if (!out.isConnectable(in)) return;
-  const auto conn = Connection(from, out, to, in);
+  const auto conn = new Connection(from, out, to, in);
 
   printf("Connection assigned \n");
+
+  //TODO fix doesnt work for more than 1 output
+  //i guess output connections need a list?
+  out.connection = conn;
+  in.connection = conn;
 
   ec.core.connections.push_back(conn);
 
   //Call the event functions
-  from.onConnectionAdded(ec, conn);
-  to.onConnectionAdded(ec, conn);
+  from.onConnectionAdded(ec, *conn);
+  to.onConnectionAdded(ec, *conn);
 }
 
 void FindDropPin(EditorContext& ec, Component& from, Pin& out) {

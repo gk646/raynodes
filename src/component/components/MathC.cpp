@@ -2,7 +2,6 @@
 
 #include <cmath>
 #include <limits>
-#include <string>
 
 #include <raygui.h>
 #include <cxutil/cxio.h>
@@ -12,28 +11,33 @@
 void MathC::draw(EditorContext& ec, Node& parent) {
   auto bounds = getBounds();
 
-  std::string dropDown;
-  for (int i = 0; i < MOperation::END; i++) {
-    dropDown.append(MOperationToString(MOperation(i))).append(";");
-  }
-  static bool edit = true;
-  if (GuiDropdownBox(bounds, dropDown.c_str(), &selectedMode, edit)) {
-    edit = !edit;
-  }
+  dropDown.draw(ec, bounds.x, bounds.y);
 }
 
 void MathC::update(EditorContext& ec, Node& parent) {
+  selectedMode = dropDown.update(ec);
   double a = inputs[0].getData<PinType::FLOAT>();
   double b = inputs[1].getData<PinType::FLOAT>();
 
-  printf("%f\n", performOperation(a, b, MOperation(selectedMode)));
+  auto res = performOperation(a, b, MOperation(selectedMode));
+  outputs[0].setData<PinType::FLOAT>(res);
 }
 
 void MathC::onCreate(EditorContext& ec, Node& parent) {
   internalLabel = false;  //We don't want to draw our label
-  inputs.push_back({PinType::FLOAT, INPUT});
-  inputs.push_back({PinType::FLOAT, INPUT});
-  outputs.push_back({PinType::FLOAT, OUTPUT});
+
+  addInput(PinType::FLOAT);
+  addInput(PinType::FLOAT);
+
+  addOutput(PinType::FLOAT);
+
+  dropDown.items.reserve(MOperation::END + 1);
+  for (int i = 0; i < MOperation::END; i++) {
+    dropDown.items.emplace_back(MOperationToString(MOperation(i)));
+  }
+
+  dropDown.w = width;
+  dropDown.h = height;
 }
 
 void MathC::save(FILE* file) {

@@ -1,0 +1,10 @@
+#ifndef RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTTEMPLATES_H_
+#define RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTTEMPLATES_H_
+
+struct Template {};
+
+struct Templates {
+  std::vector<Template> templates;
+};
+
+#endif  //RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTTEMPLATES_H_
