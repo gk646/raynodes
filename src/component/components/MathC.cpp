@@ -1,9 +1,9 @@
 #include "MathC.h"
 
+#include <raylib.h>
 #include <cmath>
 #include <limits>
 
-#include <raygui.h>
 #include <cxutil/cxio.h>
 
 #include "blocks/Connection.h"
@@ -26,10 +26,10 @@ void MathC::update(EditorContext& ec, Node& parent) {
 void MathC::onCreate(EditorContext& ec, Node& parent) {
   internalLabel = false;  //We don't want to draw our label
 
-  addInput(PinType::FLOAT);
-  addInput(PinType::FLOAT);
+  addPinInput(PinType::FLOAT);
+  addPinInput(PinType::FLOAT);
 
-  addOutput(PinType::FLOAT);
+  addPinOutput(PinType::FLOAT);
 
   dropDown.items.reserve(MOperation::END + 1);
   for (int i = 0; i < MOperation::END; i++) {
