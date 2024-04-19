@@ -10,10 +10,10 @@ void StringToNumberC::update(EditorContext& ec, Node& parent) {
 }
 
 void StringToNumberC::onCreate(EditorContext& ec, Node& parent) {
-  addInput(PinType::STRING);
+  addPinInput(PinType::STRING);
 
-  addOutput(PinType::FLOAT);
-  addOutput(PinType::INTEGER);
+  addPinOutput(PinType::FLOAT);
+  addPinOutput(PinType::INTEGER);
 }
 
 void StringToNumberC::save(FILE* file) {

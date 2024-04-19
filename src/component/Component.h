@@ -18,8 +18,8 @@
 //  These functions respect the ui layers, otherwise you will get weird interactions
 
 struct Component {
-  cxstructs::StackVector<Pin, 5> inputs{};
-  cxstructs::StackVector<Pin, 5> outputs{};
+  cxstructs::StackVector<InputPin, 5> inputs{};
+  cxstructs::StackVector<OutputPin, 5> outputs{};
   const char* const name;
   float x = 0;           //Internal state (don't change, only read)
   float y = 0;           //Internal state (don't change, only read)
@@ -28,7 +28,7 @@ struct Component {
   const ComponentType type;
   bool isFocused = false;     //Internal state (don't change, only read)
   bool isHovered = false;     //Internal state (don't change, only read)
-  bool internalLabel = true;  //If the label should be drawn or the component handles it
+  bool internalLabel = true;  //Whether the label should be drawn or the component handles it
 
   explicit Component(const char* name, const ComponentType type, const uint16_t w = 0, const uint16_t h = 0)
       : name(name), width(w), height(h), type(type) {}
@@ -71,16 +71,16 @@ struct Component {
   virtual void onConnectionRemoved(EditorContext& ec, const Connection& con) {}
 
   //-----------PINS-----------//
-  bool addInput(PinType pt) {
+  bool addPinInput(PinType pt) {
     if (inputs.size() < inputs.capacity()) {
-      inputs.push_back({pt, INPUT});
+      inputs.push_back({pt});
       return true;
     }
     return false;
   }
-  bool addOutput(PinType pt) {
+  bool addPinOutput(PinType pt) {
     if (outputs.size() < outputs.capacity()) {
-      outputs.push_back({pt, OUTPUT});
+      outputs.push_back({pt});
       return true;
     }
     return false;

@@ -11,63 +11,19 @@ enum class PinType : uint8_t {
   FLOAT,
 };
 
-struct ConnectionData {
-  union {
-    const char* string;
-    int64_t integer;
-    uint64_t unsignedInt;
-    bool boolean;
-    double floating;
-    void* data;
-    char pad[8];
-  };
-
-  template <PinType pt>
-  auto get() {
-    if constexpr (pt == PinType::STRING) {
-      return string;
-    } else if constexpr (pt == PinType::INTEGER) {
-      return integer;
-    } else if constexpr (pt == PinType::BOOLEAN) {
-      return boolean;
-    } else if constexpr (pt == PinType::FLOAT) {
-      return floating;
-    } else if constexpr (pt == PinType::DATA) {
-      return data;
-    } else {
-      static_assert(pt == PinType::STRING, "Unsupported PinType");
-    }
-  }
-  template <PinType pt>
-  void set(auto val) {
-    if constexpr (pt == PinType::STRING) {
-      string = val;
-    } else if constexpr (pt == PinType::INTEGER) {
-      integer = val;
-    } else if constexpr (pt == PinType::BOOLEAN) {
-      boolean = val;
-    } else if constexpr (pt == PinType::FLOAT) {
-      floating = val;
-    } else if constexpr (pt == PinType::DATA) {
-      data = val;
-    } else {
-      static_assert(pt == PinType::STRING, "Unsupported PinType");
-    }
-  }
-};
-
 struct Connection {
   //Source
+  Node& fromNode;
   Component& from;
-  Pin& out;
+  OutputPin& out;
   //Destination
+  Node& toNode;
   Component& to;
-  Pin& in;
-  ConnectionData data;
-  Connection(Component& from, Pin& out, Component& to, Pin& in);
-  Vector2 getFromPos() const;
-  Vector2 getToPos() const;
-  Color getConnectionColor() const;
+  InputPin& in;
+  Connection(Node& fromNode, Component& from, OutputPin& out, Node& toNode, Component& to, InputPin& in);
+  [[nodiscard]] Vector2 getFromPos() const;
+  [[nodiscard]] Vector2 getToPos() const;
+  [[nodiscard]] Color getConnectionColor() const;
 };
 
 #endif  //RAYNODES_SRC_NODE_CONNECTION_H_

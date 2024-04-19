@@ -33,15 +33,15 @@ void DisplayC::update(EditorContext& ec, Node& parent) {
 }
 
 void DisplayC::onCreate(EditorContext& ec, Node& parent) {
-  addInput(PinType::STRING);
-  addInput(PinType::FLOAT);
-  addInput(PinType::BOOLEAN);
-  addInput(PinType::INTEGER);
+  addPinInput(PinType::STRING);
+  addPinInput(PinType::FLOAT);
+  addPinInput(PinType::BOOLEAN);
+  addPinInput(PinType::INTEGER);
 
-  addOutput(PinType::STRING);
-  addOutput(PinType::FLOAT);
-  addOutput(PinType::BOOLEAN);
-  addOutput(PinType::INTEGER);
+  addPinOutput(PinType::STRING);
+  addPinOutput(PinType::FLOAT);
+  addPinOutput(PinType::BOOLEAN);
+  addPinOutput(PinType::INTEGER);
 }
 
 void DisplayC::save(FILE* file) {

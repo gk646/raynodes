@@ -19,3 +19,7 @@ Color Pin::getColor() const {
     }
     return RED;
 }
+
+auto OutputPin::isConnectable(InputPin& other) const -> bool {
+    return other.pinType == pinType && other.connection == nullptr;
+}
