@@ -7,12 +7,11 @@ set(BUILD_GAMES OFF CACHE BOOL "" FORCE)
 set(OPENGL_VERSION "4.3" CACHE STRING "OpenGL Version to build raylib with")
 
 
-set(DEPENDENCIES_PATH "C:/Users/gk646/Documents/Libaries")
+set(DEPENDENCIES_PATH "C:/Users/Lukas/Documents/Libaries")
 
 include_directories(
-        "${DEPENDENCIES_PATH}/raylib-master/src"
-        "${DEPENDENCIES_PATH}/raygui-4.0/src"
-        "${CMAKE_SOURCE_DIR}/../cxstructs/src" #Just supply a clone of cxstructs/include here
+        "${DEPENDENCIES_PATH}/raylib-5.0/src"
+        "C:/Users/Lukas/Documents/Libaries/cxstructs/include" #Just supply a clone of cxstructs/include here
         "${CMAKE_SOURCE_DIR}/src"
 )
 
@@ -37,7 +36,8 @@ elseif (MSVC)
 endif ()
 
 add_compile_definitions(_HAS_EXCEPTIONS=0)
-add_subdirectory("${DEPENDENCIES_PATH}/raylib-master" raylib)
+
+add_subdirectory("${DEPENDENCIES_PATH}/raylib-5.0" raylib)
 add_subdirectory(src)
 
 

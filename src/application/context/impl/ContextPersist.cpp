@@ -51,7 +51,7 @@ bool Persist::saveToFile(EditorContext& ec) const {
 bool Persist::loadFromFile(EditorContext& ec) const {
   FILE* file;
 
-  if (fopen_s(&file, openedFile, "r") != 0) return false;
+  if (fopen_s(&file, openedFile, "r") != 0) return true;
 
   if (!file) {
     fprintf(stderr, "Unable to open file %s\n", openedFile);

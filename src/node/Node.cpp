@@ -24,7 +24,7 @@ bool CheckPinCollisions(EditorContext& ec, Node& n, Component* c) {
   //Inputs on the left
   for (auto& p : c->inputs) {
     if (CheckCollisionPointCircle(worldMouse, {posX, p.yPos}, radius)) {
-      ec.logic.assignDraggedPin(posX, p.yPos, p, *c);
+      ec.logic.assignDraggedPin(posX, p.yPos, n, *c, p);
       return true;
     }
   }
@@ -33,7 +33,7 @@ bool CheckPinCollisions(EditorContext& ec, Node& n, Component* c) {
   posX += n.size.x;
   for (auto& p : c->outputs) {
     if (CheckCollisionPointCircle(worldMouse, {posX, p.yPos}, radius)) {
-      ec.logic.assignDraggedPin(posX, p.yPos, p, *c);
+      ec.logic.assignDraggedPin(posX, p.yPos, n, *c, p);
       return true;
     }
   }
