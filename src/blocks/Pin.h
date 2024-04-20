@@ -83,7 +83,7 @@ struct Pin {
 };
 
 struct OutputPin final : Pin {
-  OutputData data;
+  OutputData data{nullptr};
   OutputPin() = default;
   OutputPin(PinType pt) : Pin{pt, OUTPUT, 0} {}
   [[nodiscard]] auto isConnectable(InputPin& other) const -> bool;

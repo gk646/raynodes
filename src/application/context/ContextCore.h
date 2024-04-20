@@ -5,6 +5,7 @@
 #include <deque>
 #include <unordered_map>
 #include <vector>
+#include <shared/fwd.h>
 
 struct Core {
   static constexpr int TARGET_FPS = 100;
@@ -15,28 +16,40 @@ struct Core {
   std::unordered_map<NodeID, Node*> nodeMap;
   std::deque<Action*> actionQueue;
   std::vector<Node*> nodes;
+  std::vector<Node*> copiedNodes;
   std::vector<Connection*> connections;
-  std::atomic_flag flag{};  //Not needed currently
-  int logicTickTime = 0;    //Not needed
   int drawTickTime = 0;
   int currentActionIndex = -1;
   NodeID UID = static_cast<NodeID>(1);
   bool logicThreadRunning = true;
 
   Core();
-
-  Node* createNode(EditorContext& ec, NodeType type, Vector2 worldPos);
+  auto getNextID() -> NodeID {
+    UID = static_cast<NodeID>(UID + 1);
+    return UID;
+  }
+  auto createNode(EditorContext& ec, NodeType type, Vector2 worldPos, uint16_t hint = 0) -> Node*;
+  auto getNode(const NodeID id) -> Node* { return nodeMap[id]; }
   void insertNode(EditorContext& ec, NodeID id, Node* node);
   void removeNode(EditorContext& ec, NodeID id);
-  inline Node* getNode(NodeID id) { return nodeMap[id]; }
-  inline void moveToFront(Node* node) {
+  void moveToFront(Node* node) {
     std::erase(nodes, node);
     nodes.push_back(node);
   }
-  inline void lock() {
-    while (flag.test_and_set(std::memory_order_acquire)) {}
+  void removeConnections(Node& node, std::vector<Connection*>& collector) {
+    const auto newEnd =
+        std::remove_if(connections.begin(), connections.end(), [&node, &collector](Connection* conn) {
+          if (&conn->fromNode == &node || &conn->toNode == &node) {
+            collector.push_back(conn);
+            return true;
+          }
+          return false;
+        });
+
+    // Erase the removed elements
+    connections.erase(newEnd, connections.end());
   }
-  inline void unlock() { flag.clear(std::memory_order_release); }
+  //-------------EditorActions--------------//
   void addEditorAction(Action* action);
   void undo(EditorContext& ec);
   void redo(EditorContext& ec);

@@ -12,28 +12,45 @@ void TextAction::redo(EditorContext& ec) {
 }
 
 //-----------NODE_DELETE-----------//
-NodeDeleteAction::NodeDeleteAction(const int size) : Action(DELETE_NODE) {
-  deletedNodes.reserve(size);
+NodeDeleteAction::NodeDeleteAction(EditorContext& ec, const std::unordered_map<NodeID, Node*>& selectedNodes)
+    : Action(DELETE_NODE) {
+  deletedNodes.reserve(selectedNodes.size() + 1);
+  deletedConnections.reserve(selectedNodes.size() / 5);  //Just guessing
+
+  for (auto [id, node] : selectedNodes) {
+    ec.core.removeNode(ec, id);
+    ec.core.removeConnections(*node, deletedConnections);
+    deletedNodes.push_back(node);
+  }
 }
 
 NodeDeleteAction::~NodeDeleteAction() noexcept {
   if (!removeNodes) return;
-  for (auto n : deletedNodes) {
+  for (const auto n : deletedNodes) {
     delete n;
+  }
+  for (const auto conn : deletedConnections) {
+    delete conn;
   }
 }
 
 void NodeDeleteAction::undo(EditorContext& ec) {
   removeNodes = false;
-  for (auto n : deletedNodes) {
+  for (const auto n : deletedNodes) {
     ec.core.insertNode(ec, n->id, n);
+  }
+  for (const auto conn : deletedConnections) {
+    ec.core.connections.push_back(conn);
   }
 }
 
 void NodeDeleteAction::redo(EditorContext& ec) {
   removeNodes = true;
-  for (auto n : deletedNodes) {
+  for (const auto n : deletedNodes) {
     ec.core.removeNode(ec, n->id);
+  }
+  for (const auto conn : deletedConnections) {
+    std::erase(ec.core.connections, conn);
   }
 }
 
@@ -51,14 +68,14 @@ NodeCreateAction::~NodeCreateAction() noexcept {
 
 void NodeCreateAction::undo(EditorContext& ec) {
   removeNodes = true;
-  for (auto n : createdNodes) {
+  for (const auto n : createdNodes) {
     ec.core.removeNode(ec, n->id);
   }
 }
 
 void NodeCreateAction::redo(EditorContext& ec) {
   removeNodes = false;
-  for (auto n : createdNodes) {
+  for (const auto n : createdNodes) {
     ec.core.insertNode(ec, n->id, n);
   }
 }
@@ -69,18 +86,18 @@ NodeMovedAction::NodeMovedAction(const int size) : Action(MOVE_NODE) {
 }
 
 void NodeMovedAction::undo(EditorContext& ec) {
-  for (auto n : movedNodes) {
-    auto& pos = ec.core.getNode(n.first)->position;
-    pos.x += n.second.x;
-    pos.y += n.second.y;
+  for (const auto [id, delta] : movedNodes) {
+    auto& [x, y] = ec.core.getNode(id)->position;
+    x += delta.x;
+    y += delta.y;
   }
 }
 
 void NodeMovedAction::redo(EditorContext& ec) {
-  for (auto n : movedNodes) {
-    auto& pos = ec.core.getNode(n.first)->position;
-    pos.x -= n.second.x;
-    pos.y -= n.second.y;
+  for (const auto [id, delta] : movedNodes) {
+    auto& [x, y] = ec.core.getNode(id)->position;
+    x -= delta.x;
+    y -= delta.y;
   }
 }
 

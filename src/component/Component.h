@@ -37,7 +37,7 @@ struct Component {
   //-----------CORE-----------//
   //Necessary to copy the component
   virtual Component* clone() = 0;
-  //Called once each tick (on the main thread)
+  //IMPORTANT: Only called when its bounds are visible on the screen!
   virtual void draw(EditorContext& ec, Node& parent) = 0;
   //Guaranteed to be called once per tick (on the main thread) (not just when focused)
   virtual void update(EditorContext& ec, Node& parent) = 0;
@@ -97,6 +97,18 @@ struct Component {
   [[nodiscard]] float getWidth() const { return width; }
   [[nodiscard]] float getHeight() const { return height; }
   [[nodiscard]] Rectangle getBounds() const;
+  [[nodiscard]] int getPinIndex(Pin* p) const {
+    if (p->direction == INPUT) {
+      for (int i = 0; i < inputs.size(); i++) {
+        if (&inputs[i] == static_cast<InputPin*>(p)) return i;
+      }
+      return -1;
+    }
+    for (int i = 0; i < outputs.size(); i++) {
+      if (&outputs[i] == static_cast<OutputPin*>(p)) return i;
+    }
+    return -1;
+  }
 };
 
 enum ComponentType : uint8_t {

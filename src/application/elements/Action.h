@@ -12,12 +12,10 @@ enum ActionType : uint8_t { NEW_CANVAS_ACTION, MOVE_NODE, TEXT_EDIT, DELETE_NODE
 //Action was already performed when created
 //-> Current state includes this performed action
 //Undo means reversing this action
-//Redo means performing this action
+//Redo means performing this action again
 struct Action {
   ActionType type;
-
   explicit Action(const ActionType type) : type(type) {}
-
   virtual ~Action() noexcept = default;
   virtual void undo(EditorContext& ec) = 0;
   virtual void redo(EditorContext& ec) = 0;
@@ -40,9 +38,8 @@ struct Action {
   }
 };
 
-struct NewCanvasAction final : public Action {
+struct NewCanvasAction final : Action {
   NewCanvasAction() : Action(NEW_CANVAS_ACTION) {}
-
   void undo(EditorContext& ec) override {}
   void redo(EditorContext& ec) override {}
 };
@@ -56,14 +53,14 @@ struct TextAction final : Action {
       : Action(TEXT_EDIT), targetText(target), beforeState(std::move(before)) {}
 
   void setAfter(std::string after) { afterState = std::move(after); }
-
   void undo(EditorContext& ec) override;
   void redo(EditorContext& ec) override;
 };
 
 struct NodeDeleteAction final : Action {
   std::vector<Node*> deletedNodes;
-  explicit NodeDeleteAction(int size);
+  std::vector<Connection*> deletedConnections;
+  explicit NodeDeleteAction(EditorContext& ec, const std::unordered_map<NodeID, Node*>& selectedNodes);
   ~NodeDeleteAction() noexcept override;
   void undo(EditorContext& ec) override;
   void redo(EditorContext& ec) override;

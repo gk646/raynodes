@@ -1,13 +1,23 @@
 # raynodes
 
-`raynodes` is a 2D node editor meant to be easily expendable both in code and in the ui.
+`raynodes` is a 2D node editor made using [raylib](https://github.com/raysan5/raylib) with a focus extensibility and
+supporting any node-based task. It provides a clear and modularized core handling common editor features like Undo/Redo
+system, camera system, controls and state serialization.
+
+Via a clearly defined public interface, it can easily be extended with:
+
+- User created templates at runtime
+- Dynamically loaded plugins
+- Contributed components to the source
+
 
 In a lot of places it uses my C++ helper library [cxstructs](https://github.com/gk646/cxstructs).
 
 **1.** [Controls](#Controls)   
 **2.** [Features](#Features)   
 **3.** [Components!](#Expand-and-Contribute-with-Components)  
-**4.** [Software Design](#Software-Design)
+**4.** [Plugins](#Plugins)
+**5.** [Software Design](#Software-Design)
 
 ### Controls
 
@@ -29,7 +39,7 @@ RMB = Right Mouse Button
 Each action (move, edit, delete + many more) are tracked in a global list improving the workflow.
 Actions have a generic interface and new ones can easily be added.
 
-### Define your own nodes *(soon)*
+### Templates *(soon)*
 
 ...
 
@@ -93,8 +103,8 @@ dimensions...**
   //Called once when an existing connection is removed
   virtual void onConnectionRemoved(EditorContext& ec, const Connection& con) {}
 ```
-The interface is quite expansive and abstract allowing an implementation to react to a multitude of events.
 
+The interface is quite expansive and abstract allowing an implementation to react to a multitude of events.
 
 ### Loading and saving
 
@@ -120,15 +130,18 @@ cxstructs::io_load(file, buffer);
 }
 ```
 
+## Plugins
+
 ## Software Design
 
 - No global state to allow for modularity if needed (and testability...)
 - Move away from providing source code extensibility in favour of in-editor extensibility
     - Project isn't centered around code interaction but in-editor interaction
-- 2 thread model - Logic and draw thread (remove logic time overhead and memory management from draw thread)
-    - Only minimal synchronization needed (with spin lock and only in EditorContext getters and setters)
-    - Through clean code structure critical sections can easily be defined
-    - Logic overhead is very small (might not be needed)
+- ~~2 thread model - Logic and draw thread (remove logic time overhead and memory management from draw thread)~~
+    - ~~Only minimal synchronization needed (with spin lock and only in EditorContext getters and setters)~~
+    - ~~Through clean code structure critical sections can easily be defined~~
+- 1 Thread is enough - 2 Threads introduce code complexity
+    - Logic overhead is very small
 - Structured code through exporting big functions into headers
 
 ### Concepts

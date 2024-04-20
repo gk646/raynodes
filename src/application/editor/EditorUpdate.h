@@ -22,37 +22,37 @@ void StartUpdateTick(EditorContext& ec) {
 }
 void FormatSelectRectangle(EditorContext& ec) {
   {
-    auto& selectRect = ec.logic.selectRect;
+    auto& [x, y, width, height] = ec.logic.selectRect;
     auto& selectPoint = ec.logic.selectPoint;
     const auto worldMouse = ec.logic.worldMouse;
 
     if (worldMouse.x < selectPoint.x) {
       if (worldMouse.y > selectPoint.y) {
         // Mouse is left bottom
-        selectRect.x = worldMouse.x;
-        selectRect.y = worldMouse.y - (worldMouse.y - selectPoint.y);
-        selectRect.width = selectPoint.x - worldMouse.x;
-        selectRect.height = worldMouse.y - selectPoint.y;
+        x = worldMouse.x;
+        y = worldMouse.y - (worldMouse.y - selectPoint.y);
+        width = selectPoint.x - worldMouse.x;
+        height = worldMouse.y - selectPoint.y;
       } else {
         // Mouse is left top
-        selectRect.x = worldMouse.x;
-        selectRect.y = worldMouse.y;
-        selectRect.width = selectPoint.x - worldMouse.x;
-        selectRect.height = selectPoint.y - worldMouse.y;
+        x = worldMouse.x;
+        y = worldMouse.y;
+        width = selectPoint.x - worldMouse.x;
+        height = selectPoint.y - worldMouse.y;
       }
     } else {
       if (worldMouse.y > selectPoint.y) {
         // Mouse is right bottom
-        selectRect.x = selectPoint.x;
-        selectRect.y = selectPoint.y;
-        selectRect.width = worldMouse.x - selectPoint.x;
-        selectRect.height = worldMouse.y - selectPoint.y;
+        x = selectPoint.x;
+        y = selectPoint.y;
+        width = worldMouse.x - selectPoint.x;
+        height = worldMouse.y - selectPoint.y;
       } else {
         // Mouse is right top
-        selectRect.x = selectPoint.x;
-        selectRect.y = selectPoint.y - (selectPoint.y - worldMouse.y);
-        selectRect.width = worldMouse.x - selectPoint.x;
-        selectRect.height = selectPoint.y - worldMouse.y;
+        x = selectPoint.x;
+        y = selectPoint.y - (selectPoint.y - worldMouse.y);
+        width = worldMouse.x - selectPoint.x;
+        height = selectPoint.y - worldMouse.y;
       }
     }
   }
@@ -62,15 +62,11 @@ namespace Editor {
 inline void UpdateTick(EditorContext& ec) {
   StartUpdateTick(ec);
 
-  // Critical section
-  ec.core.lock();
-  {
-    auto& nodes = ec.core.nodes;
-    for (auto it = nodes.rbegin(); it != nodes.rend(); ++it) {
-      (*it)->update(ec);
-    }
+  //Reverse update to correctly reflect input layers
+  auto& nodes = ec.core.nodes;
+  for (auto it = nodes.rbegin(); it != nodes.rend(); ++it) {
+    (*it)->update(ec);
   }
-  ec.core.unlock();
 
   if (ec.logic.isSelecting) {
     FormatSelectRectangle(ec);

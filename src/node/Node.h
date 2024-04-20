@@ -5,7 +5,7 @@
 #include <cxstructs/StackVector.h>
 
 #include "shared/fwd.h"
-#include "blocks/Pin.h"
+
 #include "component/components/TextInputField.h"
 #include "component/components/MathC.h"
 #include "component/components/StringToNumberC.h"
@@ -13,6 +13,7 @@
 
 enum class NodeType : uint8_t { HEADER, MATH, DISPLAY, STRING_CONVERSION, TOTAL_SIZE };
 
+//TODO clean up - make ready for templates
 struct Node {
   static constexpr float PADDING = 3;
   static constexpr float OFFSET_Y = 20;
@@ -39,23 +40,30 @@ struct Node {
   }
   virtual ~Node();
   //Core
-  void update(EditorContext&);
-  void draw(EditorContext&);
+  void update(EditorContext& ec);
+  void draw(EditorContext& ec);
   void saveState(FILE* file);
   void loadState(FILE* file);
 
   //Components
   Component* getComponent(const char* name);
+  [[nodiscard]] int getComponentIndex(Component& c) const {
+    for (int i = 0; i < components.size(); i++) {
+      if (components[i] == &c) return i;
+    }
+    return -1;
+  }
   void addComponent(Component* comp);
 
   //Virtuals
   virtual Node* clone(const NodeID nid) { return new Node(*this, nid); }
-  virtual void exportToMQQS(std::ostream& out) {};
+  virtual void exportToMQQS(std::ostream& out){};
 
   //Helpers
   [[nodiscard]] Rectangle getExtendedBounds(float ext) const {
     return {position.x - ext, position.y - ext, size.x + ext * 2, size.y + ext * 2};
   }
+  [[nodiscard]] Rectangle getBounds() const { return {position.x, position.y, size.x, size.y}; }
 };
 
 /* |-----------------------------------------------------|
@@ -83,7 +91,7 @@ struct MathNode final : public Node {
   }
   MathNode(const MathNode& n, const NodeID id) : Node(n, id) {}
   Node* clone(const NodeID nid) override { return new MathNode(*this, nid); }
-  void exportToMQQS(std::ostream& out) override {};
+  void exportToMQQS(std::ostream& out) override{};
 };
 
 struct StringConversion final : public Node {
@@ -93,7 +101,7 @@ struct StringConversion final : public Node {
   }
   StringConversion(const StringConversion& n, const NodeID id) : Node(n, id) {}
   Node* clone(const NodeID nid) override { return new StringConversion(*this, nid); }
-  void exportToMQQS(std::ostream& out) override {};
+  void exportToMQQS(std::ostream& out) override{};
 };
 
 struct DisplayNode final : public Node {
@@ -102,7 +110,7 @@ struct DisplayNode final : public Node {
   }
   DisplayNode(const DisplayNode& n, const NodeID id) : Node(n, id) {}
   Node* clone(const NodeID nid) override { return new DisplayNode(*this, nid); }
-  void exportToMQQS(std::ostream& out) override {};
+  void exportToMQQS(std::ostream& out) override{};
 };
 
 inline Node* CreateNode(const NodeID uid, const NodeType type, const Vector2 position) {

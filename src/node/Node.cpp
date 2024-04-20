@@ -8,6 +8,8 @@
 #include "application/elements/Action.h"
 #include "shared/rayutils.h"
 
+#include <shared/fwd.h>
+
 Node::~Node() {
   for (const auto c : components) {
     c->onDestruction(*this);
@@ -299,6 +301,7 @@ void Node::update(EditorContext& ec) {
 }
 void Node::saveState(FILE* file) {
   cxstructs::io_save(file, static_cast<int>(type));
+  cxstructs::io_save(file, id);
   cxstructs::io_save(file, color.r);
   cxstructs::io_save(file, color.g);
   cxstructs::io_save(file, color.b);
@@ -314,6 +317,8 @@ void Node::saveState(FILE* file) {
 }
 void Node::loadState(FILE* file) {
   //Node type was already parsed
+  //Node id was already parsed
+  this->id = static_cast<NodeID>(id);
   int r, g, b, a;
   cxstructs::io_load(file, r);
   cxstructs::io_load(file, g);
