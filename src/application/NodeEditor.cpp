@@ -2,9 +2,9 @@
 
 #include <cxstructs/Constraint.h>
 
-#include "application/elements/Action.h"
 #include "node/Node.h"
 
+#include "application/elements/Action.h"
 #include "application/editor/EditorControls.h"
 #include "application/editor/EditorUI.h"
 #include "application/editor/EditorExit.h"
@@ -34,7 +34,44 @@ bool NodeEditor::start() {
   return c.holds();
 }
 
-// TODO add custom frame control
+namespace {
+void DrawBackGround(EditorContext& ec) {
+  Editor::DrawGrid(ec);
+}
+void DrawContent(EditorContext& ec) {
+  auto& connections = ec.core.connections;
+
+  Editor::DrawNodes(ec);
+
+  for (const auto con : connections) {
+    DrawLineBezier(con->getFromPos(), con->getToPos(), 2, con->out.getColor());
+  }
+
+  if (ec.logic.isSelecting) {
+    DrawRectanglePro(ec.logic.selectRect, {0, 0}, 0, ColorAlpha(BLUE, 0.4F));
+  }
+
+  if (ec.logic.isMakingConnection) {
+    DrawLineBezier(ec.logic.draggedPinPos, ec.logic.worldMouse, 2, ec.logic.draggedPin->getColor());
+  }
+}
+void DrawForeGround(EditorContext& ec) {
+  Editor::UpdateTick(ec);
+
+  if (ec.logic.showContextMenu) {
+    Editor::DrawContextMenu(ec);
+  }
+
+  Editor::DrawActions(ec);
+
+  Editor::PollControls(ec);
+
+  char buff[8];
+  snprintf(buff, 8, "%d", GetFPS());
+  DrawTextEx(ec.display.editorFont, buff, {25, 25}, 16, 1.0F, GREEN);
+}
+}  // namespace
+
 int NodeEditor::run() {
   const auto& camera = context.display.camera;
 
@@ -42,42 +79,16 @@ int NodeEditor::run() {
     BeginDrawing();
     ClearBackground({90, 105, 136});
     {
-      Editor::DrawBackGround(context);
+      DrawBackGround(context);
       {
         BeginMode2D(camera);
-        { Editor::DrawContent(context); }
+        { DrawContent(context); }
         EndMode2D();
       }
-      Editor::DrawForeGround(context);
+      DrawForeGround(context);
     }
     EndDrawing();
   }
 
   return Editor::Exit(context);
-}
-
-void NodeEditor::update() {
-  using namespace std::chrono;
-  using namespace std::this_thread;
-  constexpr auto tickDuration = microseconds(1'000'000 / Core::targetLogicTicks);
-  auto lastTime = steady_clock::now();
-  microseconds accumulator(0);
-  while (context.core.logicThreadRunning) {
-    auto now = steady_clock::now();
-    auto passedTime = duration_cast<microseconds>(now - lastTime);
-    lastTime = now;
-    accumulator += passedTime;
-    if (accumulator >= tickDuration) {
-      const auto startTime = steady_clock::now();
-
-      // Logic Tick
-      { Editor::UpdateTick(context); }
-
-      const auto tickTime = steady_clock::now() - startTime;
-      context.core.logicTickTime = static_cast<int>(tickTime.count());
-      accumulator = milliseconds(0);
-    }
-
-    sleep_for(microseconds(1));
-  }
 }
