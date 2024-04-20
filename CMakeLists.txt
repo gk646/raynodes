@@ -7,14 +7,11 @@ set(BUILD_GAMES OFF CACHE BOOL "" FORCE)
 set(OPENGL_VERSION "4.3" CACHE STRING "OpenGL Version to build raylib with")
 
 
-set(DEPENDENCIES_PATH "C:/Users/Lukas/Documents/Libaries")
+#include(cmake/FetchLibs.cmake)
 
-include_directories(
-        "${DEPENDENCIES_PATH}/raylib-5.0/src"
-        "C:/Users/Lukas/Documents/Libaries/cxstructs/include" #Just supply a clone of cxstructs/include here
-        "${CMAKE_SOURCE_DIR}/src"
-)
+include(cmake/LoadLocalLibs.cmake)
 
+include_directories("${CMAKE_SOURCE_DIR}/src")
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(-Wall -ffast-math -fno-exceptions -fno-rtti)
@@ -36,8 +33,6 @@ elseif (MSVC)
 endif ()
 
 add_compile_definitions(_HAS_EXCEPTIONS=0)
-
-add_subdirectory("${DEPENDENCIES_PATH}/raylib-5.0" raylib)
 add_subdirectory(src)
 
 
