@@ -29,18 +29,18 @@ inline void SetupDisplay(EditorContext& ec) {
   // Center the window on the screen
   SetWindowPosition((monitorWidth - screenWidth) / 2, (monitorHeight - screenHeight) / 2);
 
-  SetTargetFPS(ec.core.TARGET_FPS);
+  SetTargetFPS(Core::TARGET_FPS);
   SetExitKey(0);
   SetTraceLogLevel(LOG_WARNING);
   DisableEventWaiting();
 }
 
 inline void SetupCamera(EditorContext& ec) {
-  auto& camera = ec.display.camera;
-  camera.target = {0.0f, 0.0f};
-  camera.offset = {ec.display.screenSize.x / 2.0f, ec.display.screenSize.y / 2.0f};
-  camera.rotation = 0.0f;
-  camera.zoom = 1.0f;
+  auto& [offset, target, rotation, zoom] = ec.display.camera;
+  target = {0.0f, 0.0f};
+  offset = {ec.display.screenSize.x / 2.0f, ec.display.screenSize.y / 2.0f};
+  rotation = 0.0f;
+  zoom = 1.0f;
 }
 
 }  // namespace Editor

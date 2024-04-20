@@ -22,7 +22,7 @@ inline float MeasureTextUpTo(char* text, int idx, const Font& f, const float fs,
 inline void DrawCenteredText(const Font& f, const char* txt, const Vector2 pos, float fs, float spc,
                              Color c) {
   const auto width = MeasureTextEx(f, txt, fs, spc).x;
-  DrawTextEx(f, txt, {pos.x - width / 2.0F}, fs, spc, c);
+  DrawTextEx(f, txt, {pos.x - width / 2.0F, pos.y}, fs, spc, c);
 }
 
 #endif  //RAYNODES_SRC_SHARED_RAYUTILS_H_

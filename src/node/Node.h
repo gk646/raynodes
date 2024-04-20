@@ -29,9 +29,8 @@ struct Node {
   bool isDragged = false;
   bool isInOutReversed = false;  //Not yet used
 
-  Node(const NodeID id, const NodeType type, const Vector2 position = {0, 0},
-       const Color color = {1, 1, 1, 255})
-      : position(position), size({100, 100}), color(color), id(id), type(type) {}
+  Node(const NodeID id, const NodeType type, const Vector2 position = {0, 0}, const Color color = BLACK)
+      : position(position), size({70, 50}), color(color), id(id), type(type) {}
   Node(const Node& n, const NodeID id)
       : position(n.position), size(n.size), color(n.color), id(id), type(n.type) {
     for (const auto c : n.components) {
@@ -71,7 +70,7 @@ struct Node {
  * |-----------------------------------------------------|
  */
 
-struct HeaderNode final : public Node {
+struct HeaderNode final : Node {
   HeaderNode(const NodeID nid, const Vector2 position) : Node(nid, NodeType::HEADER, position) {
     addComponent(new TextInputField("Description"));
     addComponent(new TextInputField("Input"));
@@ -85,7 +84,7 @@ struct HeaderNode final : public Node {
   void exportToMQQS(std::ostream& out) override;
 };
 
-struct MathNode final : public Node {
+struct MathNode final : Node {
   MathNode(const NodeID nid, const Vector2 position) : Node(nid, NodeType::MATH, position) {
     addComponent(new MathC("Operation:"));
   }
@@ -94,7 +93,7 @@ struct MathNode final : public Node {
   void exportToMQQS(std::ostream& out) override{};
 };
 
-struct StringConversion final : public Node {
+struct StringConversion final : Node {
   StringConversion(const NodeID nid, const Vector2 position)
       : Node(nid, NodeType::STRING_CONVERSION, position) {
     addComponent(new StringToNumberC("Operation"));
@@ -104,7 +103,7 @@ struct StringConversion final : public Node {
   void exportToMQQS(std::ostream& out) override{};
 };
 
-struct DisplayNode final : public Node {
+struct DisplayNode final : Node {
   DisplayNode(const NodeID nid, const Vector2 position) : Node(nid, NodeType::DISPLAY, position) {
     addComponent(new DisplayC("Display:"));
   }
