@@ -166,33 +166,34 @@ void HandleDrag(Node& n, EditorContext& ec, auto& selectedNodes, auto worldMouse
 
 void DrawComponentPins(EditorContext& ec, Component& c, float dx, float startIn, float startOut, float w) {
   constexpr float pinRadius = Pin::PIN_SIZE / 2.0f;
+  constexpr float textOff = Pin::PIN_SIZE * 1.5F;
 
   // Draw Input Pins
   float currentY = startIn;
-  bool isAltDown = ec.input.isKeyDown(KEY_LEFT_ALT);
+  const bool isAltDown = ec.input.isKeyDown(KEY_LEFT_ALT);
   for (auto& p : c.inputs) {
     const auto middlePos = Vector2{dx, currentY + pinRadius};
-    if (isAltDown) {
-      auto txt = PinTypeToString(p.pinType);
-      const auto textPos = Vector2{middlePos.x - Pin::PIN_SIZE, middlePos.y - Pin::PIN_SIZE};
-      DrawCenteredText(ec.display.editorFont, txt, textPos, Pin::PIN_SIZE, 1.0F, WHITE);
-    }
     DrawCircleV({dx, currentY + pinRadius}, pinRadius, p.getColor());
+    if (isAltDown) {
+      const auto txt = PinTypeToString(p.pinType);
+      const auto textPos = Vector2{middlePos.x - textOff, middlePos.y - pinRadius};
+      DrawCenteredText(ec.display.editorFont, txt, textPos, Pin::PIN_SIZE+2, 0, WHITE);
+    }
     p.yPos = currentY + pinRadius;
     currentY += Pin::PIN_SIZE;
   }
 
   // Draw Output Pins
   currentY = startOut;
-  float outputX = dx + w;  // Pins on the right edge
+  const float outputX = dx + w;  // Pins on the right edge
   for (auto& p : c.outputs) {
     const auto middlePos = Vector2{outputX, currentY + pinRadius};
-    if (isAltDown) {
-      auto txt = PinTypeToString(p.pinType);
-      const auto textPos = Vector2{middlePos.x + Pin::PIN_SIZE, middlePos.y - Pin::PIN_SIZE};
-      DrawCenteredText(ec.display.editorFont, txt, textPos, Pin::PIN_SIZE, 1.0F, WHITE);
-    }
     DrawCircleV({outputX, currentY + pinRadius}, pinRadius, p.getColor());
+    if (isAltDown) {
+      const auto txt = PinTypeToString(p.pinType);
+      const auto textPos = Vector2{middlePos.x + textOff, middlePos.y -pinRadius};
+      DrawCenteredText(ec.display.editorFont, txt, textPos, Pin::PIN_SIZE+2, 0, WHITE);
+    }
     p.yPos = currentY + pinRadius;
     currentY += Pin::PIN_SIZE;
   }
