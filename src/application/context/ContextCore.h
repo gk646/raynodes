@@ -5,7 +5,8 @@
 #include <deque>
 #include <unordered_map>
 #include <vector>
-#include <shared/fwd.h>
+
+#include "shared/fwd.h"
 
 struct Core {
   static constexpr int TARGET_FPS = 100;

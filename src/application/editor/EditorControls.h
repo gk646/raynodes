@@ -1,5 +1,6 @@
 #ifndef RAYNODES_SRC_EDITOR_EDITORCONTROLS_H_
 #define RAYNODES_SRC_EDITOR_EDITORCONTROLS_H_
+
 #include <ranges>
 
 namespace Editor {
@@ -10,6 +11,7 @@ inline void PollControls(EditorContext& ec) {
   auto& camera = ec.display.camera;
   auto& isDragging = ec.logic.isDraggingScreen;
   auto& selectRect = ec.logic.selectRect;
+  auto& selectedNodes = ec.core.selectedNodes;
   auto& contextMenuPos = ec.logic.contextMenuPos;
 
   //Context menu
@@ -31,7 +33,7 @@ inline void PollControls(EditorContext& ec) {
   //Panning
   if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT) && !ec.logic.isAnyNodeHovered) {
     ec.logic.isSelecting = false;
-    ec.core.selectedNodes.clear();
+    selectedNodes.clear();
     dragStart = worldMouse;
     isDragging = true;
   }
@@ -59,7 +61,7 @@ inline void PollControls(EditorContext& ec) {
   //Selecting
   if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !ec.logic.isAnyNodeHovered
       && !ec.logic.showContextMenu) {
-    ec.core.selectedNodes.clear();
+    selectedNodes.clear();
     ec.logic.isSelecting = true;
     ec.logic.selectPoint = worldMouse;
     selectRect.width = 0;
@@ -73,10 +75,10 @@ inline void PollControls(EditorContext& ec) {
   //Delete
   if (ec.input.isKeyPressed(KEY_DELETE)) {
     //Skip if empty
-    if (!ec.core.selectedNodes.empty()) {
-      const auto action = new NodeDeleteAction(ec, ec.core.selectedNodes);
+    if (!selectedNodes.empty()) {
+      const auto action = new NodeDeleteAction(ec, selectedNodes);
       ec.core.addEditorAction(action);
-      ec.core.selectedNodes.clear();
+      selectedNodes.clear();
     }
   }
 
@@ -96,26 +98,34 @@ inline void PollControls(EditorContext& ec) {
   //CTRL + (V,C,X) shortcuts
   if (ec.input.isKeyDown(KEY_LEFT_CONTROL)) {
     auto& copiedNodes = ec.core.copiedNodes;
-    if (ec.input.isKeyPressed(KEY_C)) {
+    if (ec.input.isKeyPressed(KEY_C) && !selectedNodes.empty()) {
       copiedNodes.clear();
-      for (const auto& node : ec.core.selectedNodes | std::views::values) {
+      for (const auto& node : selectedNodes | std::views::values) {
         copiedNodes.push_back(node);
       }
-    } else if (ec.input.isKeyPressed(KEY_X)) {
+    } else if (ec.input.isKeyPressed(KEY_X) && !selectedNodes.empty()) {
       copiedNodes.clear();
-      for (const auto& [id, node] : ec.core.selectedNodes) {
-        copiedNodes.push_back(node);
-        ec.core.removeNode(ec, id);
+      for (const auto n : selectedNodes | std::views::values) {
+        copiedNodes.push_back(n);
       }
-    } else if (ec.input.isKeyPressed(KEY_V)) {
+      const auto action = new NodeDeleteAction(ec, selectedNodes);
+      ec.core.addEditorAction(action);
+      selectedNodes.clear();
+    } else if (ec.input.isKeyPressed(KEY_V) && !copiedNodes.empty()) {
+      Vector2 delta = {worldMouse.x - copiedNodes[0]->position.x, worldMouse.y - copiedNodes[0]->position.y};
+      const auto action = new NodeCreateAction(static_cast<int>(copiedNodes.size()) + 1);
       for (const auto n : copiedNodes) {
         const auto newNode = n->clone(ec.core.getNextID());
+        newNode->position.x += delta.x;
+        newNode->position.y += delta.y;
+        action->createdNodes.push_back(newNode);
         ec.core.insertNode(ec, newNode->id, newNode);
       }
-      copiedNodes.clear();
+      ec.core.addEditorAction(action);
     }
   }
 
+  //TODO remove debug features
   if (ec.input.isKeyDown(KEY_B)) {
     ec.core.createNode(ec, NodeType::HEADER,
                        {(float)GetRandomValue(0, 1000), (float)GetRandomValue(0, 1000)});

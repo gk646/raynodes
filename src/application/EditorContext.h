@@ -28,6 +28,9 @@ struct EditorContext {
   Input input{};
   Info info{};
 
-  explicit EditorContext(const char* openedFile) { persist.openedFile = openedFile; };
+  explicit EditorContext(const char* openedFile) {
+    persist.openedFile = openedFile;
+    printf("raynodes - Version %d.%d\n", Info::majorVersion, Info::minorVersion);
+  }
 };
 #endif  //RAYNODES_SRC_EDITOR_EDITORCONTEXT_H_
