@@ -5,46 +5,130 @@
 #include "application/EditorContext.h"
 #include "node/Node.h"
 
-bool Persist::saveToFile(EditorContext& ec) const {
-  const auto& nodes = ec.core.nodes;
-  if (nodes.empty()) return true;  //Nothing to save
+#include <shared/fwd.h>
 
-  FILE* file;
+namespace {
+void SaveEditorData(FILE* file, EditorContext& ec) {
+  cxstructs::io_save_section(file, "EditorData");
+  cxstructs::io_save(file, ec.display.camera.target.x);
+  cxstructs::io_save(file, ec.display.camera.target.y);
+  cxstructs::io_save(file, ec.display.camera.zoom);
+  cxstructs::io_save_newline(file);
+}
+int SaveNodes(FILE* file, EditorContext& ec) {
+  cxstructs::io_save_section(file, "Nodes");
   int count = 0;
-
-  //Write to in memory buffer
-  if (fopen_s(&file, "NUL", "w") != 0) return false;
-
-  int buffSize = (int)nodes.size() * 1000;
-  char* buffer = new char[buffSize];
-  std::memset(buffer, 0, buffSize);
-
-  if (setvbuf(file, buffer, _IOLBF, buffSize) != 0) {
-    delete[] buffer;
-    return false;
-  }
-
-  //Save nodes
-  for (auto n : nodes) {
+  for (const auto n : ec.core.nodes) {
     n->saveState(file);
     cxstructs::io_save_newline(file);
     count++;
   }
+  return count;
+}
+int SaveConnections(FILE* file, EditorContext& ec) {
+  cxstructs::io_save_section(file, "Connections");
+  int count = 0;
+  const auto& connections = ec.core.connections;
+  for (const auto conn : connections) {
+    Node& fromNode = conn->fromNode;  //Output Node
+    Component& from = conn->from;
+    cxstructs::io_save(file, fromNode.id);
+    cxstructs::io_save(file, fromNode.getComponentIndex(from));
+    cxstructs::io_save(file, from.getPinIndex(&conn->out));
 
-  if (fclose(file) != 0) return false;
-
-  //When successful, open the actual save file and save the data
-  int dataSize = (int)strlen(buffer);
-  if (fopen_s(&file, openedFile, "w") != 0) {
-    delete[] buffer;
-    return false;
+    Node& toNode = conn->toNode;  //Input Node
+    Component& to = conn->to;
+    cxstructs::io_save(file, toNode.id);
+    cxstructs::io_save(file, toNode.getComponentIndex(to));
+    cxstructs::io_save(file, to.getPinIndex(&conn->in));
+    //End with newline
+    cxstructs::io_save_newline(file);
+    count++;
   }
+  return count;
+}
+void LoadEditorData(FILE* file, EditorContext& ec) {
+  cxstructs::io_load_newline(file, true);  //Skip the Editor section
+  cxstructs::io_load(file, ec.display.camera.target.x);
+  cxstructs::io_load(file, ec.display.camera.target.y);
+  cxstructs::io_load(file, ec.display.camera.zoom);
+  cxstructs::io_load_newline(file);
+}
+int LoadNodes(FILE* file, EditorContext& ec) {
+  int count = 0;
+  while (cxstructs::io_load_inside_section(file, "Nodes")) {
+    int type = -1;
+    int id;
+    cxstructs::io_load(file, type);
+    cxstructs::io_load(file, id);
+    const auto newNode = ec.core.createNode(ec, NodeType(type), {0, 0}, id);
+    if (!newNode) {
+      cxstructs::io_load_newline(file, true);
+      continue;
+    }
+    newNode->loadState(file);
+    ec.core.UID = std::max(ec.core.UID, static_cast<NodeID>(newNode->id + 1));
+    cxstructs::io_load_newline(file);
+    count++;
+  }
+  return count;
+}
+bool IsValidNode(int maxNodeID, int fromNode, int from, int out, int toNode, int to, int in) {
+  return fromNode > 0 && fromNode < maxNodeID && from != -1 && out != -1 && toNode > 0 && toNode < maxNodeID
+         && to != -1 && in != -1;
+}
 
-  fwrite(buffer, dataSize, 1, file);
+void CreateNewNode(EditorContext& ec, int fromNodeID, int fromI, int outI, int toNodeID, int toI, int inI) {
+  const auto& nodeMap = ec.core.nodeMap;
+  Node& fromNode = *nodeMap.at(NodeID(fromNodeID));
+  Component& from = *fromNode.components[fromI];
+  OutputPin& out = from.outputs[outI];
 
-  delete[] buffer;
-  if (fclose(file) != 0) return false;
-  printf("Saved %d nodes.\n", count);
+  Node& toNode = *nodeMap.at(NodeID(toNodeID));
+  Component& to = *toNode.components[toI];
+  InputPin& in = to.inputs[inI];
+
+  ec.core.connections.push_back(new Connection(fromNode, from, out, toNode, to, in));
+}
+
+int LoadConnections(FILE* file, EditorContext& ec) {
+  int count = 0;
+  const int maxNodeID = ec.core.UID;
+  while (cxstructs::io_load_inside_section(file, "Connections")) {
+    int fromNode, from, out;
+    int toNode, to, in;
+    //Output
+    cxstructs::io_load(file, fromNode);
+    cxstructs::io_load(file, from);
+    cxstructs::io_load(file, out);
+    //Input
+    cxstructs::io_load(file, toNode);
+    cxstructs::io_load(file, to);
+    cxstructs::io_load(file, in);
+    if (IsValidNode(maxNodeID, fromNode, from, out, toNode, to, in)) {
+      CreateNewNode(ec, fromNode, from, out, toNode, to, in);
+    }
+    cxstructs::io_load_newline(file);
+    count++;
+  }
+  return count;
+}
+}  // namespace
+
+bool Persist::saveToFile(EditorContext& ec) const {
+  const int size = static_cast<int>(ec.core.nodes.size());
+
+  int nodes, connections;
+  //We assume 1000 bytes on average per node for the buffer
+  auto res = cxstructs::io_save_buffered_write(openedFile, size * 1000, [&](FILE* file) {
+    SaveEditorData(file, ec);
+    nodes = SaveNodes(file, ec);
+    connections = SaveConnections(file, ec);
+  });
+  if (!res) fprintf(stderr, "Error saving to %s", openedFile);
+
+  printf("Saved %d nodes.\n", nodes);
+  printf("Saved %d connections.\n", connections);
   return true;
 }
 
@@ -58,21 +142,15 @@ bool Persist::loadFromFile(EditorContext& ec) const {
     return true;
   }
 
-  int count = 0;
-  int type = -1;
-  while (!cxstructs::io_check_eof(file)) {
-    cxstructs::io_load(file, type);
-    auto newNode = ec.core.createNode(ec, NodeType(type), {0, 0});
-    if (!newNode) {
-      cxstructs::io_load_newline(file, true);
-      continue;
-    }
-    newNode->loadState(file);
-    cxstructs::io_load_newline(file);
-    count++;
-  }
+  //Load data
+  int nodes, connections;
+  LoadEditorData(file, ec);
+  nodes = LoadNodes(file, ec);
+  connections = LoadConnections(file, ec);
 
-  printf("Loaded %d nodes.\n", count);
+  printf("Loaded %d nodes.\n", nodes);
+  printf("Loaded %d connections.\n", connections);
+
   if (fclose(file) != 0) return false;
   return true;
 }

@@ -19,14 +19,14 @@
 #include "context/ContextString.h"
 
 struct EditorContext {
+  String string{};
   Core core{};
   Display display{};
   Logic logic{};
+  Templates templates{};
   Persist persist{};
   Input input{};
   Info info{};
-  Templates templates{};
-  String string{};
 
   explicit EditorContext(const char* openedFile) { persist.openedFile = openedFile; };
 };

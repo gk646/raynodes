@@ -35,11 +35,10 @@ void TextInputField::draw(EditorContext& ec, Node& parent) {
 }
 
 void TextInputField::update(EditorContext& ec, Node& parent) {
-  if (inputs[0].isConnected()) {
-    buffer = inputs[0].getData<PinType::STRING>();
-    outputs[0].setData<PinType::STRING>(buffer.c_str());
-    return;
-  }
+  auto inText = inputs[0].getData<PinType::STRING>();
+  if (inText != nullptr) buffer = inText;
+  outputs[0].setData<PinType::STRING>(buffer.c_str());
+
   if (!isFocused) return;
 
   if (isDragging) {

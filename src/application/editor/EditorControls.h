@@ -1,5 +1,6 @@
 #ifndef RAYNODES_SRC_EDITOR_EDITORCONTROLS_H_
 #define RAYNODES_SRC_EDITOR_EDITORCONTROLS_H_
+#include <ranges>
 
 namespace Editor {
 inline void PollControls(EditorContext& ec) {
@@ -69,15 +70,11 @@ inline void PollControls(EditorContext& ec) {
     ec.logic.isSelecting = false;
   }
 
-  //Shortcuts
+  //Delete
   if (ec.input.isKeyPressed(KEY_DELETE)) {
     //Skip if empty
     if (!ec.core.selectedNodes.empty()) {
-      const auto action = new NodeDeleteAction(static_cast<int>(ec.core.selectedNodes.size()) + 1);
-      for (auto [id, node] : ec.core.selectedNodes) {
-        ec.core.removeNode(ec, id);
-        action->deletedNodes.push_back(node);
-      }
+      const auto action = new NodeDeleteAction(ec, ec.core.selectedNodes);
       ec.core.addEditorAction(action);
       ec.core.selectedNodes.clear();
     }
@@ -96,8 +93,32 @@ inline void PollControls(EditorContext& ec) {
     ec.core.undo(ec);
   }
 
+  //CTRL + (V,C,X) shortcuts
+  if (ec.input.isKeyDown(KEY_LEFT_CONTROL)) {
+    auto& copiedNodes = ec.core.copiedNodes;
+    if (ec.input.isKeyPressed(KEY_C)) {
+      copiedNodes.clear();
+      for (const auto& node : ec.core.selectedNodes | std::views::values) {
+        copiedNodes.push_back(node);
+      }
+    } else if (ec.input.isKeyPressed(KEY_X)) {
+      copiedNodes.clear();
+      for (const auto& [id, node] : ec.core.selectedNodes) {
+        copiedNodes.push_back(node);
+        ec.core.removeNode(ec, id);
+      }
+    } else if (ec.input.isKeyPressed(KEY_V)) {
+      for (const auto n : copiedNodes) {
+        const auto newNode = n->clone(ec.core.getNextID());
+        ec.core.insertNode(ec, newNode->id, newNode);
+      }
+      copiedNodes.clear();
+    }
+  }
+
   if (ec.input.isKeyDown(KEY_B)) {
-    ec.core.createNode(ec, NodeType::HEADER, {(float)GetRandomValue(0, 1000), (float)GetRandomValue(0, 1000)});
+    ec.core.createNode(ec, NodeType::HEADER,
+                       {(float)GetRandomValue(0, 1000), (float)GetRandomValue(0, 1000)});
     printf("%d\n", static_cast<int>(ec.core.nodes.size()));
   }
 }

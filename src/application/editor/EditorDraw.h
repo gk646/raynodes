@@ -2,53 +2,19 @@
 #define RAYNODES_SRC_EDITOR_ELEMENTS_EDITORDISPLAY_H_
 
 namespace Editor {
-
-inline void DrawBackGround(EditorContext& ec) {
-  Editor::DrawGrid(ec);
-}
-inline void DrawContent(EditorContext& ec) {
+inline void DrawNodes(EditorContext& ec) {
+  //TODO dont draw too small text or nodes
   auto& nodes = ec.core.nodes;
-  auto& connections = ec.core.connections;
+  const auto topLeft = GetScreenToWorld2D({0, 0}, ec.display.camera);
+  const auto bottomRight = GetScreenToWorld2D(ec.display.screenSize, ec.display.camera);
 
-  //Critical section
-  ec.core.lock();
-  {
-    for (auto n : nodes) {
+  const Rectangle cameraBounds = {topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y};
+
+  for (const auto n : nodes) {
+    if (CheckCollisionRecs(cameraBounds, n->getBounds())) {
       n->draw(ec);
     }
   }
-  ec.core.unlock();
-
-  for (const auto con : connections) {
-    DrawLineBezier(con->getFromPos(), con->getToPos(), 2, con->out.getColor());
-  }
-
-  if (ec.logic.isSelecting) {
-    DrawRectanglePro(ec.logic.selectRect, {0, 0}, 0, ColorAlpha(BLUE, 0.4F));
-  }
-
-  if (ec.logic.isMakingConnection) {
-    DrawLineBezier(ec.logic.draggedPinPos, ec.logic.worldMouse, 2, ec.logic.draggedPin->getColor());
-  }
-}
-
-inline void DrawForeGround(EditorContext& ec) {
-  Editor::UpdateTick(ec);
-
-  if (ec.logic.showContextMenu) {
-    Editor::DrawContextMenu(ec);
-  }
-
-  Editor::DrawActions(ec);
-
-  //Critical section // (Undo / Redo )
-  ec.core.lock();
-  { Editor::PollControls(ec); }
-  ec.core.unlock();
-
-  char buff[8];
-  snprintf(buff, 8, "%d", GetFPS());
-  DrawTextEx(ec.display.editorFont, buff, {25, 25}, 16, 1.0F, GREEN);
 }
 }  // namespace Editor
 #endif  //RAYNODES_SRC_EDITOR_ELEMENTS_EDITORDISPLAY_H_
