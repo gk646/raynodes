@@ -1,3 +1,24 @@
+// Copyright (c) 2024 gk646
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+
 #include "MathC.h"
 
 #include <raylib.h>
@@ -9,8 +30,7 @@
 #include "blocks/Connection.h"
 
 void MathC::draw(EditorContext& ec, Node& parent) {
-  auto bounds = getBounds();
-
+  const auto bounds = getBounds();
   dropDown.draw(ec, bounds.x, bounds.y);
 }
 
@@ -19,7 +39,7 @@ void MathC::update(EditorContext& ec, Node& parent) {
   double a = inputs[0].getData<PinType::FLOAT>();
   double b = inputs[1].getData<PinType::FLOAT>();
 
-  auto res = performOperation(a, b, MOperation(selectedMode));
+  const auto res = performOperation(a, b, static_cast<MOperation>(selectedMode));
   outputs[0].setData<PinType::FLOAT>(res);
 }
 
@@ -31,9 +51,9 @@ void MathC::onCreate(EditorContext& ec, Node& parent) {
 
   addPinOutput(PinType::FLOAT);
 
-  dropDown.items.reserve(MOperation::END + 1);
-  for (int i = 0; i < MOperation::END; i++) {
-    dropDown.items.emplace_back(MOperationToString(MOperation(i)));
+  dropDown.items.reserve(END + 1);
+  for (int i = 0; i < END; i++) {
+    dropDown.items.emplace_back(MOperationToString(static_cast<MOperation>(i)));
   }
 
   dropDown.w = width;
@@ -50,46 +70,48 @@ void MathC::load(FILE* file) {
 
 double MathC::performOperation(double x, double y, MOperation op) {
   switch (op) {
-    case MOperation::ADD:
+    case ADD:
       return x + y;
-    case MOperation::Subtract:
+    case Subtract:
       return x - y;
-    case MOperation::Multiply:
+    case Multiply:
       return x * y;
-    case MOperation::Divide:
+    case Divide:
       return y != 0 ? x / y : std::numeric_limits<double>::infinity();  // Guard against division by zero
-    case MOperation::Power:
+    case Power:
       return std::pow(x, y);
-    case MOperation::Sqrt:
+    case Sqrt:
       return std::sqrt(x);  // Note: sqrt typically takes one parameter
-    case MOperation::Log:
+    case Log:
       return std::log10(x);
-    case MOperation::Ln:
+    case Ln:
       return std::log(x);
-    case MOperation::Sin:
+    case Sin:
       return std::sin(x);
-    case MOperation::Cos:
+    case Cos:
       return std::cos(x);
-    case MOperation::Tan:
+    case Tan:
       return std::tan(x);
-    case MOperation::ASin:
+    case ASin:
       return std::asin(x);
-    case MOperation::ACos:
+    case ACos:
       return std::acos(x);
-    case MOperation::ATan:
+    case ATan:
       return std::atan(x);
-    case MOperation::Sinh:
+    case Sinh:
       return std::sinh(x);
-    case MOperation::Cosh:
+    case Cosh:
       return std::cosh(x);
-    case MOperation::Tanh:
+    case Tanh:
       return std::tanh(x);
-    case MOperation::Exp:
+    case Exp:
       return std::exp(x);
-    case MOperation::Abs:
+    case Abs:
       return std::abs(x);
     case Modulo:
-      return (int)x % (int)y;
+      if (y != 0) return (int)x % (int)y;
+    case END:
+      break;
   }
   return 0;
 }

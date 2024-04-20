@@ -16,7 +16,7 @@ In a lot of places it uses my C++ helper library [cxstructs](https://github.com/
 **1.** [Controls](#Controls)   
 **2.** [Features](#Features)   
 **3.** [Components!](#Expand-and-Contribute-with-Components)  
-**4.** [Plugins](#Plugins)
+**4.** [Plugins](#Plugins)  
 **5.** [Software Design](#Software-Design)
 
 ### Controls
@@ -130,7 +130,7 @@ cxstructs::io_load(file, buffer);
 }
 ```
 
-## Plugins
+## Plugins *(soon)*
 
 ## Software Design
 
