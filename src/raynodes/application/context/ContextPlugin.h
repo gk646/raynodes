@@ -21,8 +21,11 @@
 #ifndef CONTEXTPLUGIN_H
 #define CONTEXTPLUGIN_H
 
-struct Plugin {
+struct RaynodesPluginI;
+struct Plugins {
+  static constexpr auto* PLUGIN_PATH = "plugins/";
+  std::vector<RaynodesPluginI*> plugins;
 
-
+  bool loadPlugins(EditorContext& ec);
 };
 #endif  //CONTEXTPLUGIN_H

@@ -41,6 +41,6 @@ struct Rectangle;
 struct InputPin;
 struct OutputPin;
 struct EditorContext;
-struct RaynodePluginI;
+struct RaynodesPluginI;
 
 #endif  //RAYNODES_SRC_SHARED_FWD_H_
