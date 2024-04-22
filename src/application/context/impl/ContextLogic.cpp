@@ -32,9 +32,7 @@ void AssignConnection(EditorContext& ec, Node& fromNode, Component& from, Output
 
   printf("Connection assigned \n");
 
-  in.connection = conn;
-
-  ec.core.connections.push_back(conn);
+  ec.core.addConnection(conn); //Internally opens it
 
   //Call the event functions
   from.onConnectionAdded(ec, *conn);

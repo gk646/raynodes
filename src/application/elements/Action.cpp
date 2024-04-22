@@ -40,7 +40,7 @@ NodeDeleteAction::NodeDeleteAction(EditorContext& ec, const std::unordered_map<N
 
   for (auto [id, node] : selectedNodes) {
     ec.core.removeNode(ec, id);
-    ec.core.removeConnections(*node, deletedConnections);
+    ec.core.removeConnectionsFromNode(*node, deletedConnections);
     deletedNodes.push_back(node);
   }
 }
@@ -61,7 +61,7 @@ void NodeDeleteAction::undo(EditorContext& ec) {
     ec.core.insertNode(ec, n->id, n);
   }
   for (const auto conn : deletedConnections) {
-    ec.core.connections.push_back(conn);
+    ec.core.addConnection(conn);
   }
 }
 
@@ -71,7 +71,7 @@ void NodeDeleteAction::redo(EditorContext& ec) {
     ec.core.removeNode(ec, n->id);
   }
   for (const auto conn : deletedConnections) {
-    std::erase(ec.core.connections, conn);
+    ec.core.removeConnection(conn);
   }
 }
 
@@ -82,7 +82,7 @@ NodeCreateAction::NodeCreateAction(const int size) : Action(CREATE_NODE) {
 
 NodeCreateAction::~NodeCreateAction() noexcept {
   if (!removeNodes) return;
-  for (auto n : createdNodes) {
+  for (const auto n : createdNodes) {
     delete n;
   }
 }
@@ -122,15 +122,41 @@ void NodeMovedAction::redo(EditorContext& ec) {
   }
 }
 
-float NodeMovedAction::calculateDeltas(EditorContext& ec) {
+float NodeMovedAction::calculateDeltas(const EditorContext& ec) {
   auto& selectedNodes = ec.core.selectedNodes;
-  for (auto& pair : movedNodes) {
-    auto& delta = pair.second;
-    const auto current = selectedNodes.at(pair.first)->position;
-    delta.x -= current.x;
-    delta.y -= current.y;
+  for (auto& [id, node] : movedNodes) {
+    auto& delta = node;
+    const auto [x, y] = selectedNodes.at(id)->position;
+    delta.x -= x;
+    delta.y -= y;
   }
   // The distance delta is always the same for all nodes (right...)
   // 0 always has to be filled
   return std::abs(movedNodes[0].second.x) + std::abs(movedNodes[0].second.y);
+}
+
+//-----------CONNECTION_DELETE-----------//
+ConnectionDeleteAction::ConnectionDeleteAction(const int size) : Action(CONNECTION_DELETED) {
+  deletedConnections.reserve(size);
+}
+
+ConnectionDeleteAction::~ConnectionDeleteAction() noexcept {
+  if (!removeNodes) return;
+  for (const auto n : deletedConnections) {
+    delete n;
+  }
+}
+
+void ConnectionDeleteAction::undo(EditorContext& ec) {
+  removeNodes = false;
+  for (const auto conn : deletedConnections) {
+    ec.core.addConnection(conn);
+  }
+}
+
+void ConnectionDeleteAction::redo(EditorContext& ec) {
+  removeNodes = true;
+  for (const auto conn : deletedConnections) {
+    ec.core.removeConnection(conn);
+  }
 }

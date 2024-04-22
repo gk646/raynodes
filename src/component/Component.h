@@ -94,14 +94,14 @@ struct Component {
   //-----------PINS-----------//
   bool addPinInput(PinType pt) {
     if (inputs.size() < inputs.capacity()) {
-      inputs.push_back({pt});
+      inputs.push_back(InputPin(pt));
       return true;
     }
     return false;
   }
   bool addPinOutput(PinType pt) {
     if (outputs.size() < outputs.capacity()) {
-      outputs.push_back({pt});
+      outputs.push_back(OutputPin(pt));
       return true;
     }
     return false;

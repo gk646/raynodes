@@ -58,10 +58,20 @@ struct Core {
     std::erase(nodes, node);
     nodes.push_back(node);
   }
-  void removeConnections(Node& node, std::vector<Connection*>& collector) {
+  void removeConnection(Connection* conn) {
+    conn->close();
+    std::erase(connections, conn);
+  }
+  void addConnection(Connection* conn) {
+    conn->open();
+    connections.push_back(conn);
+  }
+
+  void removeConnectionsFromNode(Node& node, std::vector<Connection*>& collector) {
     const auto newEnd =
         std::remove_if(connections.begin(), connections.end(), [&node, &collector](Connection* conn) {
           if (&conn->fromNode == &node || &conn->toNode == &node) {
+            conn->close();
             collector.push_back(conn);
             return true;
           }
@@ -71,6 +81,7 @@ struct Core {
     // Erase the removed elements
     connections.erase(newEnd, connections.end());
   }
+
   //-------------EditorActions--------------//
   void addEditorAction(Action* action);
   void undo(EditorContext& ec);
