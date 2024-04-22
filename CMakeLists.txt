@@ -11,7 +11,6 @@ set(OPENGL_VERSION "4.3" CACHE STRING "OpenGL Version to build raylib with")
 
 include(cmake/LoadLocalLibs.cmake)
 
-include_directories("${CMAKE_SOURCE_DIR}/src")
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(-Wall -ffast-math -fno-exceptions -fno-rtti)
@@ -33,9 +32,13 @@ elseif (MSVC)
 endif ()
 
 add_compile_definitions(_HAS_EXCEPTIONS=0)
+
+
+add_executable(raynodes src/raynodes/main.cpp)
+
+target_include_directories(raynodes PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/raynodes)
+
 add_subdirectory(src)
 
 
-add_executable(${PROJECT_NAME} src/main.cpp)
-
-target_link_libraries(${PROJECT_NAME} PUBLIC raylib user32 editor node component blocks graphics)
+target_link_libraries(raynodes PUBLIC raylib user32 editor node component blocks graphics)

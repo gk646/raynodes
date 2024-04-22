@@ -1,5 +1,8 @@
-add_subdirectory(application)
-add_subdirectory(node)
-add_subdirectory(component)
-add_subdirectory(blocks)
-add_subdirectory(graphics)
+add_subdirectory(raynodes/application)
+add_subdirectory(raynodes/node)
+add_subdirectory(raynodes/component)
+add_subdirectory(raynodes/blocks)
+add_subdirectory(raynodes/graphics)
+
+
+add_subdirectory(plugins/MQQS)
