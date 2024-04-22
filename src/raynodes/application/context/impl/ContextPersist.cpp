@@ -134,7 +134,8 @@ int LoadConnections(FILE* file, EditorContext& ec) {
 }  // namespace
 
 bool Persist::saveToFile(EditorContext& ec) const {
-  const int size = static_cast<int>(ec.core.nodes.size());
+  if (openedFile == nullptr) return true;
+  const int size = std::max(static_cast<int>(ec.core.nodes.size()), 1);
 
   int nodes, connections;
   //We assume 1000 bytes on average per node for the buffer
@@ -152,6 +153,7 @@ bool Persist::saveToFile(EditorContext& ec) const {
 
 bool Persist::loadFromFile(EditorContext& ec) const {
   FILE* file;
+  if (openedFile == nullptr) return true;
 
   if (fopen_s(&file, openedFile, "r") != 0) return true;
 

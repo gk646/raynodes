@@ -21,12 +21,10 @@
 #ifndef RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTCORE_H_
 #define RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTCORE_H_
 
-#include <atomic>
 #include <deque>
 #include <unordered_map>
 #include <vector>
 
-#include "shared/fwd.h"
 
 struct Core {
   static constexpr int TARGET_FPS = 100;
