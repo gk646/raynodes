@@ -41,6 +41,7 @@ NodeEditor::NodeEditor(const char* saveName) : context(saveName) {
 bool NodeEditor::start() {
   cxstructs::Constraint<true> c;
 
+  c + context.plugin.loadPlugins(context);
   c + context.display.loadFont(context);
   c + context.persist.loadFromFile(context);
 

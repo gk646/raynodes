@@ -18,31 +18,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "DisplayC.h"
-
 #include <raylib.h>
 
 #include "application/EditorContext.h"
+#include "component/components/DisplayC.h"
 
 void DisplayC::draw(EditorContext& ec, Node& parent) {
   const auto bounds = getBounds();
-  DrawRectangleRec(bounds, LIGHTGRAY);
+  DrawRectangleRec(bounds, GRAY);
 
-  const char* txt ;
+  const char* txt;
   if (inputs[0].isConnected()) {
     txt = inputs[0].getData<PinType::STRING>();
     DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
-  }else if(inputs[1].isConnected()){
-    txt = ec.string.formatText("%f", inputs[1].getData<PinType::FLOAT>());
+  } else if (inputs[1].isConnected()) {
+    txt = String::formatText("%f", inputs[1].getData<PinType::FLOAT>());
     DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
-  }else if(inputs[2].isConnected()){
-    txt = ec.string.formatText("%d", inputs[2].getData<PinType::BOOLEAN>() == 1);
+  } else if (inputs[2].isConnected()) {
+    txt = String::formatText("%d", inputs[2].getData<PinType::BOOLEAN>() == 1);
     DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
-  }else if(inputs[3].isConnected()){
-    txt = ec.string.formatText("%d", inputs[3].getData<PinType::INTEGER>());
+  } else if (inputs[3].isConnected()) {
+    txt = String::formatText("%d", inputs[3].getData<PinType::INTEGER>());
     DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
   }
-
 }
 
 void DisplayC::update(EditorContext& ec, Node& parent) {
@@ -55,19 +53,17 @@ void DisplayC::update(EditorContext& ec, Node& parent) {
 void DisplayC::onCreate(EditorContext& ec, Node& parent) {
   addPinInput(PinType::STRING);
   addPinInput(PinType::FLOAT);
-  addPinInput(PinType::BOOLEAN);
   addPinInput(PinType::INTEGER);
 
   addPinOutput(PinType::STRING);
   addPinOutput(PinType::FLOAT);
-  addPinOutput(PinType::BOOLEAN);
   addPinOutput(PinType::INTEGER);
 }
 
 void DisplayC::save(FILE* file) {
-
+  /*No state*/
 }
 
 void DisplayC::load(FILE* file) {
-
+  /*No state*/
 }

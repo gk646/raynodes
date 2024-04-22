@@ -29,6 +29,8 @@ inline void SetupDisplay(EditorContext& ec) {
   SetTraceLogLevel(LOG_WARNING);  //Ive seen this enough
   InitWindow(1280, 720, Info::applicationName);
 
+  ChangeDirectory(GetApplicationDirectory());
+
   // Get the current monitor size
   const int m = GetCurrentMonitor();
   const auto monitorWidth = static_cast<float>(GetMonitorWidth(m));

@@ -21,6 +21,6 @@
 #include "application/EditorContext.h"
 
 bool Display::loadFont(EditorContext& ec) {
-  editorFont = LoadFont(ec.string.formatText("%s/res/monogram.ttf", GetApplicationDirectory()));
+  editorFont = LoadFont("res/monogram.ttf");
   return editorFont.texture.id != 0 || GetFontDefault().texture.id != 0;
 }

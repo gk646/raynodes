@@ -18,12 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "MQQS.h"
+#ifndef PLUGIN_H
+#define PLUGIN_H
 
-#include <cstdio>
+#include "shared/fwd.h"
 
-void MQQS::registerComponents(EditorContext& ec) {}
-void MQQS::registerNodes(EditorContext& ec) {}
-void MQQS::onLoad(EditorContext& ec) {
-  printf("Loaded MQQS Plugin\n");
-}
+struct Plugin {
+  static RaynodesPluginI* loadPlugin(const char* absolutePath, const char* funcName);
+  static const char* getLastError();
+};
+
+#endif  //PLUGIN_H

@@ -41,15 +41,15 @@
 #include "context/ContextPlugin.h"
 
 struct EditorContext {
-  String string{};
   Core core{};
   Display display{};
   Logic logic{};
   Templates templates{};
+  Plugins plugin{};
   Persist persist{};
   Input input{};
   Info info{};
-  Plugin plugin{};
+  String string{};
 
   explicit EditorContext(const char* openedFile) {
     persist.openedFile = openedFile;

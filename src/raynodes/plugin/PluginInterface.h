@@ -23,11 +23,25 @@
 
 #include "shared/fwd.h"
 
+#ifdef _EXPORTING
+#  define EXPORT __declspec(dllexport)
+#else
+#  define EXPORT __attribute__((visibility("default")))
+#endif
+
 struct RaynodesPluginI {
   virtual ~RaynodesPluginI() = default;
-  virtual RaynodesPluginI* GetPlugin() { return nullptr; }
-  virtual void RegisterComponents(EditorContext& ec){}
-  virtual void RegisterNodes(EditorContext& ec){}
+  virtual void onLoad(EditorContext& ec) {}
+  virtual void registerComponents(EditorContext& ec) {}
+  virtual void registerNodes(EditorContext& ec) {}
 };
 
+// You have to adhere to this interface
+// Include this at the bottom
+
+/*
+extern "C" EXPORT inline RaynodesPluginI* CreatePlugin() {
+  return new MyPlugin();
+}
+*/
 #endif  //PLUGINI_H
