@@ -21,9 +21,8 @@
 
 #include "application/NodeEditor.h"
 
-
 int main(int argc, char* argv[]) {
-  NodeEditor editor{"saves/FirstQuest.rn"};
+  NodeEditor editor{argv[1]};
   if (editor.start()) {
     return editor.run();
   }

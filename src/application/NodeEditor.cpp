@@ -24,6 +24,7 @@
 #include <cxstructs/Constraint.h>
 
 #include "node/Node.h"
+#include "shared/rayutils.h"
 
 #include "application/elements/Action.h"
 #include "application/editor/EditorControls.h"
@@ -38,19 +39,11 @@ NodeEditor::NodeEditor(const char* saveName) : context(saveName) {
   Editor::SetupCamera(context);
 }
 
-NodeEditor::~NodeEditor() {
-  if (updateThread.joinable()) {
-    updateThread.join();
-  }
-}
-
 bool NodeEditor::start() {
   cxstructs::Constraint<true> c;
 
-  c + context.display.loadFont();
+  c + context.display.loadFont(context);
   c + context.persist.loadFromFile(context);
-
-  //updateThread = std::thread(&NodeEditor::update, this);
 
   return c.holds();
 }
@@ -60,16 +53,30 @@ void DrawBackGround(EditorContext& ec) {
   Editor::DrawGrid(ec);
 }
 void DrawContent(EditorContext& ec) {
-  auto& connections = ec.core.connections;
+  const auto& connections = ec.core.connections;
 
   Editor::DrawNodes(ec);
 
-  for (const auto con : connections) {
-    DrawLineBezier(con->getFromPos(), con->getToPos(), 2, con->out.getColor());
+  bool isCTRLDown = ec.input.isKeyDown(KEY_LEFT_CONTROL);
+  bool delNodes = isCTRLDown && ec.input.isMouseButtonReleased(MOUSE_BUTTON_RIGHT);
+  const auto selectRect = ec.logic.selectRect;
+
+  ConnectionDeleteAction* action = nullptr;
+  if (delNodes) action = new ConnectionDeleteAction(10);
+  for (const auto conn : connections) {
+    const auto fromPos = conn->getFromPos();
+    const auto toPos = conn->getToPos();
+    DrawLineBezier(fromPos, toPos, 2, conn->out.getColor());
+
+    if (delNodes && CheckCollisionBezierRect(fromPos, toPos, selectRect)) {
+      action->deletedConnections.push_back(conn);
+      ec.core.removeConnection(conn);
+    }
   }
+  if (delNodes) ec.core.addEditorAction(action);
 
   if (ec.logic.isSelecting) {
-    DrawRectanglePro(ec.logic.selectRect, {0, 0}, 0, ColorAlpha(BLUE, 0.4F));
+    DrawRectanglePro(selectRect, {0, 0}, 0, ColorAlpha(isCTRLDown ? RED : BLUE, 0.4F));
   }
 
   if (ec.logic.isMakingConnection) {

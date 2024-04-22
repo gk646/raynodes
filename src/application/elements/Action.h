@@ -23,12 +23,19 @@
 #define RAYNODES_SRC_EDITOR_ELEMENTS_EDITORACTION_H_
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "shared/fwd.h"
-#include "shared/Types.h"
 
-enum ActionType : uint8_t { NEW_CANVAS_ACTION, MOVE_NODE, TEXT_EDIT, DELETE_NODE, CREATE_NODE };
+enum ActionType : uint8_t {
+  NEW_CANVAS_ACTION,
+  MOVE_NODE,
+  TEXT_EDIT,
+  DELETE_NODE,
+  CREATE_NODE,
+  CONNECTION_DELETED
+};
 
 //Action was already performed when created
 //-> Current state includes this performed action
@@ -54,6 +61,8 @@ struct Action {
         return "Node(s) deleted";
       case CREATE_NODE:
         return "Node(s) created";
+      case CONNECTION_DELETED:
+        return "Connection(s) deleted";
     }
     return "Unknown";
   }
@@ -72,7 +81,6 @@ struct TextAction final : Action {
 
   TextAction(std::string& target, std::string before)
       : Action(TEXT_EDIT), targetText(target), beforeState(std::move(before)) {}
-
   void setAfter(std::string after) { afterState = std::move(after); }
   void undo(EditorContext& ec) override;
   void redo(EditorContext& ec) override;
@@ -87,7 +95,7 @@ struct NodeDeleteAction final : Action {
   void redo(EditorContext& ec) override;
 
  private:
-  bool removeNodes = true;  //Complicated to understand /just hide it
+  bool removeNodes = true;
 };
 
 struct NodeCreateAction final : Action {
@@ -98,7 +106,7 @@ struct NodeCreateAction final : Action {
   void redo(EditorContext& ec) override;
 
  private:
-  bool removeNodes = true;  //Complicated to understand /just hide it
+  bool removeNodes = true;
 };
 
 //Saves the move delta
@@ -107,7 +115,19 @@ struct NodeMovedAction final : Action {
   explicit NodeMovedAction(int size);
   void undo(EditorContext& ec) override;
   void redo(EditorContext& ec) override;
+  float calculateDeltas(const EditorContext& ec);
+};
+
+struct ConnectionDeleteAction final : Action {
+  std::vector<Connection*> deletedConnections;
+  explicit ConnectionDeleteAction(int size);
+  ~ConnectionDeleteAction() noexcept override;
+  void undo(EditorContext& ec) override;
+  void redo(EditorContext& ec) override;
   float calculateDeltas(EditorContext& ec);
+
+ private:
+  bool removeNodes = true;
 };
 
 #endif  //RAYNODES_SRC_EDITOR_ELEMENTS_EDITORACTION_H_

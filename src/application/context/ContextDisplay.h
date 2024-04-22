@@ -40,10 +40,7 @@ struct Display {
   float fontSize = 17;
   Vector2 screenSize = {};
   float gridSpacing = 20;
-  bool loadFont() {
-    editorFont = LoadFont("res/monogram.ttf");
-    return editorFont.texture.id != 0;
-  }
+  bool loadFont(EditorContext& ec);
   [[nodiscard]] Vector2 getAnchor(const AnchorPos a, const float relativeInset, const float w,
                                   const float h) const {
     Vector2 position;
@@ -88,4 +85,5 @@ struct Display {
     return minDimension * size;
   }
 };
+
 #endif  //RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTDISPLAY_H_

@@ -10,7 +10,6 @@ Via a clearly defined public interface, it can easily be extended with:
 - Dynamically loaded plugins
 - Contributed components to the source
 
-
 In a lot of places it uses my C++ helper library [cxstructs](https://github.com/gk646/cxstructs).
 
 **1.** [Controls](#Controls)   
@@ -21,9 +20,15 @@ In a lot of places it uses my C++ helper library [cxstructs](https://github.com/
 
 ### Controls
 
+- `CTRL+C` / **Copy selection**
+- `CTRL+V` / **Paste selection**
+- `CTRL+X` / **Cut (delete and copy) selection**
+
+
 - `CTRL+Z` / **Undo Action**
 - `CTRL+Y` / **Redo Action**
 - `CTRL+LMB`(click on a node) / **Add to Selection**
+- `CTRL+RMB`(drag) / **Delete nodes in selection**
 - `RMB`  / **Open context menu**
 - `RMB` (drag mouse) / **Select in rectangle**
 - `DEL` / **Delete selected nodes**
