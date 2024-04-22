@@ -23,8 +23,15 @@
 #define RAYNODES_SRC_NODE_PIN_H_
 
 #include "shared/fwd.h"
-
 #include "blocks/Connection.h"
+
+enum class PinType : uint8_t {
+  BOOLEAN,
+  STRING,
+  INTEGER,
+  DATA,
+  FLOAT,
+};
 
 inline const char* PinTypeToString(PinType pt) {
   switch (pt) {
@@ -106,7 +113,7 @@ struct Pin {
 struct OutputPin final : Pin {
   OutputData data{nullptr};
   OutputPin() = default;
-  OutputPin(PinType pt) : Pin{pt, OUTPUT, 0} {}
+  explicit OutputPin(const PinType pt) : Pin{pt, OUTPUT, 0} {}
   [[nodiscard]] auto isConnectable(InputPin& other) const -> bool;
   template <PinType pt>
   void setData(auto val) {
@@ -117,28 +124,27 @@ struct OutputPin final : Pin {
 struct InputPin final : Pin {
   Connection* connection = nullptr;
   InputPin() = default;
-  InputPin(PinType pt) : Pin{pt, INPUT, 0} {}
-  [[nodiscard]] auto isConnectable(OutputPin& other) const -> bool {
+  explicit InputPin(const PinType pt) : Pin{pt, INPUT, 0} {}
+  [[nodiscard]] auto isConnectable(const OutputPin& other) const -> bool {
     return connection == nullptr && other.pinType == pinType;
   }
   template <PinType pt>
   [[nodiscard]] auto getData() const {
     if (connection) {
       return connection->out.data.get<pt>();
+    }
+    if constexpr (pt == PinType::STRING) {
+      return static_cast<const char*>(nullptr);
+    } else if constexpr (pt == PinType::INTEGER) {
+      return 0LL;
+    } else if constexpr (pt == PinType::BOOLEAN) {
+      return false;
+    } else if constexpr (pt == PinType::FLOAT) {
+      return 0.0;
+    } else if constexpr (pt == PinType::DATA) {
+      return Pointer{nullptr, 0};
     } else {
-      if constexpr (pt == PinType::STRING) {
-        return static_cast<const char*>(nullptr);
-      } else if constexpr (pt == PinType::INTEGER) {
-        return 0LL;
-      } else if constexpr (pt == PinType::BOOLEAN) {
-        return false;
-      } else if constexpr (pt == PinType::FLOAT) {
-        return 0.0;
-      } else if constexpr (pt == PinType::DATA) {
-        return Pointer{nullptr, 0};
-      } else {
-        static_assert(pt == PinType::STRING, "Unsupported PinType");
-      }
+      static_assert(pt == PinType::STRING, "Unsupported PinType");
     }
   }
   [[nodiscard]] bool isConnected() const { return connection != nullptr; }

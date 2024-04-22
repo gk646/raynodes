@@ -46,4 +46,29 @@ inline void DrawCenteredText(const Font& f, const char* txt, const Vector2 pos, 
   DrawTextEx(f, txt, {pos.x - width / 2.0F, pos.y}, fs, spc, c);
 }
 
+inline bool CheckPointInsideRectangle(const Vector2 point, const Rectangle& rect) {
+  return point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y
+         && point.y <= rect.y + rect.height;
+}
+inline float EaseCubicIn(float t, float b, float c, float d) {
+  if ((t /= 0.5f * d) < 1) return 0.5f * c * t * t * t + b;
+
+  t -= 2;
+
+  return 0.5f * c * (t * t * t + 2.0f) + b;
+}
+inline bool CheckCollisionBezierRect(const Vector2 startPos, const Vector2 endPos, const Rectangle& rect,
+                                      int numPoints = 100) {
+  Vector2 current;
+  for (int i = 0; i <= numPoints; ++i) {
+    float t = static_cast<float>(i) / static_cast<float>(numPoints);
+    current.x = startPos.x + t * (endPos.x - startPos.x);
+    current.y = EaseCubicIn(t * numPoints, startPos.y, endPos.y - startPos.y, numPoints);
+
+    if (CheckPointInsideRectangle(current, rect)) {
+      return true;
+    }
+  }
+  return false;
+}
 #endif  //RAYNODES_SRC_SHARED_RAYUTILS_H_

@@ -24,14 +24,6 @@
 
 #include "shared/fwd.h"
 
-enum class PinType : uint8_t {
-  BOOLEAN,
-  STRING,
-  INTEGER,
-  DATA,
-  FLOAT,
-};
-
 struct Connection {
   //Source
   Node& fromNode;
@@ -45,6 +37,8 @@ struct Connection {
   [[nodiscard]] Vector2 getFromPos() const;
   [[nodiscard]] Vector2 getToPos() const;
   [[nodiscard]] Color getConnectionColor() const;
+  void close();
+  void open();
 };
 
 #endif  //RAYNODES_SRC_NODE_CONNECTION_H_

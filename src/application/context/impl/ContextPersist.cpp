@@ -98,7 +98,6 @@ bool IsValidNode(int maxNodeID, int fromNode, int from, int out, int toNode, int
   return fromNode > 0 && fromNode < maxNodeID && from != -1 && out != -1 && toNode > 0 && toNode < maxNodeID
          && to != -1 && in != -1;
 }
-
 void CreateNewNode(EditorContext& ec, int fromNodeID, int fromI, int outI, int toNodeID, int toI, int inI) {
   const auto& nodeMap = ec.core.nodeMap;
   Node& fromNode = *nodeMap.at(NodeID(fromNodeID));
@@ -109,9 +108,8 @@ void CreateNewNode(EditorContext& ec, int fromNodeID, int fromI, int outI, int t
   Component& to = *toNode.components[toI];
   InputPin& in = to.inputs[inI];
 
-  ec.core.connections.push_back(new Connection(fromNode, from, out, toNode, to, in));
+  ec.core.addConnection(new Connection(fromNode, from, out, toNode, to, in));
 }
-
 int LoadConnections(FILE* file, EditorContext& ec) {
   int count = 0;
   const int maxNodeID = ec.core.UID;

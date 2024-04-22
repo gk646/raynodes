@@ -22,13 +22,14 @@
 #ifndef RAYNODES_SRC_EDITOR_EDITORCONTEXT_H_
 #define RAYNODES_SRC_EDITOR_EDITORCONTEXT_H_
 
+#include <cstdio>
 #include <raylib.h>
 
 #include "shared/fwd.h"
-#include "shared/Types.h"
 
 #include "blocks/Connection.h"
 
+#include "context/ContextString.h"
 #include "context/ContextInfo.h"
 #include "context/ContextCore.h"
 #include "context/ContextDisplay.h"
@@ -36,8 +37,6 @@
 #include "context/ContextPersist.h"
 #include "context/ContextInput.h"
 #include "context/ContextTemplates.h"
-#include "context/ContextTemplates.h"
-#include "context/ContextString.h"
 
 struct EditorContext {
   String string{};
