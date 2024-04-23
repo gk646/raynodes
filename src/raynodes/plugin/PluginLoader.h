@@ -18,20 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef RAYNODES_SRC_COMPONENT_COMPONENTS_STRINGTONUMBERC_H_
-#define RAYNODES_SRC_COMPONENT_COMPONENTS_STRINGTONUMBERC_H_
+#ifndef PLUGIN_H
+#define PLUGIN_H
 
-#include "component/Component.h"
+#include "shared/fwd.h"
 
-struct StringToNumberC final : Component {
-  explicit StringToNumberC(const char* name) : Component(name, STRING_TO_NUMBER, 50, 20) {}
-  Component* clone() override { return new StringToNumberC(*this); };
-  void draw(EditorContext& ec, Node& parent) override;
-  void update(EditorContext& ec, Node& parent) override;
-  void save(FILE* file) override;
-  void load(FILE* file) override;
-
-  void onCreate(EditorContext &ec, Node &parent) override;
+struct PluginLoader {
+  static RaynodesPluginI* GetPluginInstance(const char* absolutePath, const char* funcName);
+  static const char* getLastError();
 };
 
-#endif  //RAYNODES_SRC_COMPONENT_COMPONENTS_STRINGTONUMBERC_H_
+#endif  //PLUGIN_H

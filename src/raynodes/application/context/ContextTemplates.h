@@ -21,26 +21,34 @@
 #ifndef RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTTEMPLATES_H_
 #define RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTTEMPLATES_H_
 
+struct StrEqual {
+  bool operator()(const char* s1, const char* s2) const { return std::strcmp(s1, s2) == 0; }
+};
+
 struct Template {};
-using ComponentCreatFunc = Component* (*)();
+using ComponentCreateFunc = Component* (*)(const char*);
 struct Templates {
 
-  std::unordered_map<const char*, ComponentCreatFunc, cxstructs::Fnv1aHash, cxstructs::StrEqual>
-      componentFactory;
+  std::unordered_map<const char*, ComponentCreateFunc, cxstructs::Fnv1aHash, StrEqual> componentFactory;
   std::vector<Template> templates;
 
+
   //Passed name only has to be valid until this function returns
-  bool registerComponent(const char* name, ComponentCreatFunc func) {
-    if (componentFactory.contains(name)) return false;
-    auto* copy = new char[strlen(name)];
+  bool registerComponent(const char* name, ComponentCreateFunc func) {
+    if (componentFactory.contains(name)) {
+      fprintf(stderr, "Colliding component \"%s\" will not be loaded. Please contact the plugin author.");
+      return false;
+    }
+    auto* copy = new char[strlen(name) + 1];
+    strcpy(copy, name);
     componentFactory.insert({copy, func});
     return true;
   }
-
+  //Passed name only has to be valid until this function returns
   Component* createComponent(const char* name) {
     const auto it = componentFactory.find(name);
     if (it != componentFactory.end()) {
-      return it->second();
+      return it->second(it->first);  //Reuse the allocated name
     }
     return nullptr;
   }

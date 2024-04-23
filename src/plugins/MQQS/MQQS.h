@@ -26,7 +26,6 @@
 struct MQQS final : RaynodesPluginI {
   void registerComponents(EditorContext& ec) override;
   void registerNodes(EditorContext& ec) override;
-  void onLoad(EditorContext& ec) override;
 };
 
 

@@ -25,11 +25,7 @@
 #include <cxstructs/StackVector.h>
 
 #include "shared/fwd.h"
-
-#include "component/components/TextInputField.h"
-#include "component/components/MathC.h"
-#include "component/components/StringToNumberC.h"
-#include "component/components/DisplayC.h"
+#include "component/Component.h"
 
 enum class NodeType : uint8_t { HEADER, MATH, DISPLAY, STRING_CONVERSION, TOTAL_SIZE };
 
@@ -96,58 +92,17 @@ struct Node {
  * |-----------------------------------------------------|
  */
 
-struct HeaderNode final : Node {
-  HeaderNode(const NodeID nid, const Vector2 position) : Node(nid, NodeType::HEADER, position) {
-    addComponent(new TextInputField("Description"));
-    addComponent(new TextInputField("Input"));
-    addComponent(new TextInputField("Bla"));
-    addComponent(new TextInputField("blue"));
-    addComponent(new TextInputField("bli"));
-    addComponent(new TextInputField("blup"));
-  }
-  HeaderNode(const HeaderNode& n, const NodeID id) : Node(n, id) {}
-  Node* clone(const NodeID nid) override { return new HeaderNode(*this, nid); }
-  void exportToMQQS(std::ostream& out) override;
-};
-
-struct MathNode final : Node {
-  MathNode(const NodeID nid, const Vector2 position) : Node(nid, NodeType::MATH, position) {
-    addComponent(new MathC("Operation:"));
-  }
-  MathNode(const MathNode& n, const NodeID id) : Node(n, id) {}
-  Node* clone(const NodeID nid) override { return new MathNode(*this, nid); }
-  void exportToMQQS(std::ostream& out) override{};
-};
-
-struct StringConversion final : Node {
-  StringConversion(const NodeID nid, const Vector2 position)
-      : Node(nid, NodeType::STRING_CONVERSION, position) {
-    addComponent(new StringToNumberC("Operation"));
-  }
-  StringConversion(const StringConversion& n, const NodeID id) : Node(n, id) {}
-  Node* clone(const NodeID nid) override { return new StringConversion(*this, nid); }
-  void exportToMQQS(std::ostream& out) override{};
-};
-
-struct DisplayNode final : Node {
-  DisplayNode(const NodeID nid, const Vector2 position) : Node(nid, NodeType::DISPLAY, position) {
-    addComponent(new DisplayC("Display:"));
-  }
-  DisplayNode(const DisplayNode& n, const NodeID id) : Node(n, id) {}
-  Node* clone(const NodeID nid) override { return new DisplayNode(*this, nid); }
-  void exportToMQQS(std::ostream& out) override{};
-};
-
 inline Node* CreateNode(const NodeID uid, const NodeType type, const Vector2 position) {
   switch (type) {
     case NodeType::HEADER:
-      return new HeaderNode(uid, position);
+      // return new HeaderNode(uid, position);
     case NodeType::MATH:
-      return new MathNode(uid, position);
+      // return new MathNode(uid, position);
     case NodeType::DISPLAY:
-      return new DisplayNode(uid, position);
+      // return new DisplayNode(uid, position);
     case NodeType::STRING_CONVERSION:
-      return new StringConversion(uid, position);
+      break;
+      //return new StringConversion(uid, position);
       /*
     case NodeType::GOTO:
       break;

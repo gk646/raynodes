@@ -23,10 +23,7 @@
 #include <raylib.h>
 #include <cmath>
 #include <limits>
-
 #include <cxutil/cxio.h>
-
-#include "blocks/Connection.h"
 
 void MathC::draw(EditorContext& ec, Node& parent) {
   const auto bounds = getBounds();

@@ -21,7 +21,7 @@
 #include <raylib.h>
 
 #include "application/EditorContext.h"
-#include "component/components/DisplayC.h"
+#include "DisplayC.h"
 
 void DisplayC::draw(EditorContext& ec, Node& parent) {
   const auto bounds = getBounds();

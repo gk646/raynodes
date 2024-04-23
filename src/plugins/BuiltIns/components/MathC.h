@@ -50,8 +50,8 @@ enum MOperation : uint8_t {
 
 struct MathC final : Component {
   int selectedMode = ADD;
-  DropDown dropDown;
-  explicit MathC(const char* name) : Component(name, MATH_OPERATION, 250, 20) {}
+  DropDown dropDown{};
+  explicit MathC(const char* name) : Component(name, 250, 20) {}
   Component* clone() override { return new MathC(*this); };
   void draw(EditorContext& ec, Node& parent) override;
   void update(EditorContext& ec, Node& parent) override;
@@ -66,45 +66,45 @@ struct MathC final : Component {
 
 inline const char* MOperationToString(MOperation op) {
   switch (op) {
-    case MOperation::ADD:
+    case ADD:
       return "Add";
-    case MOperation::Subtract:
+    case Subtract:
       return "Subtract";
-    case MOperation::Multiply:
+    case Multiply:
       return "Multiply";
-    case MOperation::Divide:
+    case Divide:
       return "Divide";
-    case MOperation::Modulo:
+    case Modulo:
       return "Modulo";
-    case MOperation::Power:
+    case Power:
       return "Power";
-    case MOperation::Sqrt:
+    case Sqrt:
       return "Sqrt";
-    case MOperation::Log:
+    case Log:
       return "Log";
-    case MOperation::Ln:
+    case Ln:
       return "Ln";
-    case MOperation::Sin:
+    case Sin:
       return "Sin";
-    case MOperation::Cos:
+    case Cos:
       return "Cos";
-    case MOperation::Tan:
+    case Tan:
       return "Tan";
-    case MOperation::ASin:
+    case ASin:
       return "ASin";
-    case MOperation::ACos:
+    case ACos:
       return "ACos";
-    case MOperation::ATan:
+    case ATan:
       return "ATan";
-    case MOperation::Sinh:
+    case Sinh:
       return "Sinh";
-    case MOperation::Cosh:
+    case Cosh:
       return "Cosh";
-    case MOperation::Tanh:
+    case Tanh:
       return "Tanh";
-    case MOperation::Exp:
+    case Exp:
       return "Exp";
-    case MOperation::Abs:
+    case Abs:
       return "Abs";
     default:
       return "Unknown Operation";

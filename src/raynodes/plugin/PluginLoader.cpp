@@ -27,12 +27,12 @@
 
 #include <cstdio>
 
-#include "plugin/Plugin.h"
+#include "plugin/PluginLoader.h"
 #include "application/context/ContextString.h"
 
 //Hide all the ugly #ifdefs
 
-RaynodesPluginI* Plugin::loadPlugin(const char* absolutePath, const char* funcName) {
+RaynodesPluginI* PluginLoader::GetPluginInstance(const char* absolutePath, const char* funcName) {
   void* handle;
 #if defined(_WIN32)
   handle = LoadLibraryA(absolutePath);
@@ -64,7 +64,7 @@ RaynodesPluginI* Plugin::loadPlugin(const char* absolutePath, const char* funcNa
   return reinterpret_cast<RaynodesPluginI* (*)()>(symbol)();;
 }
 
-const char* Plugin::getLastError() {
+const char* PluginLoader::getLastError() {
 #if defined(_WIN32)
   FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, GetLastError(),
                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), String::buffer, String::BUFFER_SIZE, nullptr);
