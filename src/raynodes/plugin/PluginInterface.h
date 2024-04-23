@@ -34,6 +34,16 @@ struct RaynodesPluginI {
   virtual void onLoad(EditorContext& ec) {}
   virtual void registerComponents(EditorContext& ec) {}
   virtual void registerNodes(EditorContext& ec) {}
+
+ protected:
+  // Useful when registering components
+  // ec.templates.registerComponent("MathOp", GetCreateFunc<MathC>());
+  template <typename T>
+  static auto GetCreateFunc() {
+    return [](const char* componentName) -> Component* {
+      return new T(componentName);
+    };
+  }
 };
 
 // You have to adhere to this interface

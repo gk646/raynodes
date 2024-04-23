@@ -24,6 +24,3 @@
 
 void MQQS::registerComponents(EditorContext& ec) {}
 void MQQS::registerNodes(EditorContext& ec) {}
-void MQQS::onLoad(EditorContext& ec) {
-  printf("Loaded MQQS Plugin\n");
-}

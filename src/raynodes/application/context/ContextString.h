@@ -23,7 +23,9 @@
 
 struct String {
   static constexpr int BUFFER_SIZE = 1024;
+  static constexpr auto* PLUGIN_PATH = "plugins/";
   inline static char buffer[BUFFER_SIZE];
+
   const char* applicationDir;
 
   String();
@@ -35,7 +37,6 @@ struct String {
     va_end(args);
     return buffer;
   }
-
 };
 
 #endif  //RAYNODES_SRC_APPLICATION_CONTEXTSTRING_H_

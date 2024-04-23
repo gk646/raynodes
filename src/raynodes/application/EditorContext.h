@@ -45,7 +45,7 @@ struct EditorContext {
   Display display{};
   Logic logic{};
   Templates templates{};
-  Plugins plugin{};
+  Plugin plugin{};
   Persist persist{};
   Input input{};
   Info info{};

@@ -22,14 +22,31 @@
 #include <filesystem>
 
 #include "application/EditorContext.h"
-#include "plugin/Plugin.h"
+#include "plugin/PluginLoader.h"
 
 String::String() {
   applicationDir = GetApplicationDirectory();
 }
 
-bool Plugins::loadPlugins(EditorContext& ec) {
-  const char* basePath = String::formatText("%s%s", ec.string.applicationDir, PLUGIN_PATH);
+void Plugin::startLoad(EditorContext& ec, const char* name) {
+  printf("Loading %s ...",name);
+  previousSize = static_cast<int>(ec.templates.componentFactory.size());
+  loadErrors = 0;
+  nodesRegistered = 0;
+  componentsRegistered = 0;
+}
+void Plugin::printLoadStats(EditorContext& ec) {
+  nodesRegistered = 0;
+  componentsRegistered = ec.templates.componentFactory.size() - previousSize;
+  printf(" Registered %d Nodes ... %d Components", nodesRegistered, componentsRegistered);
+  if (loadErrors > 0) {
+    fprintf(stderr, "... %d Errors", loadErrors);
+  }
+  printf("\n");
+}
+
+bool Plugin::loadPlugins(EditorContext& ec) {
+  const char* basePath = String::formatText("%s%s", ec.string.applicationDir, String::PLUGIN_PATH);
   const char* filter;
 #if defined(_WIN32)
   filter = ".dll";
@@ -40,15 +57,17 @@ bool Plugins::loadPlugins(EditorContext& ec) {
   for (const auto& entry : std::filesystem::directory_iterator(basePath)) {
     if (entry.path().extension() == filter) {
       std::string absolutePath = absolute(entry.path()).string();
-      auto* plugin = Plugin::loadPlugin(absolutePath.c_str(), "CreatePlugin");
+      auto* plugin = PluginLoader::GetPluginInstance(absolutePath.c_str(), "CreatePlugin");
       plugin->onLoad(ec);
       plugins.push_back(plugin);
     }
   }
 
   for (auto* p : plugins) {
+    startLoad(ec, "Dummy");
     p->registerComponents(ec);
     p->registerNodes(ec);
+    printLoadStats(ec);
   }
 
   printf("Loaded %d Plugin(s)\n", static_cast<int>(plugins.size()));
