@@ -28,8 +28,6 @@
 #include "application/elements/Action.h"
 #include "shared/rayutils.h"
 
-#include <shared/fwd.h>
-
 Node::~Node() {
   for (const auto c : components) {
     c->onDestruction(*this);
@@ -373,9 +371,3 @@ Component* Node::getComponent(const char* name) {
 }
 
 //Export
-void HeaderNode::exportToMQQS(std::ostream& out) {
-  out << "Name:" << getComponent("Description")->getString() << "\n";
-  // out << "Description:" << description << "\n";
-  // out << "Zone:" << zone << "\n";
-  //  out << "Level:" << Level << "\n";
-}

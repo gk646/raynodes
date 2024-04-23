@@ -18,14 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef PLUGIN_H
-#define PLUGIN_H
+#ifndef RAYNODES_SRC_COMPONENT_COMPONENTS_DISPLAYC_H_
+#define RAYNODES_SRC_COMPONENT_COMPONENTS_DISPLAYC_H_
 
-#include "shared/fwd.h"
+#include "component/Component.h"
 
-struct Plugin {
-  static RaynodesPluginI* loadPlugin(const char* absolutePath, const char* funcName);
-  static const char* getLastError();
+struct DisplayC final : Component {
+  explicit DisplayC(const char* name) : Component(name, 250, 20) {}
+  Component* clone() override { return new DisplayC(*this); };
+  void draw(EditorContext& ec, Node& parent) override;
+  void update(EditorContext& ec, Node& parent) override;
+  void save(FILE* file) override;
+  void load(FILE* file) override;
+
+  void onCreate(EditorContext& ec, Node& parent) override;
 };
-
-#endif  //PLUGIN_H
+#endif  //RAYNODES_SRC_COMPONENT_COMPONENTS_DISPLAYC_H_
