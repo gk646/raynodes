@@ -36,11 +36,14 @@ Core::Core() {
 }
 
 //-----------NODES-----------//
-Node* Core::createNode(EditorContext& ec, const NodeType type, const Vector2 worldPos, uint16_t hint) {
+Node* Core::createNode(EditorContext& ec, const char* name, const Vector2 worldPos, uint16_t hint) {
   //Use the hint when provided
-  auto newNode = CreateNode(hint == 0 ? UID : static_cast<NodeID>(hint), type, worldPos);
+  auto newNode = ec.templates.createNode(name);
 
   if (!newNode) return nullptr;
+
+  newNode->position = worldPos;
+  newNode->id = hint == 0 ? UID : static_cast<NodeID>(hint);
 
   nodes.push_back(newNode);
   nodeMap.insert({newNode->id, newNode});
@@ -69,8 +72,9 @@ void Core::removeNode(EditorContext& ec, NodeID id) {
 }
 //-----------ACTIONS-----------//
 void Core::addEditorAction(Action* action) {
+  if (!action) return;
   // If we're not at the end, remove all forward actions
-  while (currentActionIndex < ((int)actionQueue.size() - 1)) {
+  while (currentActionIndex < static_cast<int>(actionQueue.size()) - 1) {
     delete actionQueue.back();  //Delete ptr
     actionQueue.pop_back();
   }

@@ -76,12 +76,12 @@ void LoadEditorData(FILE* file, EditorContext& ec) {
 }
 int LoadNodes(FILE* file, EditorContext& ec) {
   int count = 0;
+  char buff[Plugin::MAX_NAME_LEN];
   while (cxstructs::io_load_inside_section(file, "Nodes")) {
-    int type = -1;
     int id;
-    cxstructs::io_load(file, type);
+    cxstructs::io_load(file, buff, Plugin::MAX_NAME_LEN);
     cxstructs::io_load(file, id);
-    const auto newNode = ec.core.createNode(ec, , {0, 0}, id);
+    const auto newNode = ec.core.createNode(ec, buff, {0, 0}, id);
     if (!newNode) {
       cxstructs::io_load_newline(file, true);
       continue;
@@ -93,11 +93,12 @@ int LoadNodes(FILE* file, EditorContext& ec) {
   }
   return count;
 }
-bool IsValidNode(int maxNodeID, int fromNode, int from, int out, int toNode, int to, int in) {
+bool IsValidConnection(int maxNodeID, int fromNode, int from, int out, int toNode, int to, int in) {
   return fromNode > 0 && fromNode < maxNodeID && from != -1 && out != -1 && toNode > 0 && toNode < maxNodeID
          && to != -1 && in != -1;
 }
-void CreateNewNode(EditorContext& ec, int fromNodeID, int fromI, int outI, int toNodeID, int toI, int inI) {
+void CreateNewConnection(EditorContext& ec, int fromNodeID, int fromI, int outI, int toNodeID, int toI,
+                         int inI) {
   const auto& nodeMap = ec.core.nodeMap;
   Node& fromNode = *nodeMap.at(NodeID(fromNodeID));
   Component& from = *fromNode.components[fromI];
@@ -123,8 +124,8 @@ int LoadConnections(FILE* file, EditorContext& ec) {
     cxstructs::io_load(file, toNode);
     cxstructs::io_load(file, to);
     cxstructs::io_load(file, in);
-    if (IsValidNode(maxNodeID, fromNode, from, out, toNode, to, in)) {
-      CreateNewNode(ec, fromNode, from, out, toNode, to, in);
+    if (IsValidConnection(maxNodeID, fromNode, from, out, toNode, to, in)) {
+      CreateNewConnection(ec, fromNode, from, out, toNode, to, in);
     }
     cxstructs::io_load_newline(file);
     count++;
@@ -139,12 +140,15 @@ bool Persist::saveToFile(EditorContext& ec) const {
 
   int nodes, connections;
   //We assume 1000 bytes on average per node for the buffer
-  auto res = cxstructs::io_save_buffered_write(openedFile, size * 1000, [&](FILE* file) {
+  const auto res = cxstructs::io_save_buffered_write(openedFile, size * 1000, [&](FILE* file) {
     SaveEditorData(file, ec);
     nodes = SaveNodes(file, ec);
     connections = SaveConnections(file, ec);
   });
-  if (!res) fprintf(stderr, "Error saving to %s", openedFile);
+  if (!res) {
+    fprintf(stderr, "Error saving to %s", openedFile);
+    return false;
+  }
 
   printf("Saved %d nodes.\n", nodes);
   printf("Saved %d connections.\n", connections);

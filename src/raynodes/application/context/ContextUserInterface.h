@@ -18,20 +18,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CONTEXTPLUGIN_H
-#define CONTEXTPLUGIN_H
+#ifndef CONTEXTUI_H
+#define CONTEXTUI_H
 
-struct Plugin {
-  static constexpr int MAX_NAME_LEN = 17;  //16 with terminator ('\0')
-  std::vector<RaynodesPluginI*> plugins;
+struct ContextMenuCategory {
+  const char* name;
+  std::vector<const char*> nodes;
+  bool isOpen = false;
+};
 
-  bool loadPlugins(EditorContext& ec);
-  void sortPlugins() {
-    for (auto* plugin : plugins) {
-      if (TextIsEqual(plugin->name, "BuiltIns")) {
-        std::swap(plugins[0], plugin);
+struct ContextMenu {
+  std::vector<ContextMenuCategory> categories;
+  void addNode(const char* category, const char* name) {
+    for (auto& c : categories) {
+      if (cxstructs::str_cmp(c.name,category)) {
+        c.nodes.push_back(name);
+        return;
       }
     }
+    ContextMenuCategory cat{category, {}, false};
+    cat.nodes.push_back(name);
+    categories.push_back(cat);
   }
 };
-#endif  //CONTEXTPLUGIN_H
+
+struct UserInterface {
+  ContextMenu contextMenu;
+  bool hideTopBar = false;
+
+  UserInterface() {
+    contextMenu.addNode("neasdölfkj","aösdlkf");
+  }
+};
+
+#endif  //CONTEXTUI_H

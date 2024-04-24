@@ -25,7 +25,6 @@
 #include <unordered_map>
 #include <vector>
 
-
 struct Core {
   static constexpr int TARGET_FPS = 100;
   static constexpr int targetLogicTicks = 120;
@@ -47,14 +46,15 @@ struct Core {
     UID = static_cast<NodeID>(UID + 1);
     return UID;
   }
-  auto createNode(EditorContext& ec,const char* name, Vector2 worldPos, uint16_t hint = 0) -> Node*;
+  auto createNode(EditorContext& ec, const char* name, Vector2 worldPos, uint16_t hint = 0) -> Node*;
   auto getNode(const NodeID id) -> Node* { return nodeMap[id]; }
   void insertNode(EditorContext& ec, NodeID id, Node* node);
   void removeNode(EditorContext& ec, NodeID id);
   void moveToFront(Node* node) {
     std::erase(nodes, node);
     nodes.push_back(node);
-  }
+  }  //Unused
+
   void removeConnection(Connection* conn) {
     conn->close();
     std::erase(connections, conn);

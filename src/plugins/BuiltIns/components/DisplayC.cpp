@@ -35,10 +35,7 @@ void DisplayC::draw(EditorContext& ec, Node& parent) {
     txt = String::formatText("%f", inputs[1].getData<PinType::FLOAT>());
     DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
   } else if (inputs[2].isConnected()) {
-    txt = String::formatText("%d", inputs[2].getData<PinType::BOOLEAN>() == 1);
-    DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
-  } else if (inputs[3].isConnected()) {
-    txt = String::formatText("%d", inputs[3].getData<PinType::INTEGER>());
+    txt = String::formatText("%d", inputs[2].getData<PinType::INTEGER>());
     DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
   }
 }
@@ -46,8 +43,7 @@ void DisplayC::draw(EditorContext& ec, Node& parent) {
 void DisplayC::update(EditorContext& ec, Node& parent) {
   outputs[0].setData<PinType::STRING>(inputs[0].getData<PinType::STRING>());
   outputs[1].setData<PinType::FLOAT>(inputs[1].getData<PinType::FLOAT>());
-  outputs[2].setData<PinType::BOOLEAN>(inputs[2].getData<PinType::BOOLEAN>());
-  outputs[3].setData<PinType::INTEGER>(inputs[3].getData<PinType::INTEGER>());
+  outputs[2].setData<PinType::INTEGER>(inputs[2].getData<PinType::INTEGER>());
 }
 
 void DisplayC::onCreate(EditorContext& ec, Node& parent) {
