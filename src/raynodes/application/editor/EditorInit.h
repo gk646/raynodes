@@ -26,7 +26,7 @@ inline void SetupDisplay(EditorContext& ec) {
   SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_ALWAYS_RUN);
 
   // Initialize the window with the initial size
-  SetTraceLogLevel(LOG_WARNING);  //Ive seen this enough
+  SetTraceLogLevel(LOG_WARNING);
   InitWindow(1280, 720, Info::applicationName);
 
   ChangeDirectory(GetApplicationDirectory());
@@ -54,7 +54,6 @@ inline void SetupDisplay(EditorContext& ec) {
 
   SetTargetFPS(Core::TARGET_FPS);
   SetExitKey(0);
-  SetTraceLogLevel(LOG_WARNING);
   DisableEventWaiting();
 }
 

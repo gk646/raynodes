@@ -47,7 +47,7 @@ struct Core {
     UID = static_cast<NodeID>(UID + 1);
     return UID;
   }
-  auto createNode(EditorContext& ec, NodeType type, Vector2 worldPos, uint16_t hint = 0) -> Node*;
+  auto createNode(EditorContext& ec,const char* name, Vector2 worldPos, uint16_t hint = 0) -> Node*;
   auto getNode(const NodeID id) -> Node* { return nodeMap[id]; }
   void insertNode(EditorContext& ec, NodeID id, Node* node);
   void removeNode(EditorContext& ec, NodeID id);

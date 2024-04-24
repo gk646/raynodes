@@ -81,7 +81,7 @@ int LoadNodes(FILE* file, EditorContext& ec) {
     int id;
     cxstructs::io_load(file, type);
     cxstructs::io_load(file, id);
-    const auto newNode = ec.core.createNode(ec, NodeType(type), {0, 0}, id);
+    const auto newNode = ec.core.createNode(ec, , {0, 0}, id);
     if (!newNode) {
       cxstructs::io_load_newline(file, true);
       continue;
