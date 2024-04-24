@@ -27,8 +27,6 @@
 #include "shared/fwd.h"
 #include "component/Component.h"
 
-enum class NodeType : uint8_t { HEADER, MATH, DISPLAY, STRING_CONVERSION, TOTAL_SIZE };
-
 //TODO clean up - make ready for templates
 struct Node {
   static constexpr float PADDING = 3;
@@ -41,16 +39,14 @@ struct Node {
   Color color;
   NodeID id;
   uint16_t contentHeight = 0;  //Current height of the content
-  NodeType type;
   bool isHovered = false;
   bool isDragged = false;
   bool isInOutReversed = false;  //Not yet used
 
-  Node(const NodeID id, const NodeType type, const Vector2 position = {0, 0}, const Color color = BLACK)
-      : position(position), size({70, 50}), color(color), id(id), type(type) {}
+  Node(const NodeID id, const Vector2 position = {0, 0}, const Color color = BLACK)
+      : position(position), size({70, 50}), color(color), id(id) {}
   Node(const Node& n, const NodeID id)
-      : position(n.position), size(n.size), color(n.color), id(id), type(n.type),
-        isInOutReversed(n.isInOutReversed) {
+      : position(n.position), size(n.size), color(n.color), id(id), isInOutReversed(n.isInOutReversed) {
     for (const auto c : n.components) {
       auto clone = c->clone();
       for (auto& in : clone->inputs) {
@@ -92,159 +88,6 @@ struct Node {
  * |-----------------------------------------------------|
  */
 
-inline Node* CreateNode(const NodeID uid, const NodeType type, const Vector2 position) {
-  switch (type) {
-    case NodeType::HEADER:
-      // return new HeaderNode(uid, position);
-    case NodeType::MATH:
-      // return new MathNode(uid, position);
-    case NodeType::DISPLAY:
-      // return new DisplayNode(uid, position);
-    case NodeType::STRING_CONVERSION:
-      break;
-      //return new StringConversion(uid, position);
-      /*
-    case NodeType::GOTO:
-      break;
-    case NodeType::GOTO_PROXIMITY:
-      break;
-    case NodeType::KILL:
-      break;
-    case NodeType::SPAWN:
-      break;
-    case NodeType::SPEAK:
-      break;
-    case NodeType::SET_QUEST_ZONE:
-      break;
-    case NodeType::SCRIPTED_NODE:
-      break;
-    case NodeType::COLLECT:
-      break;
-    case NodeType::COMBAT_TRIGGER:
-      break;
-    case NodeType::REMOVE_ITEM:
-      break;
-    case NodeType::SET_QUEST_SHOWN:
-      break;
-    case NodeType::SWITCH_ALTERNATIVE:
-      break;
-    case NodeType::SET_NPC_POS:
-      break;
-    case NodeType::REQUIRE:
-      break;
-    case NodeType::FINISH_QUEST:
-      break;
-    case NodeType::DESPAWN_NPC:
-      break;
-    case NodeType::WAIT:
-      break;
-    case NodeType::PROTECT:
-      break;
-    case NodeType::CHOICE_DIALOGUE:
-      break;
-    case NodeType::ESCORT:
-      break;
-    case NodeType::MIX:
-      break;
-    case NodeType::NPC_MOVE:
-      break;
-    case NodeType::NPC_SAY:
-      break;
-    case NodeType::NPC_SAY_PROXIMITY:
-      break;
-    case NodeType::CHOICE_DIALOGUE_SIMPLE:
-      break;
-    case NodeType::TILE_ACTION:
-      break;
-    case NodeType::PLAYER_THOUGHT:
-      break;
-    case NodeType::OPTIONAL_POSITION:
-      break;
-    case NodeType::SKIP:
-      break;
-    case NodeType::TOTAL_SIZE:
-      break;
-       */
-  }
-  return nullptr;
-}
-
-inline const char* NodeToString(NodeType type) {
-  switch (type) {
-    case NodeType::HEADER:
-      return "HEADER";
-    case NodeType::MATH:
-      return "Math Operation";
-    case NodeType::DISPLAY:
-      return "Display";
-    case NodeType::STRING_CONVERSION:
-      return "String Conversion";
-      /*
-    case NodeType::GOTO:
-      return "GOTO";
-    case NodeType::GOTO_PROXIMITY:
-      return "GOTO_PROXIMITY";
-    case NodeType::KILL:
-      return "KILL";
-    case NodeType::SPAWN:
-      return "SPAWN";
-    case NodeType::SPEAK:
-      return "SPEAK";
-    case NodeType::SET_QUEST_ZONE:
-      return "SET_QUEST_ZONE";
-    case NodeType::SCRIPTED_NODE:
-      return "SCRIPTED_NODE";
-    case NodeType::COLLECT:
-      return "COLLECT";
-    case NodeType::COMBAT_TRIGGER:
-      return "COMBAT_TRIGGER";
-    case NodeType::REMOVE_ITEM:
-      return "REMOVE_ITEM";
-    case NodeType::SET_QUEST_SHOWN:
-      return "SET_QUEST_SHOWN";
-    case NodeType::SWITCH_ALTERNATIVE:
-      return "SWITCH_ALTERNATIVE";
-    case NodeType::SET_NPC_POS:
-      return "SET_NPC_POS";
-    case NodeType::REQUIRE:
-      return "REQUIRE";
-    case NodeType::FINISH_QUEST:
-      return "FINISH_QUEST";
-    case NodeType::DESPAWN_NPC:
-      return "DESPAWN_NPC";
-    case NodeType::WAIT:
-      return "WAIT";
-    case NodeType::PROTECT:
-      return "PROTECT";
-    case NodeType::CHOICE_DIALOGUE:
-      return "CHOICE_DIALOGUE";
-    case NodeType::ESCORT:
-      return "ESCORT";
-    case NodeType::MIX:
-      return "MIX";
-    case NodeType::NPC_MOVE:
-      return "NPC_MOVE";
-    case NodeType::NPC_SAY:
-      return "NPC_SAY";
-    case NodeType::NPC_SAY_PROXIMITY:
-      return "NPC_SAY_PROXIMITY";
-    case NodeType::CHOICE_DIALOGUE_SIMPLE:
-      return "CHOICE_DIALOGUE_SIMPLE";
-    case NodeType::TILE_ACTION:
-      return "TILE_ACTION";
-    case NodeType::PLAYER_THOUGHT:
-      return "PLAYER_THOUGHT";
-    case NodeType::OPTIONAL_POSITION:
-      return "OPTIONAL_POSITION";
-    case NodeType::SKIP:
-      return "SKIP";
-    case NodeType::TOTAL_SIZE:
-      return "TOTAL_SIZE";
-       */
-
-    default:
-      return "Unknown";
-  }
-}
+inline Node* CreateNode(const NodeID uid, const char* name, const Vector2 position) {}
 
 #endif  //RAYNODES_SRC_NODES_NODES_H_

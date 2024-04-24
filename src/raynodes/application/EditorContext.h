@@ -23,6 +23,7 @@
 
 #include <cstdio>
 #include <raylib.h>
+#include <cxstructs/StackVector.h>
 #include <cxutil/cxstring.h>
 
 #include "shared/fwd.h"
@@ -44,7 +45,7 @@ struct EditorContext {
   Core core{};
   Display display{};
   Logic logic{};
-  Templates templates{};
+  Template templates{};
   Plugin plugin{};
   Persist persist{};
   Input input{};

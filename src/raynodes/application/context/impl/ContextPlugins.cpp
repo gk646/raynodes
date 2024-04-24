@@ -20,7 +20,9 @@
 
 #include <string>
 #include <filesystem>
+#include <raylib.h>  //Cause of rayutils
 
+#include "shared/rayutils.h"
 #include "application/EditorContext.h"
 #include "plugin/PluginLoader.h"
 
@@ -28,20 +30,34 @@ String::String() {
   applicationDir = GetApplicationDirectory();
 }
 
-void Plugin::startLoad(EditorContext& ec, const char* name) {
-  printf("Loading %s ...",name);
-  previousSize = static_cast<int>(ec.templates.componentFactory.size());
+void Plugin::startLoad(EditorContext& ec, const RaynodesPluginI* plugin) {
+  char nameBuff[MAX_NAME_LEN];
+  PadWithChar(nameBuff, MAX_NAME_LEN, plugin->name, '.', nullptr, ":");
+  printf("    > %s ", nameBuff);  // Print the initial loading message
+  previousCompSize = static_cast<int>(ec.templates.componentFactory.size());
+  previousNodeSize = static_cast<int>(ec.templates.nodeFactory.size());
+  currentlyLoadedPlugin = plugin;
   loadErrors = 0;
   nodesRegistered = 0;
   componentsRegistered = 0;
 }
+
 void Plugin::printLoadStats(EditorContext& ec) {
-  nodesRegistered = 0;
-  componentsRegistered = ec.templates.componentFactory.size() - previousSize;
-  printf(" Registered %d Nodes ... %d Components", nodesRegistered, componentsRegistered);
-  if (loadErrors > 0) {
-    fprintf(stderr, "... %d Errors", loadErrors);
-  }
+  currentlyLoadedPlugin = nullptr;
+  componentsRegistered = static_cast<int>(ec.templates.componentFactory.size()) - previousCompSize;
+  nodesRegistered = static_cast<int>(ec.templates.nodeFactory.size()) - previousNodeSize;
+
+  constexpr int numBuffSize = 4;
+  char numBuff[numBuffSize];
+  PadWithChar(numBuff, numBuffSize, String::formatText("%d", nodesRegistered), '.');
+  printf("Nodes: %s ", numBuff);
+
+  PadWithChar(numBuff, numBuffSize, String::formatText("%d", componentsRegistered), '.');
+  printf("Components: %s ", numBuff);
+
+  PadWithChar(numBuff, numBuffSize, String::formatText("%d", loadErrors), '.');
+  printf("Errors: %s", numBuff);
+
   printf("\n");
 }
 
@@ -53,23 +69,34 @@ bool Plugin::loadPlugins(EditorContext& ec) {
 #else
   filter = ".so";
 #endif
-
+  printf("Loading raynodes plugins:\n");
   for (const auto& entry : std::filesystem::directory_iterator(basePath)) {
     if (entry.path().extension() == filter) {
-      std::string absolutePath = absolute(entry.path()).string();
-      auto* plugin = PluginLoader::GetPluginInstance(absolutePath.c_str(), "CreatePlugin");
+      auto* nameBuff = new char[MAX_NAME_LEN];
+      auto fileName = entry.path().filename().generic_string();
+      strncpy_s(nameBuff, MAX_NAME_LEN, fileName.c_str(), fileName.size());
+      auto* plugin = PluginLoader::GetPluginInstance(absolute(entry.path()).string().c_str(), "CreatePlugin");
+      if (!plugin) {
+        PadWithChar(nameBuff, MAX_NAME_LEN, fileName.c_str(), '.');
+        fprintf(stderr, "Failed to load plugin: %s\n", nameBuff);
+        continue;
+      }
+      plugin->name = nameBuff;
       plugin->onLoad(ec);
       plugins.push_back(plugin);
     }
   }
 
+  //TODO Sort plugins before loading - so builtins come first
+
   for (auto* p : plugins) {
-    startLoad(ec, "Dummy");
+    startLoad(ec, p);
     p->registerComponents(ec);
     p->registerNodes(ec);
     printLoadStats(ec);
   }
 
+  printf("=============================================================\n");
   printf("Loaded %d Plugin(s)\n", static_cast<int>(plugins.size()));
 
   return true;

@@ -21,19 +21,21 @@
 #ifndef RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTTEMPLATES_H_
 #define RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTTEMPLATES_H_
 
-struct StrEqual {
-  bool operator()(const char* s1, const char* s2) const { return std::strcmp(s1, s2) == 0; }
+using StringComponentMap =
+    std::unordered_map<const char*, ComponentCreateFunc, cxstructs::Fnv1aHash, cxstructs::StrEqual>;
+using StringNodeMap =
+    std::unordered_map<const char*, NodeCreateFunc, cxstructs::Fnv1aHash, cxstructs::StrEqual>;
+
+struct NodeTemplate {
+  cxstructs::StackVector<const char*, 10> components;  //Component names are unique
 };
 
-struct Template {};
-using ComponentCreateFunc = Component* (*)(const char*);
-struct Templates {
+struct Template {
+  StringComponentMap componentFactory;
+  StringNodeMap nodeFactory;
+  std::vector<NodeTemplate> templates;
 
-  std::unordered_map<const char*, ComponentCreateFunc, cxstructs::Fnv1aHash, StrEqual> componentFactory;
-  std::vector<Template> templates;
-
-
-  //Passed name only has to be valid until this function returns
+  //Passed name only has to be valid until this function returns (copied)
   bool registerComponent(const char* name, ComponentCreateFunc func) {
     if (componentFactory.contains(name)) {
       fprintf(stderr, "Colliding component \"%s\" will not be loaded. Please contact the plugin author.");
@@ -44,7 +46,7 @@ struct Templates {
     componentFactory.insert({copy, func});
     return true;
   }
-  //Passed name only has to be valid until this function returns
+  //Passed name only has to be valid until this function returns (copied)
   Component* createComponent(const char* name) {
     const auto it = componentFactory.find(name);
     if (it != componentFactory.end()) {
@@ -52,6 +54,31 @@ struct Templates {
     }
     return nullptr;
   }
+  //Passed name only has to be valid until this function returns (copied)
+  bool registerNode(const char* name, NodeCreateFunc func) {
+    if (nodeFactory.contains(name)) {
+      fprintf(stderr, "Colliding component \"%s\" will not be loaded. Please contact the plugin author.");
+      return false;
+    }
+    auto* copy = new char[strlen(name) + 1];
+    strcpy(copy, name);
+    nodeFactory.insert({copy, func});
+    return true;
+  }
+  //Passed name only has to be valid until this function returns (copied)
+  Node* createNode(const char* name) {
+    const auto it = nodeFactory.find(name);
+    if (it != nodeFactory.end()) {
+      return it->second(it->first);  //Reuse the allocated name
+    }
+    return nullptr;
+  }
+};
+
+// Special interfaces to capsulate the registration
+struct ComponentRegister {
+  EditorContext& ec;
+  bool registerComponent(const char* name, ComponentCreateFunc func);
 };
 
 #endif  //RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTTEMPLATES_H_

@@ -20,7 +20,5 @@
 
 #include "MQQS.h"
 
-#include <cstdio>
-
-void MQQS::registerComponents(EditorContext& ec) {}
+void MQQS::registerComponents(ComponentRegister& ec) {}
 void MQQS::registerNodes(EditorContext& ec) {}

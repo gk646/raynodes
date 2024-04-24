@@ -24,7 +24,7 @@
 #include "plugin/PluginInterface.h"
 
 struct MQQS final : RaynodesPluginI {
-  void registerComponents(EditorContext& ec) override;
+  void registerComponents(ComponentRegister& ec) override;
   void registerNodes(EditorContext& ec) override;
 };
 

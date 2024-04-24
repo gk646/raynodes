@@ -23,21 +23,17 @@
 
 #include "shared/fwd.h"
 
-#ifdef _EXPORTING
-#  define EXPORT __declspec(dllexport)
-#else
-#  define EXPORT __attribute__((visibility("default")))
-#endif
+using RegisterCompFunc = bool (*)(const char*, ComponentCreateFunc);
 
 struct RaynodesPluginI {
+  const char* name = nullptr;  //Will be set automatically at runtime (to the file name, for clarity)
   virtual ~RaynodesPluginI() = default;
   virtual void onLoad(EditorContext& ec) {}
-  virtual void registerComponents(EditorContext& ec) {}
+  virtual void registerComponents(ComponentRegister& cr) {}
   virtual void registerNodes(EditorContext& ec) {}
 
  protected:
-  // Useful when registering components
-  // ec.templates.registerComponent("MathOp", GetCreateFunc<MathC>());
+  // Useful when registering components e.g: cr.registerComponent("MathOp", GetCreateFunc<MathC>());
   template <typename T>
   static auto GetCreateFunc() {
     return [](const char* componentName) -> Component* {
@@ -46,9 +42,7 @@ struct RaynodesPluginI {
   }
 };
 
-// You have to adhere to this interface
-// Include this at the bottom
-
+// IMPORTANT: Include this at the bottom
 /*
 extern "C" EXPORT inline RaynodesPluginI* CreatePlugin() {
   return new MyPlugin();

@@ -23,24 +23,31 @@
 
 #include <cstdint>
 
-enum class NodeType : uint8_t;
-enum class PinType : uint8_t;
-enum MOperation : uint8_t;
-enum Direction : bool;
-enum ComponentType : uint8_t;
-enum NodeID : uint16_t;
-struct Connection;
-struct Component;
-struct Pin;
+#ifdef _EXPORTING
+#  define EXPORT __declspec(dllexport)
+#else
+#  define EXPORT __attribute__((visibility("default")))
+#endif
+
+enum class PinType : uint8_t;  // Datatype of connection pins
+enum MOperation : uint8_t;     // Type of math operation
+enum Direction : bool;         // Which directiont the pin is factin (in/out)
+enum NodeID : uint16_t;        // Unique NodeID counting up
+struct Connection;             // A connection between two components
+struct Component;              // Base class for all components
+struct Pin;                    // Base class for both pin types
+struct InputPin;               // InputPin specialization
+struct OutputPin;              // OutputPin specialization
 struct Node;
 struct Action;
 struct EditorContext;
 struct Color;
 struct Vector2;
 struct Rectangle;
-struct InputPin;
-struct OutputPin;
 struct EditorContext;
 struct RaynodesPluginI;
+struct ComponentRegister;
+using ComponentCreateFunc = Component* (*)(const char*);
+using NodeCreateFunc = Node* (*)(const char*);
 
 #endif  //RAYNODES_SRC_SHARED_FWD_H_

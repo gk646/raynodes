@@ -7,9 +7,10 @@
 #include "components/StringToNumberC.h"
 #include "components/TextInputField.h"
 
-void BuiltIns::registerComponents(EditorContext& ec) {
-  ec.templates.registerComponent("MathOp", GetCreateFunc<MathC>());
-  ec.templates.registerComponent("Display", GetCreateFunc<DisplayC>());
-  ec.templates.registerComponent("StrConv", GetCreateFunc<StringToNumberC>());
-  ec.templates.registerComponent("TextField", GetCreateFunc<TextInputField>());
+void BuiltIns::registerComponents(ComponentRegister& cr) {
+  cr.registerComponent("MathOp", GetCreateFunc<MathC>());
+  cr.registerComponent("Display", GetCreateFunc<DisplayC>());
+  cr.registerComponent("StrConv", GetCreateFunc<StringToNumberC>());
+  cr.registerComponent("TextField", GetCreateFunc<TextInputField>());
+  cr.registerComponent("TextField", GetCreateFunc<TextInputField>());
 }

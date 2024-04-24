@@ -48,7 +48,6 @@ class TextInputField final : public Component {
   void onFocusGain(EditorContext&) override;
   void onFocusLoss(EditorContext&) override;
   void onCreate(EditorContext& ec, Node& parent) override;
-  void onConnectionAdded(EditorContext &ec, const Connection &con) override;
   const char* getString() override { return buffer.c_str(); }
 
  private:
