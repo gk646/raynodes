@@ -33,8 +33,9 @@ struct Node {
   static constexpr float OFFSET_Y = 20;
   inline static Vector2 DRAG_OFFSET;
 
-  cxstructs::StackVector<Component*, 7> components{};
-  Vector2 position;
+  cxstructs::StackVector<Component*, 10> components{};  //Current limit
+  const char* name;                                     //Unique allocated name
+  Vector2 position{};
   Vector2 size;
   Color color;
   NodeID id;
@@ -43,8 +44,7 @@ struct Node {
   bool isDragged = false;
   bool isInOutReversed = false;  //Not yet used
 
-  Node(const NodeID id, const Vector2 position = {0, 0}, const Color color = BLACK)
-      : position(position), size({70, 50}), color(color), id(id) {}
+  explicit Node(const char* name) : name(name), size({70, 50}), color(BLACK) {}
   Node(const Node& n, const NodeID id)
       : position(n.position), size(n.size), color(n.color), id(id), isInOutReversed(n.isInOutReversed) {
     for (const auto c : n.components) {
@@ -82,12 +82,5 @@ struct Node {
   }
   [[nodiscard]] Rectangle getBounds() const { return {position.x, position.y, size.x, size.y}; }
 };
-
-/* |-----------------------------------------------------|
- * |                DEFINE NODES HERE                    |
- * |-----------------------------------------------------|
- */
-
-inline Node* CreateNode(const NodeID uid, const char* name, const Vector2 position) {}
 
 #endif  //RAYNODES_SRC_NODES_NODES_H_

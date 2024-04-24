@@ -36,6 +36,25 @@ inline void DrawNodes(EditorContext& ec) {
     }
   }
 }
+inline void DrawConnections(EditorContext& ec, bool isCTRLDown) {
+  const auto& connections = ec.core.connections;
+  const auto selectRect = ec.logic.selectRect;
+  const bool delNodes = isCTRLDown && ec.input.isMouseButtonReleased(MOUSE_BUTTON_RIGHT);
 
+  ConnectionDeleteAction* action = nullptr;
+  if (delNodes) action = new ConnectionDeleteAction(10);
+
+  for (const auto conn : connections) {
+    const auto fromPos = conn->getFromPos();
+    const auto toPos = conn->getToPos();
+    DrawLineBezier(fromPos, toPos, 2, conn->out.getColor());
+
+    if (delNodes && CheckCollisionBezierRect(fromPos, toPos, selectRect)) {
+      action->deletedConnections.push_back(conn);
+      ec.core.removeConnection(conn);
+    }
+  }
+  if (delNodes) ec.core.addEditorAction(action);
+}
 }  // namespace Editor
 #endif  //RAYNODES_SRC_EDITOR_ELEMENTS_EDITORDISPLAY_H_

@@ -158,6 +158,7 @@ void HandleHover(EditorContext& ec, Node& n, auto& selectedNodes) {
 //selectedNodes is std::unordered_map
 void HandleDrag(Node& n, EditorContext& ec, auto& selectedNodes, auto worldMouse) {
   ec.logic.isAnyNodeHovered = true;
+  ec.logic.isAnyNodeDragged = true;
   ec.logic.draggedNode = &n;
   if (ec.input.isMouseButtonDown(MOUSE_BUTTON_LEFT)) {
     const Vector2 movementDelta = {worldMouse.x - Node::DRAG_OFFSET.x, worldMouse.y - Node::DRAG_OFFSET.y};
@@ -195,7 +196,7 @@ void DrawComponentPins(EditorContext& ec, Component& c, float dx, float startIn,
     if (isAltDown) {
       const auto txt = PinTypeToString(p.pinType);
       const auto textPos = Vector2{middlePos.x - textOff, middlePos.y - pinRadius};
-      DrawCenteredText(ec.display.editorFont, txt, textPos, Pin::PIN_SIZE+2, 0, WHITE);
+      DrawCenteredText(ec.display.editorFont, txt, textPos, Pin::PIN_SIZE + 2, 0, WHITE);
     }
     p.yPos = currentY + pinRadius;
     currentY += Pin::PIN_SIZE;
@@ -209,8 +210,8 @@ void DrawComponentPins(EditorContext& ec, Component& c, float dx, float startIn,
     DrawCircleV({outputX, currentY + pinRadius}, pinRadius, p.getColor());
     if (isAltDown) {
       const auto txt = PinTypeToString(p.pinType);
-      const auto textPos = Vector2{middlePos.x + textOff, middlePos.y -pinRadius};
-      DrawCenteredText(ec.display.editorFont, txt, textPos, Pin::PIN_SIZE+2, 0, WHITE);
+      const auto textPos = Vector2{middlePos.x + textOff, middlePos.y - pinRadius};
+      DrawCenteredText(ec.display.editorFont, txt, textPos, Pin::PIN_SIZE + 2, 0, WHITE);
     }
     p.yPos = currentY + pinRadius;
     currentY += Pin::PIN_SIZE;
@@ -258,7 +259,7 @@ void Node::draw(EditorContext& ec) {
   }
 
   // Draw header text
-  DrawTextEx(display.editorFont, NodeToString(type), headerPos, display.fontSize, 1.0F, WHITE);
+  DrawTextEx(display.editorFont, name, headerPos, display.fontSize, 1.0F, WHITE);
 
   // Iterate over components and draw them
   const float initialY = startY;
@@ -274,7 +275,6 @@ void Node::draw(EditorContext& ec) {
   contentHeight = static_cast<uint16_t>(startY - initialY);
   size.y = startY - position.y + Pin::PIN_SIZE + PADDING;
 }
-
 void Node::update(EditorContext& ec) {
   //Cache
   const auto bounds = Rectangle{position.x, position.y, size.x, size.y};
@@ -319,7 +319,7 @@ void Node::update(EditorContext& ec) {
   }
 }
 void Node::saveState(FILE* file) {
-  cxstructs::io_save(file, static_cast<int>(type));
+  cxstructs::io_save(file, name);
   cxstructs::io_save(file, id);
   cxstructs::io_save(file, color.r);
   cxstructs::io_save(file, color.g);
@@ -335,9 +335,8 @@ void Node::saveState(FILE* file) {
   }
 }
 void Node::loadState(FILE* file) {
-  //Node type was already parsed
+  //Node name (type) was already parsed
   //Node id was already parsed
-  this->id = static_cast<NodeID>(id);
   int r, g, b, a;
   cxstructs::io_load(file, r);
   cxstructs::io_load(file, g);

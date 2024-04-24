@@ -22,11 +22,6 @@
 #define RAYNODES_SRC_SHARED_RAYUTILS_H_
 
 //#include <raylib.h> // raylib include is assumed / We don't force it
-#include <cmath>
-
-inline float GetDistManhattan(const Vector2 a, const Vector2 b) {
-  return std::abs(a.x - b.x) + std::abs(a.y - b.y);
-}
 
 //Measure the given text up to the given index
 //Does not do any bound checks
@@ -70,25 +65,4 @@ inline bool CheckCollisionBezierRect(const Vector2 startPos, const Vector2 endPo
   }
   return false;
 }
-
-inline void PadWithChar(char* buff, const int size, const char* arg, char padSymbol,
-                        const char* prefix = nullptr, const char* suffix = nullptr) {
-  int currPos = 0;
-  std::memset(buff, 0, size);
-
-  if (prefix) {
-    currPos += std::snprintf(buff, size, "%s", prefix);
-  }
-  currPos += std::snprintf(buff + currPos, size - currPos, "%s", arg);
-  if (suffix) {
-    currPos += std::snprintf(buff + currPos, size - currPos, "%s", suffix);
-  }
-
-  for (int i = currPos; i < size - 1; i++) {
-    if (buff[i] == '\0') {
-      buff[i] = padSymbol;
-    }
-  }
-}
-
 #endif  //RAYNODES_SRC_SHARED_RAYUTILS_H_

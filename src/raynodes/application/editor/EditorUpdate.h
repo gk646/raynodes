@@ -38,6 +38,7 @@ void StartUpdateTick(EditorContext& ec) {
   ec.logic.worldMouse = GetScreenToWorld2D(mouse, camera);
   ec.logic.mouse = mouse;
   ec.logic.isAnyNodeHovered = false;  // Reset each tick
+  ec.logic.isAnyNodeDragged = false;  // Reset each tick
   ec.input.reset();                   //Reset input for tick
 }
 void FormatSelectRectangle(EditorContext& ec) {

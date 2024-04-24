@@ -21,7 +21,6 @@
 #ifndef RAYNODES_SRC_APPLICATION_EDITOR_EDITOREXIT_H_
 #define RAYNODES_SRC_APPLICATION_EDITOR_EDITOREXIT_H_
 
-#include <cxstructs/Constraint.h>
 
 namespace Editor {
 

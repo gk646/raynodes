@@ -18,20 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CONTEXTPLUGIN_H
-#define CONTEXTPLUGIN_H
 
-struct Plugin {
-  static constexpr int MAX_NAME_LEN = 17;  //16 with terminator ('\0')
-  std::vector<RaynodesPluginI*> plugins;
+#include "application/EditorContext.h"
 
-  bool loadPlugins(EditorContext& ec);
-  void sortPlugins() {
-    for (auto* plugin : plugins) {
-      if (TextIsEqual(plugin->name, "BuiltIns")) {
-        std::swap(plugins[0], plugin);
-      }
-    }
-  }
-};
-#endif  //CONTEXTPLUGIN_H
+String::String() {
+  applicationDir = GetApplicationDirectory();
+}

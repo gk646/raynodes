@@ -18,20 +18,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CONTEXTPLUGIN_H
-#define CONTEXTPLUGIN_H
+#include <cstdarg>
 
-struct Plugin {
-  static constexpr int MAX_NAME_LEN = 17;  //16 with terminator ('\0')
-  std::vector<RaynodesPluginI*> plugins;
+#include <initializer_list>
+#include "application/EditorContext.h"
 
-  bool loadPlugins(EditorContext& ec);
-  void sortPlugins() {
-    for (auto* plugin : plugins) {
-      if (TextIsEqual(plugin->name, "BuiltIns")) {
-        std::swap(plugins[0], plugin);
-      }
-    }
+bool ComponentRegister::registerComponent(const char* name, ComponentCreateFunc func) {
+  const auto res = ec.templates.registerComponent(name, func, plugin);
+  if (!res) errorCount++;
+  return res;
+}
+
+bool NodeRegister::registerNode(const char* name, NodeTemplate& nt) {
+  const auto res = ec.templates.registerNode(name, nt, plugin);
+  if (res) {
+    ec.ui.contextMenu.addNode(plugin.name, name);
+  } else {
+    errorCount++;
   }
-};
-#endif  //CONTEXTPLUGIN_H
+  return res;
+}
+
+bool NodeRegister::registerNode(const char* name, const std::initializer_list<const char*>& components) {
+  NodeTemplate nt;
+  int i = 0;
+  for (const auto component : components) {
+    nt.components[i] = component;
+    i++;
+  }
+  const auto res = ec.templates.registerNode(name, nt, plugin);
+  if (res) {
+    ec.ui.contextMenu.addNode(plugin.name, name);
+  } else {
+    errorCount++;
+  }
+  return res;
+}

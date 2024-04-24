@@ -11,4 +11,4 @@ add_executable(raynodes main.cpp)
 # This places the executable in the root of the build directory
 set_target_properties(raynodes PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 # Link against user32 on windows
-target_link_libraries(raynodes PRIVATE raylib user32 editor)
+target_link_libraries(raynodes PUBLIC raylib user32 editor)

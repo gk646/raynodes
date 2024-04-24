@@ -25,15 +25,20 @@
 
 using RegisterCompFunc = bool (*)(const char*, ComponentCreateFunc);
 
+//The raynodes plugin interface
 struct RaynodesPluginI {
   const char* name = nullptr;  //Will be set automatically at runtime (to the file name, for clarity)
   virtual ~RaynodesPluginI() = default;
+  // Called once after its been loaded
   virtual void onLoad(EditorContext& ec) {}
+  // Called once at the correct time to register its components
   virtual void registerComponents(ComponentRegister& cr) {}
-  virtual void registerNodes(EditorContext& ec) {}
+  // Called once at the correct time to register its nodes
+  virtual void registerNodes(NodeRegister& nr) {}
 
  protected:
   // Useful when registering components e.g: cr.registerComponent("MathOp", GetCreateFunc<MathC>());
+  //TODO might be able to remove that and just use type to register
   template <typename T>
   static auto GetCreateFunc() {
     return [](const char* componentName) -> Component* {
@@ -42,10 +47,23 @@ struct RaynodesPluginI {
   }
 };
 
-// IMPORTANT: Include this at the bottom
+// ====IMPORTANT====: Include this at the bottom to export the function
+
+//
+//extern "C" EXPORT inline RaynodesPluginI* CreatePlugin() {
+//  return new MyPlugin();
+//}
+
+//-----------EXAMPLE-----------//
 /*
+#include "plugin/PluginInterface.h"
+
+struct BuiltIns final : RaynodesPluginI{
+  void registerComponents(ComponentRegister& cr) override;
+};
+
 extern "C" EXPORT inline RaynodesPluginI* CreatePlugin() {
-  return new MyPlugin();
+  return new BuiltIns();
 }
 */
 #endif  //PLUGINI_H

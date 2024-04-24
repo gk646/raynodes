@@ -21,4 +21,4 @@
 #include "MQQS.h"
 
 void MQQS::registerComponents(ComponentRegister& ec) {}
-void MQQS::registerNodes(EditorContext& ec) {}
+void MQQS::registerNodes(NodeRegister& nr) {}

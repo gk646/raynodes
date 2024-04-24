@@ -3,13 +3,13 @@
 
 #include "plugin/PluginInterface.h"
 
-
-struct BuiltIns final : RaynodesPluginI{
+struct BuiltIns final : RaynodesPluginI {
   void registerComponents(ComponentRegister& cr) override;
+  void registerNodes(NodeRegister& nr) override;
 };
 
 extern "C" EXPORT inline RaynodesPluginI* CreatePlugin() {
   return new BuiltIns();
 }
 
-#endif //BUILTINS_H
+#endif  //BUILTINS_H
