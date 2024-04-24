@@ -21,15 +21,17 @@
 #ifndef CONTEXTPLUGIN_H
 #define CONTEXTPLUGIN_H
 
-
 struct Plugin {
+  static constexpr int MAX_NAME_LEN = 17;  //16 with terminator ('\0')
   std::vector<RaynodesPluginI*> plugins;
-  int previousSize = 0;
+  const RaynodesPluginI* currentlyLoadedPlugin = nullptr;
+  int previousCompSize = 0;
+  int previousNodeSize = 0;
   int loadErrors = 0;
   int componentsRegistered = 0;
   int nodesRegistered = 0;
 
-  void startLoad(EditorContext& ec, const char* name);
+  void startLoad(EditorContext& ec, const RaynodesPluginI* plugin);
   void printLoadStats(EditorContext& ec);
   bool loadPlugins(EditorContext& ec);
 };

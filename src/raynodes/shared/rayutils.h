@@ -57,7 +57,7 @@ inline float EaseCubicIn(float t, float b, float c, float d) {
   return 0.5f * c * (t * t * t + 2.0f) + b;
 }
 inline bool CheckCollisionBezierRect(const Vector2 startPos, const Vector2 endPos, const Rectangle& rect,
-                                      int numPoints = 100) {
+                                     int numPoints = 100) {
   Vector2 current;
   for (int i = 0; i <= numPoints; ++i) {
     float t = static_cast<float>(i) / static_cast<float>(numPoints);
@@ -70,4 +70,25 @@ inline bool CheckCollisionBezierRect(const Vector2 startPos, const Vector2 endPo
   }
   return false;
 }
+
+inline void PadWithChar(char* buff, const int size, const char* arg, char padSymbol,
+                        const char* prefix = nullptr, const char* suffix = nullptr) {
+  int currPos = 0;
+  std::memset(buff, 0, size);
+
+  if (prefix) {
+    currPos += std::snprintf(buff, size, "%s", prefix);
+  }
+  currPos += std::snprintf(buff + currPos, size - currPos, "%s", arg);
+  if (suffix) {
+    currPos += std::snprintf(buff + currPos, size - currPos, "%s", suffix);
+  }
+
+  for (int i = currPos; i < size - 1; i++) {
+    if (buff[i] == '\0') {
+      buff[i] = padSymbol;
+    }
+  }
+}
+
 #endif  //RAYNODES_SRC_SHARED_RAYUTILS_H_

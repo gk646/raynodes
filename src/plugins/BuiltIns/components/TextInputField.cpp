@@ -27,6 +27,43 @@
 #include "application/elements/Action.h"
 #include "shared/rayutils.h"
 
+void DrawTextSelection(const Font& font, char* buffer, int bufferLength, int selectionStart, int selectionEnd,
+                       float x, float y, float maxWidth, int fontSize) {
+  float currentX = x;      // X position where the current line starts
+  float currentY = y;      // Y position where the current line starts
+  int lineStartIndex = 0;  // Start index of the current line in buffer
+
+  for (int i = 0; i < bufferLength; i++) {
+    bool atEndOfLine = buffer[i] == '\n' || buffer[i] == '\0' || currentX > maxWidth;
+    bool atEndOfBuffer = i == bufferLength - 1;
+
+    if (atEndOfLine || atEndOfBuffer) {
+      if (atEndOfBuffer && !atEndOfLine) {
+        // If we are at the end of the buffer and not at a new line, we need to include the last character in the line width calculation
+        i++;
+      }
+
+      // Check if this line contains part of the selection
+      if (selectionStart < i && selectionEnd >= lineStartIndex) {
+        int startInLine = std::max(selectionStart - lineStartIndex, 0);
+        int endInLine = std::min(selectionEnd - lineStartIndex, i - lineStartIndex);
+
+        float startX = MeasureTextUpTo(buffer + lineStartIndex, startInLine, font, fontSize, 1);
+        float endX = MeasureTextUpTo(buffer + lineStartIndex, endInLine, font, fontSize, 1);
+
+        DrawRectangle(currentX + startX, currentY, endX - startX, fontSize, ColorAlpha(LIGHTGRAY, 0.5F));
+      }
+
+      // Reset to new line parameters
+      currentY += fontSize;    // Move down by one line
+      currentX = x;            // Reset X to the initial position
+      lineStartIndex = i + 1;  // Update line start index to the next character after new line or buffer end
+    } else {
+      // Calculate the width of the current character and add it to the currentX
+      currentX += MeasureTextUpTo(buffer + i, 1, font, fontSize, 1);
+    }
+  }
+}
 void TextInputField::draw(EditorContext& ec, Node& parent) {
   //Cache
   const auto bounds = getBounds();
@@ -49,8 +86,8 @@ void TextInputField::draw(EditorContext& ec, Node& parent) {
   }
   //Draw selection highlight
   if (isDragging && selectionStart != selectionEnd) {
-    auto width = MeasureTextUpTo(buffer.data() + selectionStart, selectionEnd, font, fs, 0.5F);
-    DrawRectangleRec({bounds.x, bounds.y, width, fs}, ColorAlpha(LIGHTGRAY, 0.5F));
+    DrawTextSelection(font, buffer.data(), buffer.size(), selectionStart, selectionEnd, bounds.x + 3,
+                      bounds.y, bounds.width, fs);
   }
 }
 
@@ -184,8 +221,4 @@ uint16_t TextInputField::getIndexFromPos(const Font& font, const float fs, const
   }
   if (relX > accu) return static_cast<uint16_t>(buffer.size());
   return 0;
-}
-void TextInputField::onConnectionAdded(EditorContext& ec, const Connection& con) {
-
-  outputs[0].setData<PinType::STRING>(buffer.c_str());
 }

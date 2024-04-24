@@ -15,4 +15,4 @@
 #target_include_directories(MyPlugin PRIVATE ${CMAKE_SOURCE_DIR}/src/raynodes)
 
 add_subdirectory(MQQS) # MageQuest Quest Script
-add_subdirectory(BuiltIns) # Built in Types (STL)
+add_subdirectory(BuiltIns) # Built in Types (raynodes STL...)
