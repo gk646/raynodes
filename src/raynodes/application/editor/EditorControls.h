@@ -21,9 +21,9 @@
 #ifndef RAYNODES_SRC_EDITOR_EDITORCONTROLS_H_
 #define RAYNODES_SRC_EDITOR_EDITORCONTROLS_H_
 
-#include <ranges>
-
 namespace Editor {
+//TODO split up
+
 inline void PollControls(EditorContext& ec) {
   const auto mouse = ec.logic.mouse;
   const auto worldMouse = ec.logic.worldMouse;
@@ -144,10 +144,8 @@ inline void PollControls(EditorContext& ec) {
       ec.core.addEditorAction(action);
     }
   }
-
-  //TODO remove debug features
   if (ec.input.isKeyDown(KEY_B)) {
-    ec.core.createNode(ec, NodeType::HEADER,
+    ec.core.createNode(ec, "Display",
                        {(float)GetRandomValue(0, 1000), (float)GetRandomValue(0, 1000)});
     printf("%d\n", static_cast<int>(ec.core.nodes.size()));
   }

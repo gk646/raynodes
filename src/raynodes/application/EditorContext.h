@@ -23,13 +23,13 @@
 
 #include <cstdio>
 #include <raylib.h>
-#include <cxstructs/StackVector.h>
 #include <cxutil/cxstring.h>
 
 #include "shared/fwd.h"
 
 #include "plugin/PluginInterface.h"
 #include "blocks/Connection.h"
+#include "node/Node.h"
 
 #include "context/ContextString.h"
 #include "context/ContextInfo.h"
@@ -40,6 +40,7 @@
 #include "context/ContextInput.h"
 #include "context/ContextTemplates.h"
 #include "context/ContextPlugin.h"
+#include "context/ContextUserInterface.h"
 
 struct EditorContext {
   Core core{};
@@ -47,6 +48,7 @@ struct EditorContext {
   Logic logic{};
   Template templates{};
   Plugin plugin{};
+  UserInterface ui{};
   Persist persist{};
   Input input{};
   Info info{};

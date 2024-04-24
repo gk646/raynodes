@@ -20,7 +20,9 @@
 
 #include "StringToNumberC.h"
 
-void StringToNumberC::draw(EditorContext& ec, Node& parent) {}
+void StringToNumberC::draw(EditorContext& ec, Node& parent) {
+
+}
 
 void StringToNumberC::update(EditorContext& ec, Node& parent) {
   auto inData = inputs[0].getData<PinType::STRING>();

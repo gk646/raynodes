@@ -10,7 +10,13 @@
 void BuiltIns::registerComponents(ComponentRegister& cr) {
   cr.registerComponent("MathOp", GetCreateFunc<MathC>());
   cr.registerComponent("Display", GetCreateFunc<DisplayC>());
-  cr.registerComponent("StrConv", GetCreateFunc<StringToNumberC>());
-  cr.registerComponent("TextField", GetCreateFunc<TextInputField>());
-  cr.registerComponent("TextField", GetCreateFunc<TextInputField>());
+  cr.registerComponent("StrToNum", GetCreateFunc<StringToNumberC>());
+  cr.registerComponent("TextInputField", GetCreateFunc<TextInputField>());
+}
+
+void BuiltIns::registerNodes(NodeRegister& nr) {
+  nr.registerNode("MathOp", {"MathOp"});
+  nr.registerNode("TextField", {"TextInputField"});
+  nr.registerNode("StringToNum", {"StrToNum"});
+  nr.registerNode("Display", {"Display"});
 }

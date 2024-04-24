@@ -23,6 +23,7 @@
 
 #include <cstdint>
 
+// Defines for the plugin exports
 #ifdef _EXPORTING
 #  define EXPORT __declspec(dllexport)
 #else
@@ -38,16 +39,18 @@ struct Component;              // Base class for all components
 struct Pin;                    // Base class for both pin types
 struct InputPin;               // InputPin specialization
 struct OutputPin;              // OutputPin specialization
-struct Node;
-struct Action;
-struct EditorContext;
+struct Node;                   // Base class for node
+struct Action;                 // Base class for any editor action (anything able to be undone/redone)
+struct EditorContext;          // Core data holder for the editor
+struct RaynodesPluginI;        // Base class for the plugin interface
+struct NodeTemplate;           // Template to create a node (list of component names)
+struct ComponentRegister;      // Interface that encaspulate registering components
+struct NodeRegister;           // Interface that encaspulate registering nodes
+using ComponentCreateFunc = Component* (*)(const char* name);  // Takes a name and returns a new Component
+
+//Raylib types
 struct Color;
 struct Vector2;
 struct Rectangle;
-struct EditorContext;
-struct RaynodesPluginI;
-struct ComponentRegister;
-using ComponentCreateFunc = Component* (*)(const char*);
-using NodeCreateFunc = Node* (*)(const char*);
 
 #endif  //RAYNODES_SRC_SHARED_FWD_H_

@@ -20,46 +20,47 @@
 
 #include <string>
 #include <filesystem>
-#include <raylib.h>  //Cause of rayutils
+#include <cxutil/cxstring.h>
 
-#include "shared/rayutils.h"
 #include "application/EditorContext.h"
 #include "plugin/PluginLoader.h"
 
-String::String() {
-  applicationDir = GetApplicationDirectory();
-}
-
-void Plugin::startLoad(EditorContext& ec, const RaynodesPluginI* plugin) {
-  char nameBuff[MAX_NAME_LEN];
-  PadWithChar(nameBuff, MAX_NAME_LEN, plugin->name, '.', nullptr, ":");
-  printf("    > %s ", nameBuff);  // Print the initial loading message
-  previousCompSize = static_cast<int>(ec.templates.componentFactory.size());
-  previousNodeSize = static_cast<int>(ec.templates.nodeFactory.size());
-  currentlyLoadedPlugin = plugin;
-  loadErrors = 0;
-  nodesRegistered = 0;
-  componentsRegistered = 0;
-}
-
-void Plugin::printLoadStats(EditorContext& ec) {
-  currentlyLoadedPlugin = nullptr;
-  componentsRegistered = static_cast<int>(ec.templates.componentFactory.size()) - previousCompSize;
-  nodesRegistered = static_cast<int>(ec.templates.nodeFactory.size()) - previousNodeSize;
-
+namespace {
+// Registers a plugin in one go
+void RegisterPlugin(EditorContext& ec, RaynodesPluginI* plugin) {
+  char nameBuff[Plugin::MAX_NAME_LEN];
   constexpr int numBuffSize = 4;
   char numBuff[numBuffSize];
-  PadWithChar(numBuff, numBuffSize, String::formatText("%d", nodesRegistered), '.');
-  printf("Nodes: %s ", numBuff);
 
-  PadWithChar(numBuff, numBuffSize, String::formatText("%d", componentsRegistered), '.');
-  printf("Components: %s ", numBuff);
+  // Start
+  cxstructs::str_pad(nameBuff, Plugin::MAX_NAME_LEN, plugin->name, '.', nullptr, ":");
+  printf("    > %s ", nameBuff);  // Print the initial loading message
 
-  PadWithChar(numBuff, numBuffSize, String::formatText("%d", loadErrors), '.');
+  // Nodes
+  int nodesRegistered = static_cast<int>(ec.templates.nodeFactory.size());
+  NodeRegister nr{ec, *plugin, 0};
+  plugin->registerNodes(nr);
+  nodesRegistered = static_cast<int>(ec.templates.nodeFactory.size()) - nodesRegistered;
+  cxstructs::str_pad(numBuff, numBuffSize, String::formatText("%d", nodesRegistered), '.');
+  printf("Nodes: %s / ", numBuff);
+
+  // Components
+  int componentsRegistered = static_cast<int>(ec.templates.componentFactory.size());
+  ComponentRegister cr{ec, *plugin, 0};
+  plugin->registerComponents(cr);
+  componentsRegistered = static_cast<int>(ec.templates.componentFactory.size()) - componentsRegistered;
+  cxstructs::str_pad(numBuff, numBuffSize, String::formatText("%d", componentsRegistered), '.');
+  printf("Components: %s / ", numBuff);
+
+  // Errors
+  cxstructs::str_pad(numBuff, numBuffSize, String::formatText("%d", nr.errorCount + cr.errorCount), '.');
   printf("Errors: %s", numBuff);
-
   printf("\n");
+  fflush(stdout);
+  fflush(stderr);
 }
+
+}  // namespace
 
 bool Plugin::loadPlugins(EditorContext& ec) {
   const char* basePath = String::formatText("%s%s", ec.string.applicationDir, String::PLUGIN_PATH);
@@ -70,30 +71,27 @@ bool Plugin::loadPlugins(EditorContext& ec) {
   filter = ".so";
 #endif
   printf("Loading raynodes plugins:\n");
+
+  char nameBuff[MAX_NAME_LEN]{};
   for (const auto& entry : std::filesystem::directory_iterator(basePath)) {
     if (entry.path().extension() == filter) {
-      auto* nameBuff = new char[MAX_NAME_LEN];
-      auto fileName = entry.path().filename().generic_string();
-      strncpy_s(nameBuff, MAX_NAME_LEN, fileName.c_str(), fileName.size());
-      auto* plugin = PluginLoader::GetPluginInstance(absolute(entry.path()).string().c_str(), "CreatePlugin");
+      std::string fileName = entry.path().stem().string();  // Get the filename without extension
+      TextCopy(nameBuff, fileName.c_str());
+      auto* plugin = PluginLoader::GetPluginInstance(entry.path().string().c_str(), "CreatePlugin");
       if (!plugin) {
-        PadWithChar(nameBuff, MAX_NAME_LEN, fileName.c_str(), '.');
         fprintf(stderr, "Failed to load plugin: %s\n", nameBuff);
         continue;
       }
-      plugin->name = nameBuff;
+      plugin->name = cxstructs::str_dup(nameBuff);
       plugin->onLoad(ec);
       plugins.push_back(plugin);
     }
   }
 
-  //TODO Sort plugins before loading - so builtins come first
+  ec.plugin.sortPlugins();  // BuiltIns has to be first
 
-  for (auto* p : plugins) {
-    startLoad(ec, p);
-    p->registerComponents(ec);
-    p->registerNodes(ec);
-    printLoadStats(ec);
+  for (auto* plugin : plugins) {
+    RegisterPlugin(ec, plugin);
   }
 
   printf("=============================================================\n");
@@ -101,40 +99,3 @@ bool Plugin::loadPlugins(EditorContext& ec) {
 
   return true;
 }
-
-//C-Style approach using raylib - not tested
-/*
-*const char* basePath = String::formatText("%s%s", ec.string.applicationDir, PLUGIN_PATH);
-  const char* filter;
-#if defined(_WIN32)
-  filter = ".dll";
-#else
-  filter = ".so";
-#endif
-
-  dirent* dp = nullptr;
-  DIR* dir = opendir(basePath);
-
-  std::memset(String::buffer, 0, String::BUFFER_SIZE);
-
-  if (dir != nullptr) {
-    while ((dp = readdir(dir)) != nullptr) {
-      if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0) {
-#if defined(_WIN32)
-        sprintf(String::buffer, "%s\\%s", basePath, dp->d_name);
-#else
-        sprintf(path, "%s/%s", basePath, dp->d_name);
-#endif
-
-        if (IsFileExtension(String::buffer, filter)) {
-          auto* plugin = new Plugin();
-          if (plugin->load(String::buffer)) {
-            auto* raynodePlugin = plugin->getFunction<RaynodePluginI*>("GetPlugin");
-            plugins.push_back(raynodePlugin);
-          }
-        }
-      }
-    }
-  }
-  closedir(dir);
- */
