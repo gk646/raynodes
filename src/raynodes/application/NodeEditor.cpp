@@ -68,15 +68,15 @@ void DrawContent(EditorContext& ec) {
   }
 }
 void DrawForeGround(EditorContext& ec) {
-  Editor::UpdateTick(ec);
+  Editor::UpdateTick(ec);  //Updates all nodes
 
   if (ec.logic.showContextMenu) {
     Editor::DrawContextMenu(ec);
   }
 
-  Editor::DrawActions(ec);
-
   Editor::PollControls(ec);
+  Editor::DrawActions(ec);
+  Editor::DrawTopBar(ec);
 
   char buff[8];
   snprintf(buff, 8, "%d", GetFPS());

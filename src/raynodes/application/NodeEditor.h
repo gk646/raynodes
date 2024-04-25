@@ -26,8 +26,6 @@
 class NodeEditor {
   EditorContext context;
 
-  void update();
-
  public:
   explicit NodeEditor(const char* saveName);
   bool start();

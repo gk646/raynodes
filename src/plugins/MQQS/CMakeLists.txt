@@ -9,3 +9,4 @@ set_target_properties(MQQS PROPERTIES
 
 
 target_include_directories(MQQS PRIVATE ${CMAKE_SOURCE_DIR}/src/raynodes)
+target_link_libraries(MQQS PRIVATE editor)

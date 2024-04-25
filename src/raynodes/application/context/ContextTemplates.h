@@ -21,7 +21,6 @@
 #ifndef RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTTEMPLATES_H_
 #define RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTTEMPLATES_H_
 
-struct NodeTemplate;
 using StringComponentMap =
     std::unordered_map<const char*, ComponentCreateFunc, cxstructs::Fnv1aHash, cxstructs::StrEqual>;
 using StringNodeMap =
@@ -36,15 +35,7 @@ struct Template {
   StringNodeMap nodeFactory;
 
   // Passed name only has to be valid until this function returns (copied)
-  bool registerComponent(const char* name, ComponentCreateFunc func, const RaynodesPluginI& plugin) {
-    if (componentFactory.contains(name)) {
-      auto* format = "Naming collision: %s/%s wont be loaded. Please contact the plugin author.\n";
-      fprintf(stderr, format, plugin.name, name);
-      return false;
-    }
-    componentFactory.insert({cxstructs::str_dup(name), func});
-    return true;
-  }
+  bool registerComponent(const char* name, ComponentCreateFunc func, const RaynodesPluginI& plugin);
   // Passed name only has to be valid until this function returns
   Component* createComponent(const char* name) {
     const auto it = componentFactory.find(name);
@@ -54,21 +45,7 @@ struct Template {
     return nullptr;
   }
   // Passed template names only have to be valid until this function returns (copied)
-  bool registerNode(const char* name, const NodeTemplate& nt, const RaynodesPluginI& plugin) {
-    if (nodeFactory.contains(name)) {
-      auto* format = "Naming collision: %s/%s wont be loaded. Please contact the plugin author.\n";
-      fprintf(stderr, format, plugin.name, name);
-      return false;
-    }
-    NodeTemplate newTemplate;  // Allocate and copy the given component names
-    for (int i = 0; i < 10; ++i) {
-      if (nt.components[i] == nullptr) continue;  // We dont break for safety
-      newTemplate.components[i] = cxstructs::str_dup(nt.components[i]);
-    }
-
-    nodeFactory.insert({cxstructs::str_dup(name), newTemplate});  // Allocate and copy the name
-    return true;
-  }
+  bool registerNode(const char* name, const NodeTemplate& nt, const RaynodesPluginI& plugin);
   // Passed name only has to be valid until this function returns
   Node* createNode(const char* name) {
     const auto it = nodeFactory.find(name);
@@ -82,25 +59,6 @@ struct Template {
     }
     return nullptr;
   }
-};
-
-// Special interfaces to capsulate the registration
-struct ComponentRegister {
-  EditorContext& ec;
-  RaynodesPluginI& plugin;
-  int errorCount = 0;
-  // Register a component to be used with the given name
-  // "ComponentCreateFunc" is just a function that takes a string name and returns a"Component*"
-  bool registerComponent(const char* name, ComponentCreateFunc func);
-};
-struct NodeRegister {
-  EditorContext& ec;
-  RaynodesPluginI& plugin;
-  int errorCount = 0;
-  // Registers a node with name "name" with the components specified in the template
-  bool registerNode(const char* name, NodeTemplate& nt);
-  // Registers a node with name "name" and the component names specified directly
-  bool registerNode(const char* name, const std::initializer_list<const char*>& components);
 };
 
 #endif  //RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTTEMPLATES_H_

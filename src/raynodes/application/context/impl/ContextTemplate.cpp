@@ -18,39 +18,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <cstdarg>
-
-#include <initializer_list>
 #include "application/EditorContext.h"
+#include "plugin/PluginInterface.h"
 
-bool ComponentRegister::registerComponent(const char* name, ComponentCreateFunc func) {
-  const auto res = ec.templates.registerComponent(name, func, plugin);
-  if (!res) errorCount++;
-  return res;
+bool Template::registerComponent(const char* name, ComponentCreateFunc func, const RaynodesPluginI& plugin) {
+  if (componentFactory.contains(name)) {
+    auto* format = "Naming collision: %s/%s wont be loaded. Please contact the plugin author.\n";
+    fprintf(stderr, format, plugin.name, name);
+    return false;
+  }
+  componentFactory.insert({cxstructs::str_dup(name), func});
+  return true;
 }
 
-bool NodeRegister::registerNode(const char* name, NodeTemplate& nt) {
-  const auto res = ec.templates.registerNode(name, nt, plugin);
-  if (res) {
-    ec.ui.contextMenu.addNode(plugin.name, name);
-  } else {
-    errorCount++;
+bool Template::registerNode(const char* name, const NodeTemplate& nt, const RaynodesPluginI& plugin) {
+  if (nodeFactory.contains(name)) {
+    auto* format = "Naming collision: %s/%s wont be loaded. Please contact the plugin author.\n";
+    fprintf(stderr, format, plugin.name, name);
+    return false;
   }
-  return res;
-}
+  NodeTemplate newTemplate;  // Allocate and copy the given component names
+  for (int i = 0; i < 10; ++i) {
+    if (nt.components[i] == nullptr) continue;  // We dont break for safety
+    newTemplate.components[i] = cxstructs::str_dup(nt.components[i]);
+  }
 
-bool NodeRegister::registerNode(const char* name, const std::initializer_list<const char*>& components) {
-  NodeTemplate nt;
-  int i = 0;
-  for (const auto component : components) {
-    nt.components[i] = component;
-    i++;
-  }
-  const auto res = ec.templates.registerNode(name, nt, plugin);
-  if (res) {
-    ec.ui.contextMenu.addNode(plugin.name, name);
-  } else {
-    errorCount++;
-  }
-  return res;
+  nodeFactory.insert({cxstructs::str_dup(name), newTemplate});  // Allocate and copy the name
+  return true;
 }

@@ -88,7 +88,8 @@ inline void DrawContextMenu(EditorContext& ec) {
     Rectangle categoryRect = {drawPos.x + menuWidth, drawPos.y, menuWidth, categoryHeight};
 
     // Detect if mouse is over this category
-    if (CheckCollisionPointRec(mouse, textRect) || CheckCollisionPointRec(mouse, categoryRect)) {
+    if (CheckCollisionPointRec(mouse, textRect)
+        || (CheckCollisionPointRec(mouse, categoryRect) && category.isOpen)) {
       hoveredCategory = &category;  // Update the currently hovered category
     }
 
@@ -131,7 +132,6 @@ inline void DrawContextMenu(EditorContext& ec) {
     ec.logic.showContextMenu = false;
   }
 }
-
 inline void DrawActions(EditorContext& ec) {
   constexpr int visibleActions = 10;  // Number of actions displayed at a time
 
@@ -181,6 +181,17 @@ inline void DrawActions(EditorContext& ec) {
 
     // Move to the next action's position, ensuring space for text and padding
     rect.y += fs + padding;
+  }
+}
+inline void DrawTopBar(EditorContext& ec) {
+  const auto color = LIGHTGRAY;
+  const auto inset = ec.display.getSpace(0.05F);
+  const auto topBarRect = Rectangle{0, 0, ec.display.screenSize.x / 2.0F, inset};
+
+  if (!ec.ui.showTopBarOnlyOnHover || CheckCollisionPointRec(ec.logic.mouse, topBarRect)) {
+    DrawRectangleRounded(topBarRect, 0.1F, 30, ColorAlpha(color, 0.8F));
+  } else {
+    DrawRectangleRounded(topBarRect, 0.1F, 30, ColorAlpha(color, 0.3F));
   }
 }
 }  // namespace Editor

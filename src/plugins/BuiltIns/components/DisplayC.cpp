@@ -32,10 +32,10 @@ void DisplayC::draw(EditorContext& ec, Node& parent) {
     txt = inputs[0].getData<PinType::STRING>();
     DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
   } else if (inputs[1].isConnected()) {
-    txt = String::formatText("%f", inputs[1].getData<PinType::FLOAT>());
+    txt = String::FormatText("%f", inputs[1].getData<PinType::FLOAT>());
     DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
   } else if (inputs[2].isConnected()) {
-    txt = String::formatText("%d", inputs[2].getData<PinType::INTEGER>());
+    txt = String::FormatText("%d", inputs[2].getData<PinType::INTEGER>());
     DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
   }
 }

@@ -18,15 +18,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "MQQS.h"
+#ifndef NUMBERINPUT_H
+#define NUMBERINPUT_H
 
-#include "plugin/PluginInterface.h"
+#include <string>
 
-void MQQS::registerComponents(ComponentRegister& ec) {
+#include "component/Component.h"
 
-}
+struct TextAction;
+struct Font;
+class NumberInput final : public Component {
+  inline static uint8_t BLINK_DELAY = 45;
+  std::string buffer;
+  TextAction* currAction = nullptr;
+  uint16_t cursorPos{};
+  bool showCursor = false;
+  uint8_t blinkCounter = 0;
 
-void MQQS::registerNodes(NodeRegister& nr) {
-  nr.registerNode("Dialogue Choice",{"TextInput","TextInput","TextInput","TextInput","TextInput"});
-  nr.registerNode("Dialogue",{"TextInput"});
-}
+ public:
+  explicit NumberInput(const char* name) : Component(name, 150, 20) {}
+  Component* clone() override { return new NumberInput(*this); }
+  void draw(EditorContext& ec, Node& parent) override;
+  void update(EditorContext&, Node& parent) override;
+  void load(FILE* file) override;
+  void save(FILE* file) override;
+  void onFocusGain(EditorContext&) override;
+  void onFocusLoss(EditorContext&) override;
+  void onCreate(EditorContext& ec, Node& parent) override;
+  const char* getString() override { return buffer.c_str(); }
+
+ private:
+  [[nodiscard]] uint16_t getIndexFromPos(const Font& font, float fs, Vector2 mouse) const;
+};
+#endif  //NUMBERINPUT_H
