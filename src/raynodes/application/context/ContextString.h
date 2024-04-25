@@ -30,11 +30,18 @@ struct String {
 
   String();
 
-  static const char* formatText(const char* format, ...) {
+  static const char* FormatText(const char* format, ...) {
     va_list args;
     va_start(args, format);
     vsnprintf(buffer, BUFFER_SIZE, format, args);
     va_end(args);
+    return buffer;
+  }
+  static const char* GetWindowTitle(const char* fileName);
+  static const char* GetPaddedNum(const int num) {
+    char buff[4];
+    snprintf(buff,4,"%d",num);
+    cxstructs::str_pad(buffer, 4, buff, '.');
     return buffer;
   }
 };
