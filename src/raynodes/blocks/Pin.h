@@ -30,6 +30,8 @@ enum class PinType : uint8_t {
   INTEGER,
   DATA,
   FLOAT,
+  VECTOR_3,
+  VECTOR_2,
 };
 
 inline const char* PinTypeToString(PinType pt) {
@@ -44,6 +46,10 @@ inline const char* PinTypeToString(PinType pt) {
       return "Data";
     case PinType::FLOAT:
       return "Float";
+    case PinType::VECTOR_2:
+      return "Vec2";
+    case PinType::VECTOR_3:
+      return "Vec3";
     default:
       return "Unknown Type";
   }

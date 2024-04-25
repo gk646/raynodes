@@ -31,7 +31,7 @@ struct ContextMenu {
   std::vector<ContextMenuCategory> categories;
   void addNode(const char* category, const char* name) {
     for (auto& c : categories) {
-      if (cxstructs::str_cmp(c.name,category)) {
+      if (cxstructs::str_cmp(c.name, category)) {
         c.nodes.push_back(name);
         return;
       }
@@ -44,11 +44,9 @@ struct ContextMenu {
 
 struct UserInterface {
   ContextMenu contextMenu;
-  bool hideTopBar = false;
+  bool showTopBarOnlyOnHover = true;
 
-  UserInterface() {
-    contextMenu.addNode("neasdölfkj","aösdlkf");
-  }
+  UserInterface() = default;
 };
 
 #endif  //CONTEXTUI_H

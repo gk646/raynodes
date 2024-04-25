@@ -21,6 +21,7 @@
 #include "application/NodeEditor.h"
 
 int main(int argc, char* argv[]) {
+  //TODO add relative path
   NodeEditor editor{argv[1]};
   if (editor.start()) {
     return editor.run();

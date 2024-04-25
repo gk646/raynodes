@@ -18,15 +18,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "MQQS.h"
-
+#include "application/EditorContext.h"
 #include "plugin/PluginInterface.h"
 
-void MQQS::registerComponents(ComponentRegister& ec) {
-
+bool ComponentRegister::registerComponent(const char* name, ComponentCreateFunc func) {
+  const auto res = ec.templates.registerComponent(name, func, plugin);
+  if (!res) errorCount++;
+  return res;
 }
 
-void MQQS::registerNodes(NodeRegister& nr) {
-  nr.registerNode("Dialogue Choice",{"TextInput","TextInput","TextInput","TextInput","TextInput"});
-  nr.registerNode("Dialogue",{"TextInput"});
+bool NodeRegister::registerNode(const char* name, NodeTemplate& nt) {
+  const auto res = ec.templates.registerNode(name, nt, plugin);
+  if (res) {
+    ec.ui.contextMenu.addNode(plugin.name, name);
+  } else {
+    errorCount++;
+  }
+  return res;
+}
+
+bool NodeRegister::registerNode(const char* name, const std::initializer_list<const char*>& components) {
+  NodeTemplate nt;
+  int i = 0;
+  for (const auto component : components) {
+    nt.components[i] = component;
+    i++;
+  }
+  const auto res = ec.templates.registerNode(name, nt, plugin);
+  if (res) {
+    ec.ui.contextMenu.addNode(plugin.name, name);
+  } else {
+    errorCount++;
+  }
+  return res;
 }

@@ -27,6 +27,7 @@
 
 #include <cstdio>
 
+#include <cxutil/cxstring.h>
 #include "plugin/PluginLoader.h"
 #include "application/context/ContextString.h"
 

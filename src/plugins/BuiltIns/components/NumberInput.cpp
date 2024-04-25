@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "TextInputField.h"
+#include "NumberInput.h"
 
 #include <cxutil/cxmath.h>
 #include <cxutil/cxio.h>
@@ -27,44 +27,7 @@
 #include "application/elements/Action.h"
 #include "shared/rayutils.h"
 
-void DrawTextSelection(const Font& font, char* buffer, int bufferLength, int selectionStart, int selectionEnd,
-                       float x, float y, float maxWidth, int fontSize) {
-  float currentX = x;      // X position where the current line starts
-  float currentY = y;      // Y position where the current line starts
-  int lineStartIndex = 0;  // Start index of the current line in buffer
-
-  for (int i = 0; i < bufferLength; i++) {
-    bool atEndOfLine = buffer[i] == '\n' || buffer[i] == '\0' || currentX > maxWidth;
-    bool atEndOfBuffer = i == bufferLength - 1;
-
-    if (atEndOfLine || atEndOfBuffer) {
-      if (atEndOfBuffer && !atEndOfLine) {
-        // If we are at the end of the buffer and not at a new line, we need to include the last character in the line width calculation
-        i++;
-      }
-
-      // Check if this line contains part of the selection
-      if (selectionStart < i && selectionEnd >= lineStartIndex) {
-        int startInLine = std::max(selectionStart - lineStartIndex, 0);
-        int endInLine = std::min(selectionEnd - lineStartIndex, i - lineStartIndex);
-
-        float startX = MeasureTextUpTo(buffer + lineStartIndex, startInLine, font, fontSize, 1);
-        float endX = MeasureTextUpTo(buffer + lineStartIndex, endInLine, font, fontSize, 1);
-
-        DrawRectangle(currentX + startX, currentY, endX - startX, fontSize, ColorAlpha(LIGHTGRAY, 0.5F));
-      }
-
-      // Reset to new line parameters
-      currentY += fontSize;    // Move down by one line
-      currentX = x;            // Reset X to the initial position
-      lineStartIndex = i + 1;  // Update line start index to the next character after new line or buffer end
-    } else {
-      // Calculate the width of the current character and add it to the currentX
-      currentX += MeasureTextUpTo(buffer + i, 1, font, fontSize, 1);
-    }
-  }
-}
-void TextInputField::draw(EditorContext& ec, Node& parent) {
+void NumberInput::draw(EditorContext& ec, Node& parent) {
   //Cache
   const auto bounds = getBounds();
   const auto& font = ec.display.editorFont;
@@ -84,50 +47,22 @@ void TextInputField::draw(EditorContext& ec, Node& parent) {
   if (showCursor) {
     DrawTextEx(font, "|", {bounds.x + beforeWidth, bounds.y}, fs, 0.5F, WHITE);
   }
-  //Draw selection highlight
-  if (isDragging && selectionStart != selectionEnd) {
-    DrawTextSelection(font, buffer.data(), buffer.size(), selectionStart, selectionEnd, bounds.x + 3,
-                      bounds.y, bounds.width, fs);
-  }
 }
 
-void TextInputField::update(EditorContext& ec, Node& parent) {
+void NumberInput::update(EditorContext& ec, Node& parent) {
   auto inText = inputs[0].getData<PinType::STRING>();
   if (inText != nullptr) buffer = inText;
   outputs[0].setData<PinType::STRING>(buffer.c_str());
 
   if (!isFocused) return;
 
-  if (isDragging) {
-    selectionEnd = getIndexFromPos(ec.display.editorFont, ec.display.fontSize, ec.logic.worldMouse);
-  }
-
   if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-    isDragging = true;
     cursorPos = getIndexFromPos(ec.display.editorFont, ec.display.fontSize, ec.logic.worldMouse);
-    selectionStart = cursorPos;
-    selectionEnd = selectionStart;
-  }
-
-  if (ec.input.isMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-    isDragging = false;
-  }
-
-  if (ec.input.isKeyPressed(KEY_V) && ec.input.isKeyDown(KEY_LEFT_CONTROL)) {
-    buffer.insert(cursorPos, GetClipboardText());
-  }
-
-  if (ec.input.isKeyPressed(KEY_C) && ec.input.isKeyDown(KEY_LEFT_CONTROL)) {
-    SetClipboardText("");  //TODO
   }
 
   int key = GetCharPressed();
   while (key > 0) {
-    if (key == KEY_ENTER) {
-      buffer.insert(buffer.begin() + cursorPos, '\n');
-      cursorPos++;
-    }
-    if (key >= 32 && key <= 125 && buffer.length() < 1024) {
+    if ((key >= 48 && key <= 57) || key == 46 /* dot*/) {
       buffer.insert(buffer.begin() + cursorPos, static_cast<char>(key));
       cursorPos++;
     }
@@ -161,7 +96,7 @@ void TextInputField::update(EditorContext& ec, Node& parent) {
   }
 }
 
-void TextInputField::onFocusGain(EditorContext& ec) {
+void NumberInput::onFocusGain(EditorContext& ec) {
   //Position the cursor correct inside the text
   cursorPos = getIndexFromPos(ec.display.editorFont, ec.display.fontSize, ec.logic.worldMouse);
 
@@ -174,7 +109,7 @@ void TextInputField::onFocusGain(EditorContext& ec) {
   currAction = new TextAction(buffer, buffer);
 }
 
-void TextInputField::onFocusLoss(EditorContext& ec) {
+void NumberInput::onFocusLoss(EditorContext& ec) {
   showCursor = false;
   if (currAction) {
     //TRANSFER OWNERSHIP
@@ -189,21 +124,24 @@ void TextInputField::onFocusLoss(EditorContext& ec) {
   }
 }
 
-void TextInputField::onCreate(EditorContext& ec, Node& parent) {
+void NumberInput::onCreate(EditorContext& ec, Node& parent) {
   internalLabel = false;  //We don't want to draw our label
-  addPinInput(PinType::STRING);
-  addPinOutput(PinType::STRING);
+  addPinInput(PinType::INTEGER);
+  addPinInput(PinType::FLOAT);
+
+  addPinOutput(PinType::INTEGER);
+  addPinOutput(PinType::FLOAT);
 }
 
-void TextInputField::save(FILE* file) {
+void NumberInput::save(FILE* file) {
   cxstructs::io_save(file, buffer.c_str());
 }
 
-void TextInputField::load(FILE* file) {
+void NumberInput::load(FILE* file) {
   cxstructs::io_load(file, buffer);
 }
 
-uint16_t TextInputField::getIndexFromPos(const Font& font, const float fs, const Vector2 mouse) const {
+uint16_t NumberInput::getIndexFromPos(const Font& font, const float fs, const Vector2 mouse) const {
   const float relX = mouse.x - x;
   float accu = 0;
   char buff[2] = {};

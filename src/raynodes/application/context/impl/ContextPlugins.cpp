@@ -23,14 +23,13 @@
 #include <cxutil/cxstring.h>
 
 #include "application/EditorContext.h"
+#include "plugin/PluginInterface.h"
 #include "plugin/PluginLoader.h"
 
 namespace {
 // Registers a plugin in one go
 void RegisterPlugin(EditorContext& ec, RaynodesPluginI* plugin) {
   char nameBuff[Plugin::MAX_NAME_LEN];
-  constexpr int numBuffSize = 4;
-  char numBuff[numBuffSize];
 
   // Start
   cxstructs::str_pad(nameBuff, Plugin::MAX_NAME_LEN, plugin->name, '.', nullptr, ":");
@@ -41,20 +40,17 @@ void RegisterPlugin(EditorContext& ec, RaynodesPluginI* plugin) {
   NodeRegister nr{ec, *plugin, 0};
   plugin->registerNodes(nr);
   nodesRegistered = static_cast<int>(ec.templates.nodeFactory.size()) - nodesRegistered;
-  cxstructs::str_pad(numBuff, numBuffSize, String::formatText("%d", nodesRegistered), '.');
-  printf("Nodes: %s / ", numBuff);
+  printf("Nodes: %s / ", String::GetPaddedNum(nodesRegistered));
 
   // Components
   int componentsRegistered = static_cast<int>(ec.templates.componentFactory.size());
   ComponentRegister cr{ec, *plugin, 0};
   plugin->registerComponents(cr);
   componentsRegistered = static_cast<int>(ec.templates.componentFactory.size()) - componentsRegistered;
-  cxstructs::str_pad(numBuff, numBuffSize, String::formatText("%d", componentsRegistered), '.');
-  printf("Components: %s / ", numBuff);
+  printf("Components: %s / ", String::GetPaddedNum(componentsRegistered));
 
   // Errors
-  cxstructs::str_pad(numBuff, numBuffSize, String::formatText("%d", nr.errorCount + cr.errorCount), '.');
-  printf("Errors: %s", numBuff);
+  printf("Errors: %s", String::GetPaddedNum(nr.errorCount + cr.errorCount));
   printf("\n");
   fflush(stdout);
   fflush(stderr);
@@ -63,7 +59,7 @@ void RegisterPlugin(EditorContext& ec, RaynodesPluginI* plugin) {
 }  // namespace
 
 bool Plugin::loadPlugins(EditorContext& ec) {
-  const char* basePath = String::formatText("%s%s", ec.string.applicationDir, String::PLUGIN_PATH);
+  const char* basePath = String::FormatText("%s%s", ec.string.applicationDir, String::PLUGIN_PATH);
   const char* filter;
 #if defined(_WIN32)
   filter = ".dll";
@@ -94,8 +90,17 @@ bool Plugin::loadPlugins(EditorContext& ec) {
     RegisterPlugin(ec, plugin);
   }
 
+  cxstructs::str_pad(nameBuff, 4, String::FormatText("%d", static_cast<int>(plugins.size())), '.');
+  printf("Loaded %s Plugin(s)\n", nameBuff);
   printf("=============================================================\n");
-  printf("Loaded %d Plugin(s)\n", static_cast<int>(plugins.size()));
 
   return true;
+}
+
+void Plugin::sortPlugins() {
+  for (auto* plugin : plugins) {
+    if (TextIsEqual(plugin->name, "BuiltIns")) {
+      std::swap(plugins[0], plugin);
+    }
+  }
 }

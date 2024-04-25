@@ -21,9 +21,7 @@
 #ifndef PLUGINI_H
 #define PLUGINI_H
 
-#include "shared/fwd.h"
-
-using RegisterCompFunc = bool (*)(const char*, ComponentCreateFunc);
+#include "plugin/RegisterInterface.h"
 
 //The raynodes plugin interface
 struct RaynodesPluginI {
@@ -46,6 +44,7 @@ struct RaynodesPluginI {
     };
   }
 };
+
 
 // ====IMPORTANT====: Include this at the bottom to export the function
 

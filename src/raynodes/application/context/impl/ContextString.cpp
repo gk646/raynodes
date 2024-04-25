@@ -18,9 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-
 #include "application/EditorContext.h"
 
 String::String() {
   applicationDir = GetApplicationDirectory();
+}
+const char* String::GetWindowTitle(const char* fileName) {
+  if (fileName == nullptr) {
+    return FormatText("%s - NewNodeSheet.rn", Info::applicationName);
+  }
+  return FormatText("%s - %s", Info::applicationName, fileName);
 }

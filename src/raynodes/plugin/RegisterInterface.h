@@ -18,15 +18,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "MQQS.h"
+#ifndef REGISTERINTERFACE_H
+#define REGISTERINTERFACE_H
 
-#include "plugin/PluginInterface.h"
+#include <initializer_list>
 
-void MQQS::registerComponents(ComponentRegister& ec) {
+#include "shared/fwd.h"
 
-}
+using RegisterCompFunc = bool (*)(const char*, ComponentCreateFunc);
 
-void MQQS::registerNodes(NodeRegister& nr) {
-  nr.registerNode("Dialogue Choice",{"TextInput","TextInput","TextInput","TextInput","TextInput"});
-  nr.registerNode("Dialogue",{"TextInput"});
-}
+// Special interfaces to capsulate the registration
+struct ComponentRegister {
+  EditorContext& ec;
+  RaynodesPluginI& plugin;
+  int errorCount = 0;
+  // Register a component to be used with the given name
+  // "ComponentCreateFunc" is just a function that takes a string name and returns a"Component*"
+  bool registerComponent(const char* name, ComponentCreateFunc func);
+};
+
+struct NodeRegister {
+  EditorContext& ec;
+  RaynodesPluginI& plugin;
+  int errorCount = 0;
+  // Registers a node with name "name" with the components specified in the template
+  bool registerNode(const char* name, NodeTemplate& nt);
+  // Registers a node with name "name" and the component names specified directly
+  bool registerNode(const char* name, const std::initializer_list<const char*>& components);
+};
+
+#endif  //REGISTERINTERFACE_H

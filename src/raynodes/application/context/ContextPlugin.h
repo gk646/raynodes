@@ -26,12 +26,6 @@ struct Plugin {
   std::vector<RaynodesPluginI*> plugins;
 
   bool loadPlugins(EditorContext& ec);
-  void sortPlugins() {
-    for (auto* plugin : plugins) {
-      if (TextIsEqual(plugin->name, "BuiltIns")) {
-        std::swap(plugins[0], plugin);
-      }
-    }
-  }
+  void sortPlugins();
 };
 #endif  //CONTEXTPLUGIN_H

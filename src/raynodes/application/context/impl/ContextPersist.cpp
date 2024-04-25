@@ -150,12 +150,14 @@ bool Persist::saveToFile(EditorContext& ec) const {
     return false;
   }
 
-  printf("Saved %d nodes.\n", nodes);
-  printf("Saved %d connections.\n", connections);
+  printf("Saved %s nodes\n", String::GetPaddedNum(nodes));
+  printf("Saved %s connections\n",  String::GetPaddedNum(connections));
   return true;
 }
 
 bool Persist::loadFromFile(EditorContext& ec) const {
+  SetWindowTitle(String::GetWindowTitle(openedFile));
+
   FILE* file;
   if (openedFile == nullptr) return true;
 
@@ -172,8 +174,8 @@ bool Persist::loadFromFile(EditorContext& ec) const {
   nodes = LoadNodes(file, ec);
   connections = LoadConnections(file, ec);
 
-  printf("Loaded %d nodes.\n", nodes);
-  printf("Loaded %d connections.\n", connections);
+  printf("Loaded %s nodes\n", String::GetPaddedNum(nodes));
+  printf("Loaded %s connections\n", String::GetPaddedNum(connections));
 
   if (fclose(file) != 0) return false;
   return true;

@@ -21,18 +21,17 @@
 #ifndef RAYNODES_SRC_EDITOR_EDITORCONTEXT_H_
 #define RAYNODES_SRC_EDITOR_EDITORCONTEXT_H_
 
+#include "shared/fwd.h"
+
 #include <cstdio>
 #include <raylib.h>
 #include <cxutil/cxstring.h>
 
-#include "shared/fwd.h"
-
-#include "plugin/PluginInterface.h"
 #include "blocks/Connection.h"
 #include "node/Node.h"
 
-#include "context/ContextString.h"
 #include "context/ContextInfo.h"
+#include "context/ContextString.h"
 #include "context/ContextCore.h"
 #include "context/ContextDisplay.h"
 #include "context/ContextLogic.h"
