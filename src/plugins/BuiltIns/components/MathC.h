@@ -51,7 +51,7 @@ enum MOperation : uint8_t {
 struct MathC final : Component {
   int selectedMode = ADD;
   DropDown dropDown{};
-  explicit MathC(const char* name) : Component(name, 250, 20) {}
+  explicit MathC(const ComponentTemplate ct) : Component(ct, 250, 20) {}
   Component* clone() override { return new MathC(*this); };
   void draw(EditorContext& ec, Node& parent) override;
   void update(EditorContext& ec, Node& parent) override;

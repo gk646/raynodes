@@ -21,13 +21,13 @@
 #include "application/EditorContext.h"
 #include "plugin/PluginInterface.h"
 
-bool ComponentRegister::registerComponent(const char* name, ComponentCreateFunc func) {
+bool ComponentRegister::registerComponent(const char* name, const ComponentCreateFunc func) {
   const auto res = ec.templates.registerComponent(name, func, plugin);
   if (!res) errorCount++;
   return res;
 }
 
-bool NodeRegister::registerNode(const char* name, NodeTemplate& nt) {
+bool NodeRegister::registerNode(const char* name, const NodeTemplate& nt) {
   const auto res = ec.templates.registerNode(name, nt, plugin);
   if (res) {
     ec.ui.contextMenu.addNode(plugin.name, name);
@@ -37,7 +37,7 @@ bool NodeRegister::registerNode(const char* name, NodeTemplate& nt) {
   return res;
 }
 
-bool NodeRegister::registerNode(const char* name, const std::initializer_list<const char*>& components) {
+bool NodeRegister::registerNode(const char* name, const std::initializer_list<ComponentTemplate>& components) {
   NodeTemplate nt;
   int i = 0;
   for (const auto component : components) {

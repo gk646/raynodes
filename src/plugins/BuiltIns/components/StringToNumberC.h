@@ -24,7 +24,7 @@
 #include "component/Component.h"
 
 struct StringToNumberC final : Component {
-  explicit StringToNumberC(const char* name) : Component(name, 50, 20) {}
+  explicit StringToNumberC(const ComponentTemplate ct) : Component(ct, 50, 20) {}
   Component* clone() override { return new StringToNumberC(*this); };
   void draw(EditorContext& ec, Node& parent) override;
   void update(EditorContext& ec, Node& parent) override;

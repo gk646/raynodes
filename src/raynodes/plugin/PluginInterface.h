@@ -33,16 +33,6 @@ struct RaynodesPluginI {
   virtual void registerComponents(ComponentRegister& cr) {}
   // Called once at the correct time to register its nodes
   virtual void registerNodes(NodeRegister& nr) {}
-
- protected:
-  // Useful when registering components e.g: cr.registerComponent("MathOp", GetCreateFunc<MathC>());
-  //TODO might be able to remove that and just use type to register
-  template <typename T>
-  static auto GetCreateFunc() {
-    return [](const char* componentName) -> Component* {
-      return new T(componentName);
-    };
-  }
 };
 
 
