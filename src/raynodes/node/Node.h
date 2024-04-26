@@ -44,7 +44,7 @@ struct Node {
   bool isDragged = false;
   bool isInOutReversed = false;  //Not yet used
 
-  explicit Node(const char* name) : name(name), size({70, 50}), color(BLACK) {}
+   Node(const char* name) : name(name), size({70, 50}), color(BLACK) {}
   Node(const Node& n, const NodeID id)
       : position(n.position), size(n.size), color(n.color), id(id), isInOutReversed(n.isInOutReversed) {
     for (const auto c : n.components) {

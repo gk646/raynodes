@@ -24,7 +24,7 @@
 #include "component/Component.h"
 
 struct DisplayC final : Component {
-  explicit DisplayC(const char* name) : Component(name, 250, 20) {}
+  explicit DisplayC(const ComponentTemplate ct) : Component(ct,  250, 20) {}
   Component* clone() override { return new DisplayC(*this); };
   void draw(EditorContext& ec, Node& parent) override;
   void update(EditorContext& ec, Node& parent) override;

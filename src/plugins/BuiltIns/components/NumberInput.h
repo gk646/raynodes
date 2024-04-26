@@ -36,7 +36,7 @@ class NumberInput final : public Component {
   uint8_t blinkCounter = 0;
 
  public:
-  explicit NumberInput(const char* name) : Component(name, 150, 20) {}
+  explicit NumberInput(const ComponentTemplate ct) : Component(ct,  150, 20) {}
   Component* clone() override { return new NumberInput(*this); }
   void draw(EditorContext& ec, Node& parent) override;
   void update(EditorContext&, Node& parent) override;

@@ -26,21 +26,17 @@ using StringComponentMap =
 using StringNodeMap =
     std::unordered_map<const char*, NodeTemplate, cxstructs::Fnv1aHash, cxstructs::StrEqual>;
 
-struct NodeTemplate {
-  const char* components[10] = {nullptr};  //Component names are unique
-};
-
 struct Template {
   StringComponentMap componentFactory;
   StringNodeMap nodeFactory;
 
   // Passed name only has to be valid until this function returns (copied)
   bool registerComponent(const char* name, ComponentCreateFunc func, const RaynodesPluginI& plugin);
-  // Passed name only has to be valid until this function returns
-  Component* createComponent(const char* name) {
-    const auto it = componentFactory.find(name);
+  // "ComponentTemplate" MUST BE allocated and unchanged for the lifetime of the component
+  Component* createComponent(const ComponentTemplate component) {
+    const auto it = componentFactory.find(component.component);
     if (it != componentFactory.end()) {
-      return it->second(it->first);  //Reuse the allocated name
+      return it->second(component);  //Reuse the allocated name
     }
     return nullptr;
   }
@@ -52,7 +48,7 @@ struct Template {
     if (it != nodeFactory.end()) {
       auto* node = new Node(it->first);
       for (const auto component : it->second.components) {
-        if (component == nullptr) continue;  // We dont break for safety
+        if (component.component == nullptr) continue;  // We dont break for safety
         node->components.push_back(createComponent(component));
       }
       return node;

@@ -27,43 +27,59 @@
 #include "application/elements/Action.h"
 #include "shared/rayutils.h"
 
-void DrawTextSelection(const Font& font, char* buffer, int bufferLength, int selectionStart, int selectionEnd,
-                       float x, float y, float maxWidth, int fontSize) {
+namespace {
+void DrawTextSelection(const Font& font, char* buffer, int bufferLength, int selectionStartI,
+                       int selectionEndI, float x, float y, float maxWidth, float fontSize) {
+  int selectionStart, selectionEnd;
+  if (selectionStartI > selectionEndI) {
+    selectionStart = selectionEndI;
+    selectionEnd = selectionStartI;
+  } else {
+    selectionStart = selectionStartI;
+    selectionEnd = selectionEndI;
+  }
+
+
+  float startX = x;
   float currentX = x;      // X position where the current line starts
   float currentY = y;      // Y position where the current line starts
   int lineStartIndex = 0;  // Start index of the current line in buffer
+  bool endReached = false;
 
+  bool insideSelection = false;
   for (int i = 0; i < bufferLength; i++) {
-    bool atEndOfLine = buffer[i] == '\n' || buffer[i] == '\0' || currentX > maxWidth;
-    bool atEndOfBuffer = i == bufferLength - 1;
+    if (i == selectionEnd) {
+      endReached = true;
+      const auto distFromStart = MeasureTextUpTo(buffer + lineStartIndex, i, font, fontSize, 0.5F);
+      DrawRectangleRec({startX, y, x + distFromStart - startX, fontSize}, ColorAlpha(WHITE, 0.5F));
+      break;
+    }
 
-    if (atEndOfLine || atEndOfBuffer) {
-      if (atEndOfBuffer && !atEndOfLine) {
-        // If we are at the end of the buffer and not at a new line, we need to include the last character in the line width calculation
-        i++;
+    if (*buffer == '\n') {
+      if (insideSelection) {
+        const auto distFromStart = MeasureTextUpTo(buffer + lineStartIndex, i, font, fontSize, 0.5F);
+        DrawRectangleRec({startX, y, x + distFromStart - startX, fontSize}, ColorAlpha(WHITE, 0.5F));
       }
+      currentX = x;
+      startX = x;
+      lineStartIndex = i + 1;
+      currentY += fontSize;
+      continue;
+    }
 
-      // Check if this line contains part of the selection
-      if (selectionStart < i && selectionEnd >= lineStartIndex) {
-        int startInLine = std::max(selectionStart - lineStartIndex, 0);
-        int endInLine = std::min(selectionEnd - lineStartIndex, i - lineStartIndex);
-
-        float startX = MeasureTextUpTo(buffer + lineStartIndex, startInLine, font, fontSize, 1);
-        float endX = MeasureTextUpTo(buffer + lineStartIndex, endInLine, font, fontSize, 1);
-
-        DrawRectangle(currentX + startX, currentY, endX - startX, fontSize, ColorAlpha(LIGHTGRAY, 0.5F));
-      }
-
-      // Reset to new line parameters
-      currentY += fontSize;    // Move down by one line
-      currentX = x;            // Reset X to the initial position
-      lineStartIndex = i + 1;  // Update line start index to the next character after new line or buffer end
-    } else {
-      // Calculate the width of the current character and add it to the currentX
-      currentX += MeasureTextUpTo(buffer + i, 1, font, fontSize, 1);
+    if (i == selectionStart) {
+      insideSelection = true;
+      startX = x + MeasureTextUpTo(buffer + lineStartIndex, i, font, fontSize, 0.5F);
     }
   }
+  if (!endReached) {
+    const auto distFromStart = MeasureTextUpTo(buffer + lineStartIndex, bufferLength, font, fontSize, 0.5F);
+    DrawRectangleRec({startX, y, x + distFromStart - startX, fontSize}, ColorAlpha(WHITE, 0.5F));
+  }
 }
+
+}  // namespace
+
 void TextInputField::draw(EditorContext& ec, Node& parent) {
   //Cache
   const auto bounds = getBounds();
@@ -115,32 +131,43 @@ void TextInputField::update(EditorContext& ec, Node& parent) {
 
   if (ec.input.isKeyPressed(KEY_V) && ec.input.isKeyDown(KEY_LEFT_CONTROL)) {
     buffer.insert(cursorPos, GetClipboardText());
+    updateState(ec);
   }
 
   if (ec.input.isKeyPressed(KEY_C) && ec.input.isKeyDown(KEY_LEFT_CONTROL)) {
-    SetClipboardText("");  //TODO
+    auto* data = buffer.data();
+    int sStart = selectionStart < selectionEnd ? selectionStart : selectionEnd;
+    int sEnd = selectionStart < selectionEnd ? selectionEnd : selectionStart;
+    const char temp = *(data + sEnd);
+    SetClipboardText(data + sStart);
+    *(data + sEnd) = temp;
   }
 
   int key = GetCharPressed();
   while (key > 0) {
-    if (key == KEY_ENTER) {
-      buffer.insert(buffer.begin() + cursorPos, '\n');
-      cursorPos++;
-    }
     if (key >= 32 && key <= 125 && buffer.length() < 1024) {
       buffer.insert(buffer.begin() + cursorPos, static_cast<char>(key));
       cursorPos++;
+      updateState(ec);
     }
     key = GetCharPressed();  // Check next character in the queue
+  }
+
+  if (IsKeyPressed(KEY_ENTER)) {
+    buffer.insert(buffer.begin() + cursorPos, '\n');
+    cursorPos++;
+    updateState(ec);
   }
 
   if (cursorPos > 0 && (ec.input.isKeyPressed(KEY_BACKSPACE) || ec.input.isKeyPressedRepeat(KEY_BACKSPACE))) {
     buffer.erase(buffer.begin() + cursorPos - 1);
     cursorPos--;
+    updateState(ec);
   }
 
   if (cursorPos < buffer.size()
       && (ec.input.isKeyPressed(KEY_DELETE) || ec.input.isKeyPressedRepeat(KEY_DELETE))) {
+    updateState(ec);
     buffer.erase(buffer.begin() + cursorPos);
   }
 
@@ -201,6 +228,34 @@ void TextInputField::save(FILE* file) {
 
 void TextInputField::load(FILE* file) {
   cxstructs::io_load(file, buffer);
+}
+
+void TextInputField::updateState(EditorContext& ec) {
+  int lineCount = 0;
+  int lineStart = 0;
+  float longestLine = 250;
+  auto* text = buffer.data();
+  const int size = static_cast<int>(buffer.size());
+
+  for (int i = 0; i < size; ++i) {
+    if (*(text + i) == '\n') {
+      float lineWidth =
+          MeasureTextUpTo(text + lineStart, i, ec.display.editorFont, ec.display.fontSize, 0.5F);
+      longestLine = std::max(longestLine, lineWidth);
+      lineStart = i + 1;
+      lineCount++;
+    }
+  }
+
+  if (lineStart < size) {
+    float lineWidth =
+        MeasureTextUpTo(text + lineStart, size - lineStart, ec.display.editorFont, ec.display.fontSize, 0.5F);
+    longestLine = std::max(longestLine, lineWidth);
+    lineCount++;
+  }
+
+  height = 20 * lineCount;
+  width = longestLine;
 }
 
 uint16_t TextInputField::getIndexFromPos(const Font& font, const float fs, const Vector2 mouse) const {
