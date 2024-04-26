@@ -30,6 +30,15 @@
 #  define EXPORT __attribute__((visibility("default")))
 #endif
 
+struct ComponentTemplate {
+  const char* label = nullptr;
+  const char* component = nullptr;
+};
+
+struct NodeTemplate {
+  ComponentTemplate components[10];
+};
+
 enum class PinType : uint8_t;  // Datatype of connection pins
 enum MOperation : uint8_t;     // Type of math operation
 enum Direction : bool;         // Which directiont the pin is factin (in/out)
@@ -46,11 +55,12 @@ struct RaynodesPluginI;        // Base class for the plugin interface
 struct NodeTemplate;           // Template to create a node (list of component names)
 struct ComponentRegister;      // Interface that encaspulate registering components
 struct NodeRegister;           // Interface that encaspulate registering nodes
-using ComponentCreateFunc = Component* (*)(const char* name);  // Takes a name and returns a new Component
+using ComponentCreateFunc = Component* (*)(ComponentTemplate);  // Takes a name and returns a new Component
 
 //Raylib types
 struct Color;
 struct Vector2;
 struct Rectangle;
+
 
 #endif  //RAYNODES_SRC_SHARED_FWD_H_

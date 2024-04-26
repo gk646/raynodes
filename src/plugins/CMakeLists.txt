@@ -13,6 +13,7 @@
 #
 #
 #target_include_directories(MyPlugin PRIVATE ${CMAKE_SOURCE_DIR}/src/raynodes)
+#target_link_libraries(MyPlugin PRIVATE editor) # Link against the editor (static) or possibly raylib (shared)
 
-add_subdirectory(MQQS) # MageQuest Quest Script
 add_subdirectory(BuiltIns) # Built in Types (raynodes STL...)
+add_subdirectory(MQQS) # MageQuest Quest Script

@@ -39,7 +39,7 @@ class TextInputField final : public Component {
   uint8_t blinkCounter = 0;
 
  public:
-  explicit TextInputField(const char* name) : Component(name, 250, 20) {}
+  explicit TextInputField(const ComponentTemplate ct) : Component(ct, 250, 20) {}
   Component* clone() override { return new TextInputField(*this); }
   void draw(EditorContext& ec, Node& parent) override;
   void update(EditorContext&, Node& parent) override;
@@ -51,6 +51,7 @@ class TextInputField final : public Component {
   const char* getString() override { return buffer.c_str(); }
 
  private:
+  void updateState(EditorContext& ec);
   [[nodiscard]] uint16_t getIndexFromPos(const Font& font, float fs, Vector2 mouse) const;
 };
 

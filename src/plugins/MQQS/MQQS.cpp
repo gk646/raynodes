@@ -27,6 +27,10 @@ void MQQS::registerComponents(ComponentRegister& ec) {
 }
 
 void MQQS::registerNodes(NodeRegister& nr) {
-  nr.registerNode("Dialogue Choice",{"TextInput","TextInput","TextInput","TextInput","TextInput"});
-  nr.registerNode("Dialogue",{"TextInput"});
+  nr.registerNode("Dialogue Choice", {{"DisplayText", "TextInput"},
+                                      {"Choice1", "TextInput"},
+                                      {"Choice2", "TextInput"},
+                                      {"Choice3", "TextInput"},
+                                      {"Choice4", "TextInput"}});
+  nr.registerNode("Dialogue", {{"DisplayText", "TextInput"}});
 }

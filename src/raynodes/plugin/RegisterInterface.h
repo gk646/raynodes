@@ -25,26 +25,42 @@
 
 #include "shared/fwd.h"
 
-using RegisterCompFunc = bool (*)(const char*, ComponentCreateFunc);
-
 // Special interfaces to capsulate the registration
 struct ComponentRegister {
   EditorContext& ec;
   RaynodesPluginI& plugin;
   int errorCount = 0;
+
+  // Simplest method to register a component - just a name and the type
+  template <typename CompType>
+  bool registerComponent(const char* name) {
+    return registerComponent(name, GetCreateFunc<CompType>());
+  }
+
+ private:
   // Register a component to be used with the given name
-  // "ComponentCreateFunc" is just a function that takes a string name and returns a"Component*"
+  // "ComponentCreateFunc" is just a function that takes a string name and returns a "Component*"
   bool registerComponent(const char* name, ComponentCreateFunc func);
+
+  // Useful when registering components e.g: cr.registerComponent("MathOp", GetCreateFunc<MathC>());
+  template <typename T>
+  static ComponentCreateFunc GetCreateFunc() {
+    return [](const ComponentTemplate ct) -> Component* {
+      return new T(ct);
+    };
+  }
 };
 
 struct NodeRegister {
   EditorContext& ec;
   RaynodesPluginI& plugin;
   int errorCount = 0;
+  // Simplest method to register a node with a "name" and the components specified directly
+  bool registerNode(const char* name, const std::initializer_list<ComponentTemplate>& components);
+
+ private:
   // Registers a node with name "name" with the components specified in the template
-  bool registerNode(const char* name, NodeTemplate& nt);
-  // Registers a node with name "name" and the component names specified directly
-  bool registerNode(const char* name, const std::initializer_list<const char*>& components);
+  bool registerNode(const char* name, const NodeTemplate& nt);
 };
 
 #endif  //REGISTERINTERFACE_H

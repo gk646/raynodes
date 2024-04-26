@@ -39,8 +39,9 @@ bool Template::registerNode(const char* name, const NodeTemplate& nt, const Rayn
   }
   NodeTemplate newTemplate;  // Allocate and copy the given component names
   for (int i = 0; i < 10; ++i) {
-    if (nt.components[i] == nullptr) continue;  // We dont break for safety
-    newTemplate.components[i] = cxstructs::str_dup(nt.components[i]);
+    if (nt.components[i].component == nullptr) continue;  // We dont break for safety
+    newTemplate.components[i].component = cxstructs::str_dup(nt.components[i].component);
+    newTemplate.components[i].label = cxstructs::str_dup(nt.components[i].label);
   }
 
   nodeFactory.insert({cxstructs::str_dup(name), newTemplate});  // Allocate and copy the name

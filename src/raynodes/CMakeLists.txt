@@ -6,6 +6,7 @@ list(FILTER EDITOR_FILES EXCLUDE REGEX "main.cpp")
 add_library(editor STATIC ${EDITOR_FILES})
 # Set include dir for full paths
 target_include_directories(editor PRIVATE ${CMAKE_SOURCE_DIR}/src/raynodes)
+
 # Define the type
 add_executable(raynodes main.cpp)
 # This places the executable in the root of the build directory

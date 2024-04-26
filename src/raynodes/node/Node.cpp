@@ -266,7 +266,7 @@ void Node::draw(EditorContext& ec) {
   for (const auto& component : components) {
     if (!component->internalLabel) {
       Vector2 textPos = {position.x + PADDING, startY};
-      DrawTextEx(display.editorFont, component->name, textPos, display.fontSize, 0.0F, WHITE);
+      DrawTextEx(display.editorFont, component->label, textPos, display.fontSize, 0.0F, WHITE);
       startY += display.fontSize;
     }
     DrawComponent(ec, *this, *component, position.x, startY, size.x);

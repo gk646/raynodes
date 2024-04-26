@@ -23,7 +23,6 @@
 
 #include "shared/fwd.h"
 
-#include <cstdio>
 #include <cxstructs/StackVector.h>
 
 #include "blocks/Pin.h"
@@ -40,7 +39,8 @@
 struct Component {
   cxstructs::StackVector<InputPin, 3> inputs{};    //Current limit (could be changed to a std::vector)
   cxstructs::StackVector<OutputPin, 3> outputs{};  //Current limit (could be changed to a std::vector)
-  const char* const name;                          //The name is uniquely identifying (constant allocated ptr)
+  const char* const id;                            //Uniquely identifiyin name id (constant allocated ptr)
+  const char* const label;                         //Display name (and access name)
   float x = 0;                                     //Internal state (don't change, only read)
   float y = 0;                                     //Internal state (don't change, only read)
   uint16_t width = 50;                             //Dynamically adjustable
@@ -49,8 +49,8 @@ struct Component {
   bool isHovered = false;                          //Internal state (don't change, only read)
   bool internalLabel = true;  //Whether the label should be drawn or the component handles it
 
-  explicit Component(const char* name, const uint16_t w = 0, const uint16_t h = 0)
-      : name(name), width(w), height(h) {}
+  explicit Component(const ComponentTemplate ct, const uint16_t w = 0, const uint16_t h = 0)
+      : id(ct.component), label(ct.label), width(w), height(h) {}
   virtual ~Component() = default;
 
   //-----------CORE-----------//
@@ -90,14 +90,14 @@ struct Component {
   virtual void onConnectionRemoved(EditorContext& ec, const Connection& con) {}
 
   //-----------PINS-----------//
-  bool addPinInput(PinType pt) {
+  bool addPinInput(const PinType pt) {
     if (inputs.size() < inputs.capacity()) {
       inputs.push_back(InputPin(pt));
       return true;
     }
     return false;
   }
-  bool addPinOutput(PinType pt) {
+  bool addPinOutput(const PinType pt) {
     if (outputs.size() < outputs.capacity()) {
       outputs.push_back(OutputPin(pt));
       return true;
@@ -112,7 +112,7 @@ struct Component {
   virtual void* getData() { return nullptr; }
 
   // Getters
-  [[nodiscard]] const char* getName() const { return name; }
+  [[nodiscard]] const char* getName() const { return label; }
   [[nodiscard]] float getWidth() const { return width; }
   [[nodiscard]] float getHeight() const { return height; }
   [[nodiscard]] Rectangle getBounds() const;
@@ -129,15 +129,4 @@ struct Component {
     return -1;
   }
 };
-
-enum ComponentType : uint8_t {
-  INPUT_FIELD_TEXT,
-  INPUT_FIELD_INTEGER,
-  INPUT_FIELD_BOOLEAN,
-  INPUT_FIELD_FLOAT,
-  MATH_OPERATION,
-  STRING_TO_NUMBER,
-  DISPLAY,
-};
-
 #endif  //RAYNODES_SRC_NODES_COMPONENT_H_
