@@ -44,13 +44,15 @@ struct Node {
   bool isDragged = false;
   bool isInOutReversed = false;  //Not yet used
 
-   Node(const char* name) : name(name), size({70, 50}), color(BLACK) {}
+  explicit Node(const char* name) : name(name), size({70, 50}), color(BLACK) {}
   Node(const Node& n, const NodeID id)
-      : position(n.position), size(n.size), color(n.color), id(id), isInOutReversed(n.isInOutReversed) {
+      : name(n.name), position(n.position), size(n.size), color(n.color), id(id),
+        isInOutReversed(n.isInOutReversed) {
     for (const auto c : n.components) {
       auto clone = c->clone();
       for (auto& in : clone->inputs) {
         in.connection = nullptr;  //Dont copy the connection ptr
+        //TODO maybe copy connections but then fully -> create new connection objects
       }
       components.push_back(clone);
     }

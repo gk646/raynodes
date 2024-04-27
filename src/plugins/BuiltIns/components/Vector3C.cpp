@@ -18,13 +18,4 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "application/EditorContext.h"
-
-String::String() {
-  applicationDir = GetApplicationDirectory();
-}
-
-const char* String::GetWindowTitle(const char* fileName) {
-
-  return FormatText("%s - %s", Info::applicationName, fileName);
-}
+#include "Vector3C.h"

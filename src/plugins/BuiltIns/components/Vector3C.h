@@ -18,26 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef NUMBERINPUT_H
-#define NUMBERINPUT_H
+#ifndef VECTOR3C_H
+#define VECTOR3C_H
 
-#include <string>
+#include "TextInputField.h"
 
-#include "component/Component.h"
-
-struct TextAction;
-struct Font;
-class NumberInput final : public Component {
-  inline static uint8_t BLINK_DELAY = 45;
-  std::string buffer;
-  TextAction* currAction = nullptr;
-  uint16_t cursorPos{};
-  bool showCursor = false;
-  uint8_t blinkCounter = 0;
-
- public:
-  explicit NumberInput(const ComponentTemplate ct) : Component(ct,  150, 20) {}
-  Component* clone() override { return new NumberInput(*this); }
+struct Vector3C final : Component {
+  explicit Vector3C(const ComponentTemplate ct) : Component(ct, 250, 20) {}
+  Component* clone() override { return new Vector3C(*this); }
   void draw(EditorContext& ec, Node& parent) override;
   void update(EditorContext&, Node& parent) override;
   void load(FILE* file) override;
@@ -45,9 +33,6 @@ class NumberInput final : public Component {
   void onFocusGain(EditorContext&) override;
   void onFocusLoss(EditorContext&) override;
   void onCreate(EditorContext& ec, Node& parent) override;
-  const char* getString() override { return buffer.c_str(); }
-
- private:
-  [[nodiscard]] uint16_t getIndexFromPos(const Font& font, float fs, Vector2 mouse) const;
 };
-#endif  //NUMBERINPUT_H
+
+#endif  //VECTOR3C_H
