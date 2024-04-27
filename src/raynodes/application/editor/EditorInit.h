@@ -27,9 +27,7 @@ inline void SetupDisplay(EditorContext& ec) {
 
   // Initialize the window with the initial size
   SetTraceLogLevel(LOG_WARNING);
-  InitWindow(1280, 720, Info::applicationName);
-
-  ChangeDirectory(GetApplicationDirectory());
+  InitWindow(1280, 720, ec.persist.openedFile);
 
   // Get the current monitor size
   const int m = GetCurrentMonitor();

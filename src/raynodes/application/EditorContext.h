@@ -53,8 +53,18 @@ struct EditorContext {
   Info info{};
   String string{};
 
-  explicit EditorContext(const char* openedFile) {
-    persist.openedFile = openedFile;
+  explicit EditorContext(int argc, char* argv[]) {
+    if (argc == 2) {
+      if (*argv[1] == '.') {  // Relative path
+        persist.openedFile = String::FormatText("%s%s", string.applicationDir, argv[1]);
+      } else {
+        persist.openedFile = argv[1];
+      }
+    } else {
+      persist.openedFile = String::FormatText("%s%s", string.applicationDir, "NewNodeSheet.rn");
+    }
+    persist.openedFile = cxstructs::str_dup(persist.openedFile);  // Allocate it
+
     printf("raynodes - Version %d.%d\n", Info::majorVersion, Info::minorVersion);
   }
 };

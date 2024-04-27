@@ -25,6 +25,7 @@
 #include "application/EditorContext.h"
 #include "node/Node.h"
 
+#include <cxstructs/Constraint.h>
 #include <shared/fwd.h>
 
 namespace {
@@ -151,12 +152,12 @@ bool Persist::saveToFile(EditorContext& ec) const {
   }
 
   printf("Saved %s nodes\n", String::GetPaddedNum(nodes));
-  printf("Saved %s connections\n",  String::GetPaddedNum(connections));
+  printf("Saved %s connections\n", String::GetPaddedNum(connections));
   return true;
 }
 
 bool Persist::loadFromFile(EditorContext& ec) const {
-  SetWindowTitle(String::GetWindowTitle(openedFile));
+  SetWindowTitle(String::FormatText("%s - %s", Info::applicationName, openedFile));
 
   FILE* file;
   if (openedFile == nullptr) return true;
@@ -179,4 +180,12 @@ bool Persist::loadFromFile(EditorContext& ec) const {
 
   if (fclose(file) != 0) return false;
   return true;
+}
+
+bool Persist::loadWorkingDirectory(EditorContext& ec) {
+  cxstructs::Constraint<true> c;
+
+  c + ChangeDirectory(GetApplicationDirectory());
+
+  return c.holds();
 }

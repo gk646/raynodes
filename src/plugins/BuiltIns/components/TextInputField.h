@@ -25,8 +25,15 @@
 
 #include "component/Component.h"
 
-struct TextAction;
-struct Font;
+enum InputConstraint {
+  NONE,
+  NUMERIC,
+};
+
+//TODO needs to be remade as a standalone class not a component
+// so it can be reused -> gets rid of template aswell - components then use it and just call its methods
+
+template <InputConstraint>
 class TextInputField final : public Component {
   inline static uint8_t BLINK_DELAY = 45;
   std::string buffer;
@@ -51,6 +58,7 @@ class TextInputField final : public Component {
   const char* getString() override { return buffer.c_str(); }
 
  private:
+  Ints getSelection() const;
   void updateState(EditorContext& ec);
   [[nodiscard]] uint16_t getIndexFromPos(const Font& font, float fs, Vector2 mouse) const;
 };

@@ -34,7 +34,7 @@
 #include "application/editor/EditorUpdate.h"
 #include "application/editor/EditorDraw.h"
 
-NodeEditor::NodeEditor(const char* saveName) : context(saveName) {
+NodeEditor::NodeEditor(const int argc, char* argv[]) : context(argc, argv) {
   Editor::SetupDisplay(context);
   Editor::SetupCamera(context);
 }
@@ -42,6 +42,7 @@ NodeEditor::NodeEditor(const char* saveName) : context(saveName) {
 bool NodeEditor::start() {
   cxstructs::Constraint<true> c;
 
+  c + context.persist.loadWorkingDirectory(context);
   c + context.display.loadFont(context);
   c + context.plugin.loadPlugins(context);
   c + context.persist.loadFromFile(context);
