@@ -30,6 +30,11 @@
 #  define EXPORT __attribute__((visibility("default")))
 #endif
 
+struct Ints {
+  int a;
+  int b;
+};
+
 struct ComponentTemplate {
   const char* label = nullptr;
   const char* component = nullptr;
@@ -50,6 +55,7 @@ struct InputPin;               // InputPin specialization
 struct OutputPin;              // OutputPin specialization
 struct Node;                   // Base class for node
 struct Action;                 // Base class for any editor action (anything able to be undone/redone)
+struct TextAction;             // Special action that represent a text change
 struct EditorContext;          // Core data holder for the editor
 struct RaynodesPluginI;        // Base class for the plugin interface
 struct NodeTemplate;           // Template to create a node (list of component names)
@@ -61,6 +67,6 @@ using ComponentCreateFunc = Component* (*)(ComponentTemplate);  // Takes a name 
 struct Color;
 struct Vector2;
 struct Rectangle;
-
+struct Font;
 
 #endif  //RAYNODES_SRC_SHARED_FWD_H_

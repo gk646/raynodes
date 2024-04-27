@@ -27,7 +27,7 @@ class NodeEditor {
   EditorContext context;
 
  public:
-  explicit NodeEditor(const char* saveName);
+  explicit NodeEditor(int argc,char* argv[]);
   bool start();
   int run();
 };
