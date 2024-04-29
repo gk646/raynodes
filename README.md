@@ -1,14 +1,17 @@
 # raynodes
 
-`raynodes` is a 2D node editor made using [raylib](https://github.com/raysan5/raylib) with a focus extensibility and
-supporting any node-based task. It provides a clear and modularized core handling common editor features like Undo/Redo
-system, camera system, controls and state serialization.
+`raynodes` is a standalone 2D node editor made using [raylib](https://github.com/raysan5/raylib) with a focus extensibility.
+Its goal is to be able to handle every node based task by providing:
+
+- 
+
+It provides a clear and modularized core handling common editor features like Undo/Redo,
+camera , controls and state serialization.
 
 Via a clearly defined public interface, it can easily be extended with:
 
 - User created templates at runtime
 - Dynamically loaded plugins
-- Contributed components to the source
 
 In a lot of places it uses my C++ helper library [cxstructs](https://github.com/gk646/cxstructs).
 
@@ -44,7 +47,7 @@ RMB = Right Mouse Button
 Each action (move, edit, delete + many more) are tracked in a global list improving the workflow.
 Actions have a generic interface and new ones can easily be added.
 
-### Templates *(soon)*
+### User Defined Templates *(soon)*
 
 ...
 
@@ -72,10 +75,10 @@ dimensions...**
 ### Interface
 
 ```cpp
-//-----------CORE-----------//
+  //-----------CORE-----------//
   //Necessary to copy the component
   virtual Component* clone() = 0;
-  //Called once each tick (on the main thread)
+  //IMPORTANT: Only called when its bounds are visible on the screen!
   virtual void draw(EditorContext& ec, Node& parent) = 0;
   //Guaranteed to be called once per tick (on the main thread) (not just when focused)
   virtual void update(EditorContext& ec, Node& parent) = 0;
@@ -135,7 +138,73 @@ cxstructs::io_load(file, buffer);
 }
 ```
 
-## Plugins *(soon)*
+## Plugins
+
+`raynodes` provides an easy-to-use plugin interface that allows defining custom components and building nodes out of
+them.
+
+```cpp
+//The raynodes plugin interface
+struct RaynodesPluginI {
+const char* name = nullptr;  //Will be set automatically at runtime (to the file name, for clarity)
+virtual ~RaynodesPluginI() = default;
+// Called once after its been loaded
+virtual void onLoad(EditorContext& ec) {}
+// Called once at the correct time to register its components
+virtual void registerComponents(ComponentRegister& cr) {}
+// Called once at the correct time to register its nodes
+virtual void registerNodes(NodeRegister& nr) {}
+};
+
+extern "C" EXPORT inline RaynodesPluginI* CreatePlugin() {
+ return new MyPlugin();
+}
+```
+
+Implement this interface and **add the exported function to create an instance.**
+
+### Registering Components
+
+Components are easily registered by providing a name and its type. This works cause all Components have a similar
+constructor.
+After you implemented a new Component by creating a derived class in your plugin files just include its header and
+register it in your plugin.
+
+**NOTE: Components are uniquely identified by this name (naming collision will be shown when loading).**
+This means it's advised to pick a namespace for your plugin (small prefix).
+
+```cpp
+void BuiltIns::registerComponents(ComponentRegister& cr) {
+cr.registerComponent<MathC>("MathOp");
+cr.registerComponent<DisplayC>("Display");
+cr.registerComponent<StringToNumberC>("StrToNum");
+cr.registerComponent<TextInputField<NONE>>("TextInput");
+cr.registerComponent<TextInputField<NUMERIC>>("NumberInput");
+}
+```
+
+### Registering Nodes
+
+A node is then just a container for components. The register process allows to set custom labels for each component
+which helps to reference a specific component later on:
+
+Syntax: `registerNode <NodeName> , { {<CustomLabel>,<Component-Identifier>}, ... }`
+
+```cpp
+void BuiltIns::registerNodes(NodeRegister& nr) {
+  nr.registerNode("MathOp", {{"Operation", "MathOp"}});
+  nr.registerNode("TextField", {{"TextField", "TextInput"}});
+  nr.registerNode("StringToNum", {{"Converter", "StrToNum"}});
+  nr.registerNode("Display", {{"Display", "Display"}});
+  nr.registerNode("NumberField", {{"Number", "NumberInput"}});
+}
+```
+
+### Misc
+
+**When creating your plugin you might have to link against the base editor (statically) and against raylib (shared).**
+
+Plugins will be loaded from the `./plugins` folder relative to the executable
 
 ## Software Design
 

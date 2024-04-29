@@ -60,7 +60,7 @@ class TextInputField final : public Component {
  private:
   Ints getSelection() const;
   void updateState(EditorContext& ec);
-  [[nodiscard]] uint16_t getIndexFromPos(const Font& font, float fs, Vector2 mouse) const;
+  [[nodiscard]] uint16_t getIndexFromPos(const Font& font, float fs, Vector2 mouse) ;
 };
 
 #endif  //RAYNODES_SRC_NODES_ELEMENTS_TEXTINPUTFIELD_H_
