@@ -311,46 +311,41 @@ void TextInputField<constraint>::updateState(EditorContext& ec) {
     lineCount++;
   }
 
-  height = std::max(20, (uint16_t)ec.display.fontSize * lineCount);
+  height = std::max(20, static_cast<uint16_t>(ec.display.fontSize) * lineCount);
   width = longestLine;
 }
 
 template <InputConstraint constraint>
-uint16_t TextInputField<constraint>::getIndexFromPos(const Font& font, const float fs,
-                                                     const Vector2 mouse) const {
+uint16_t TextInputField<constraint>::getIndexFromPos(const Font& font, const float fs, const Vector2 mouse) {
   const float relX = mouse.x - x;
   const float relY = mouse.y - y;
 
-  float currentLineY = 0;
-  float lineWidth = 0;
+  if (relX < 0 ) return 0;
+  if (relX > width ) return buffer.size();
+
   int currentLineStartIndex = 0;
+  float currentLineTop = 0;
+  char* text = buffer.data();
 
   for (int i = 0; i <= buffer.size(); ++i) {
-    if (i == buffer.size() || buffer[i] == '\n') {
-      if (relY >= currentLineY && relY < currentLineY + fs) {
-        float accu = 0;
+    if (i == buffer.size() || *(text + i) == '\n') {
+      if (relY >= currentLineTop && relY < currentLineTop + fs) {
         for (int j = currentLineStartIndex; j < i; ++j) {
-          char buff[2] = {buffer[j], '\0'};
-          accu += MeasureTextEx(font, buff, fs, 0.5F).x;
-          if (accu >= relX) {
-            return static_cast<uint16_t>(j);
+          const auto currentWidth = MeasureTextUpTo(text + currentLineStartIndex, j - currentLineStartIndex + 1, font, fs, 0.5F);
+          if (currentWidth > relX) {
+            return j;
           }
         }
-        return static_cast<uint16_t>((buffer[i] == '\n') ? i : i);
+        return i;
       }
-      currentLineY += fs;
       currentLineStartIndex = i + 1;
-      lineWidth = 0;
-    } else {
-      char buff[2] = {buffer[i], '\0'};
-      lineWidth += MeasureTextEx(font, buff, fs, 0.5F).x;
+      currentLineTop += fs;
     }
   }
-  if (relY >= currentLineY) {
-    return static_cast<uint16_t>(buffer.size() - 1);
-  }
-  return 0;
+
+  return buffer.size();
 }
+
 
 template <InputConstraint constraint>
 Ints TextInputField<constraint>::getSelection() const {

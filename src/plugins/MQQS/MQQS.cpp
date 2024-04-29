@@ -22,9 +22,7 @@
 
 #include "plugin/PluginInterface.h"
 
-void MQQS::registerComponents(ComponentRegister& ec) {
-
-}
+void MQQS::registerComponents(ComponentRegister& ec) {}
 
 void MQQS::registerNodes(NodeRegister& nr) {
   nr.registerNode("Dialogue Choice", {{"DisplayText", "TextInput"},
@@ -33,4 +31,7 @@ void MQQS::registerNodes(NodeRegister& nr) {
                                       {"Choice3", "TextInput"},
                                       {"Choice4", "TextInput"}});
   nr.registerNode("Dialogue", {{"DisplayText", "TextInput"}});
+
+  nr.registerNode("QuestHeader",
+                  {{"Name", "TextInput"}, {"Description", "TextInput"}, {"Zone", "TextInput"}, {"Level"}});
 }
