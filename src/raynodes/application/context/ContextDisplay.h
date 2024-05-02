@@ -34,11 +34,12 @@ enum AnchorPos : uint8_t {
 };
 
 struct Display {
-  Camera2D camera = {};
   Font editorFont = {};
-  float fontSize = 17;
+  Camera2D camera = {};
   Vector2 screenSize = {};
+  float fontSize = 17;
   float gridSpacing = 20;
+
   bool loadFont(EditorContext& ec);
   [[nodiscard]] Vector2 getAnchor(const AnchorPos a, const float relativeInset, const float w,
                                   const float h) const {

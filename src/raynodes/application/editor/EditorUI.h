@@ -21,6 +21,7 @@
 #ifndef RAYNODES_SRC_APPLICATION_EDITOR_EDITORUI_H_
 #define RAYNODES_SRC_APPLICATION_EDITOR_EDITORUI_H_
 
+
 namespace {
 void CreateNewNode(EditorContext& ec, Vector2 pos, const char* name) {
   const auto newN = ec.core.createNode(ec, name, GetScreenToWorld2D(pos, ec.display.camera));
@@ -184,14 +185,10 @@ inline void DrawActions(EditorContext& ec) {
   }
 }
 inline void DrawTopBar(EditorContext& ec) {
-  const auto color = LIGHTGRAY;
-  const auto inset = ec.display.getSpace(0.05F);
-  const auto topBarRect = Rectangle{0, 0, ec.display.screenSize.x / 2.0F, inset};
-
-  if (!ec.ui.showTopBarOnlyOnHover || CheckCollisionPointRec(ec.logic.mouse, topBarRect)) {
-    DrawRectangleRounded(topBarRect, 0.1F, 30, ColorAlpha(color, 0.8F));
-  } else {
-    DrawRectangleRounded(topBarRect, 0.1F, 30, ColorAlpha(color, 0.3F));
+  int active = 0;
+  if (GuiDropdownBox({20, 5, 100, 25}, ec.ui.fileMenuText, &active, ec.ui.fileMenuDropDown)) {
+    ec.ui.fileMenuDropDown = !ec.ui.fileMenuDropDown;
+    ec.ui.invokeFileMenu(active);
   }
 }
 }  // namespace Editor

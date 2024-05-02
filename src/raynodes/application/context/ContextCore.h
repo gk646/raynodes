@@ -27,7 +27,6 @@
 
 struct Core {
   static constexpr int TARGET_FPS = 100;
-  static constexpr int targetLogicTicks = 120;
   static constexpr int MAX_ACTIONS = 50;
 
   std::unordered_map<NodeID, Node*> selectedNodes;
@@ -54,7 +53,6 @@ struct Core {
     std::erase(nodes, node);
     nodes.push_back(node);
   }  //Unused
-
   void removeConnection(Connection* conn) {
     conn->close();
     std::erase(connections, conn);

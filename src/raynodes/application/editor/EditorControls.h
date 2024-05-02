@@ -145,8 +145,7 @@ inline void PollControls(EditorContext& ec) {
     }
   }
   if (ec.input.isKeyDown(KEY_B)) {
-    ec.core.createNode(ec, "Display",
-                       {(float)GetRandomValue(0, 1000), (float)GetRandomValue(0, 1000)});
+    ec.core.createNode(ec, "Display", {(float)GetRandomValue(0, 1000), (float)GetRandomValue(0, 1000)});
     printf("%d\n", static_cast<int>(ec.core.nodes.size()));
   }
 }

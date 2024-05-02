@@ -44,9 +44,11 @@ struct ContextMenu {
 
 struct UserInterface {
   ContextMenu contextMenu;
+  const char* fileMenuText = "#001#File;#008#New;#005#Open;#002#Save;#006#Save As;#159#Exit";
   bool showTopBarOnlyOnHover = true;
+  bool fileMenuDropDown = false;  // FileMenu dropdown state
 
-  UserInterface() = default;
+  void invokeFileMenu(int i) {}
 };
 
 #endif  //CONTEXTUI_H

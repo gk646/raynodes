@@ -1,6 +1,9 @@
 name: Copy File on Commit
 
-on: [push]
+on: [ push ]
+
+permissions:
+  contents: write
 
 jobs:
   file-copy:

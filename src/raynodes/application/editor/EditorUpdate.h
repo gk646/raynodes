@@ -34,13 +34,16 @@ void StartUpdateTick(EditorContext& ec) {
   camera.zoom = (camera.zoom > 3.0f) ? 3.0f : camera.zoom;
   camera.zoom = (camera.zoom < 0.1f) ? 0.1f : camera.zoom;
 
+  // Scale to normal screen space
   const auto mouse = GetMousePosition();
+
   ec.logic.worldMouse = GetScreenToWorld2D(mouse, camera);
   ec.logic.mouse = mouse;
   ec.logic.isAnyNodeHovered = false;  // Reset each tick
   ec.logic.isAnyNodeDragged = false;  // Reset each tick
   ec.input.reset();                   //Reset input for tick
 }
+
 void FormatSelectRectangle(EditorContext& ec) {
   {
     auto& [x, y, width, height] = ec.logic.selectRect;
@@ -84,7 +87,7 @@ inline void UpdateTick(EditorContext& ec) {
   StartUpdateTick(ec);
 
   //Reverse update to correctly reflect input layers
-  for (const auto & node : std::ranges::reverse_view(ec.core.nodes)) {
+  for (const auto& node : std::ranges::reverse_view(ec.core.nodes)) {
     node->update(ec);
   }
 

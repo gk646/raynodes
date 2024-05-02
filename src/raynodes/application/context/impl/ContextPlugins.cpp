@@ -59,7 +59,7 @@ void RegisterPlugin(EditorContext& ec, RaynodesPluginI* plugin) {
 }  // namespace
 
 bool Plugin::loadPlugins(EditorContext& ec) {
-  const char* basePath = String::FormatText("%s%s", ec.string.applicationDir, String::PLUGIN_PATH);
+  const char* basePath = String::FormatText("%s%s", ec.string.applicationDir, PLUGIN_PATH);
   const char* filter;
 #if defined(_WIN32)
   filter = ".dll";

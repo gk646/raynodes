@@ -18,11 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "DropDown.h"
+#include "ui/DropDown.h"
 
 #include <raylib.h>
 
-#include "application/EditorContext.h"
+#include "../application/EditorContext.h"
 
 void DropDown::draw(EditorContext& ec, float dx, float dy) {
   x = dx;
