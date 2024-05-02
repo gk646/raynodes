@@ -7,7 +7,6 @@ set(BUILD_GAMES OFF CACHE BOOL "" FORCE)
 set(OPENGL_VERSION "4.3" CACHE STRING "OpenGL Version to build raylib with")
 set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE) # Build as shared lib
 
-
 # Choose either one - currently only local libs supported
 # include(cmake/FetchLibs.cmake)
 include(cmake/LoadLocalLibs.cmake)

@@ -21,33 +21,17 @@
 #ifndef RAYNODES_SRC_NODES_ELEMENTS_TEXTINPUTFIELD_H_
 #define RAYNODES_SRC_NODES_ELEMENTS_TEXTINPUTFIELD_H_
 
-#include <string>
-
 #include "component/Component.h"
+#include "graphics/TextField.h"
+#include "application/elements/Action.h"
 
-enum InputConstraint {
-  NONE,
-  NUMERIC,
-};
-
-//TODO needs to be remade as a standalone class not a component
-// so it can be reused -> gets rid of template aswell - components then use it and just call its methods
-
-template <InputConstraint>
-class TextInputField final : public Component {
-  inline static uint8_t BLINK_DELAY = 45;
-  std::string buffer;
-  TextAction* currAction = nullptr;
-  uint16_t cursorPos{};
-  uint16_t selectionStart = 0;
-  uint16_t selectionEnd = 0;
-  bool isDragging = false;
-  bool showCursor = false;
-  uint8_t blinkCounter = 0;
+class TextInputC final : public Component {
+  TextInputField textField;
+  TextAction* currentAction = nullptr;
 
  public:
-  explicit TextInputField(const ComponentTemplate ct) : Component(ct, 250, 20) {}
-  Component* clone() override { return new TextInputField(*this); }
+  TextInputC(const ComponentTemplate ct) : Component(ct, 250, 20), textField(250, 19, NONE) {}
+  Component* clone() override { return new TextInputC(*this); }
   void draw(EditorContext& ec, Node& parent) override;
   void update(EditorContext&, Node& parent) override;
   void load(FILE* file) override;
@@ -55,12 +39,7 @@ class TextInputField final : public Component {
   void onFocusGain(EditorContext&) override;
   void onFocusLoss(EditorContext&) override;
   void onCreate(EditorContext& ec, Node& parent) override;
-  const char* getString() override { return buffer.c_str(); }
-
- private:
-  Ints getSelection() const;
-  void updateState(EditorContext& ec);
-  [[nodiscard]] uint16_t getIndexFromPos(const Font& font, float fs, Vector2 mouse) ;
+  const char* getString() override { return textField.buffer.c_str(); }
 };
 
 #endif  //RAYNODES_SRC_NODES_ELEMENTS_TEXTINPUTFIELD_H_

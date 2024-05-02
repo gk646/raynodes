@@ -1,22 +1,23 @@
 # raynodes
 
-`raynodes` is a standalone 2D node editor made using [raylib](https://github.com/raysan5/raylib) with a focus extensibility.
-Its goal is to be able to handle every node based task by providing:
+`raynodes` is a standalone 2D node editor made using [raylib](https://github.com/raysan5/raylib) with a focus
+extensibility. It aims to be an attractive tool for any node based task, but focuses on source code integration within
+bigger projects like games, editors...
 
-- 
+A small showcase of its major features:
 
-It provides a clear and modularized core handling common editor features like Undo/Redo,
-camera , controls and state serialization.
+- Clean, modularized and documented source code
+- Fast and optimized import and export functionalities without dependencies!
+- Cross-platform support
+- Documented plugin interface and capabilities
+- User created node templates at runtime
+- Easily extendable with event-driven Component interface
 
-Via a clearly defined public interface, it can easily be extended with:
 
-- User created templates at runtime
-- Dynamically loaded plugins
-
-In a lot of places it uses my C++ helper library [cxstructs](https://github.com/gk646/cxstructs).
+In a lot of places it uses my (header only) C++ helper library [cxstructs](https://github.com/gk646/cxstructs).
 
 **1.** [Controls](#Controls)   
-**2.** [Features](#Features)   
+**2.** [Editor Features](#Editor-Features)   
 **3.** [Components!](#Expand-and-Contribute-with-Components)  
 **4.** [Plugins](#Plugins)  
 **5.** [Software Design](#Software-Design)
@@ -26,8 +27,6 @@ In a lot of places it uses my C++ helper library [cxstructs](https://github.com/
 - `CTRL+C` / **Copy selection**
 - `CTRL+V` / **Paste selection**
 - `CTRL+X` / **Cut (delete and copy) selection**
-
-
 - `CTRL+Z` / **Undo Action**
 - `CTRL+Y` / **Redo Action**
 - `CTRL+LMB`(click on a node) / **Add to Selection**
@@ -40,7 +39,7 @@ CTRL = Control
 LMB = Left Mouse Button   
 RMB = Right Mouse Button
 
-## Features:
+## Editor Features:
 
 ### Action History
 
@@ -65,7 +64,15 @@ Some powerful features include:
 - Access other nodes and their components from your component
     - e.g. modify all nodes with a given label
 - Modify editor properties like resolution or camera zoom and position
-- Trigger function like saving or adding and removing nodes
+- Trigger functions like saving or adding and removing nodes
+
+Some ides that are possible:
+
+- Load a picture from a given path and display it
+    - Take a Vector3 input and shift the colors
+- Computer logic gates with clock cycle
+    - Use the boolean type to activate
+    - Use the integer type to pass bit data
 
 ### One Rule to rule them all
 
@@ -173,13 +180,14 @@ register it in your plugin.
 **NOTE: Components are uniquely identified by this name (naming collision will be shown when loading).**
 This means it's advised to pick a namespace for your plugin (small prefix).
 
+Syntax: `registerComponent<ComponentType>("<Component-Identifier>")`
+
 ```cpp
 void BuiltIns::registerComponents(ComponentRegister& cr) {
 cr.registerComponent<MathC>("MathOp");
 cr.registerComponent<DisplayC>("Display");
 cr.registerComponent<StringToNumberC>("StrToNum");
-cr.registerComponent<TextInputField<NONE>>("TextInput");
-cr.registerComponent<TextInputField<NUMERIC>>("NumberInput");
+cr.registerComponent<TextInputField>("TextInput");
 }
 ```
 
@@ -188,7 +196,7 @@ cr.registerComponent<TextInputField<NUMERIC>>("NumberInput");
 A node is then just a container for components. The register process allows to set custom labels for each component
 which helps to reference a specific component later on:
 
-Syntax: `registerNode <NodeName> , { {<CustomLabel>,<Component-Identifier>}, ... }`
+Syntax: `registerNode("<NodeName>", { {<CustomLabel>,<Component-Identifier>}, ... }`
 
 ```cpp
 void BuiltIns::registerNodes(NodeRegister& nr) {
@@ -208,6 +216,8 @@ Plugins will be loaded from the `./plugins` folder relative to the executable
 
 ## Software Design
 
+- Prefer fixed size containers for lower level structs for better cache efficiency
+  - Also helps to reduce allocations
 - No global state to allow for modularity if needed (and testability...)
 - Move away from providing source code extensibility in favour of in-editor extensibility
     - Project isn't centered around code interaction but in-editor interaction
@@ -229,3 +239,7 @@ NodeEditor - Logic
 
 - Will be passed a EditorContext& to operate on
 - Defines logic that works on the data
+
+### Format and Style
+
+- General style guide [cxutil/cxtips.h](https://github.com/gk646/cxstructs/blob/master/src/cxutil/cxtips.h)
