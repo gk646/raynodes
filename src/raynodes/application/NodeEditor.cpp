@@ -22,6 +22,7 @@
 
 #include <ranges>
 #include <cxstructs/Constraint.h>
+#include <raygui.h>
 
 #include "node/Node.h"
 #include "shared/rayutils.h"
@@ -71,17 +72,19 @@ void DrawContent(EditorContext& ec) {
 void DrawForeGround(EditorContext& ec) {
   Editor::UpdateTick(ec);  //Updates all nodes
 
+  // Normalize UI to FullHD
   if (ec.logic.showContextMenu) {
     Editor::DrawContextMenu(ec);
   }
 
-  Editor::PollControls(ec);
   Editor::DrawActions(ec);
   Editor::DrawTopBar(ec);
 
   char buff[8];
   snprintf(buff, 8, "%d", GetFPS());
   DrawTextEx(ec.display.editorFont, buff, {25, 25}, 16, 1.0F, GREEN);
+
+  Editor::PollControls(ec);
 }
 }  // namespace
 

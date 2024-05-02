@@ -23,13 +23,11 @@
 
 struct String {
   static constexpr int BUFFER_SIZE = 1024;
-  static constexpr auto* PLUGIN_PATH = "plugins/";
   inline static char buffer[BUFFER_SIZE];
 
   const char* applicationDir;
 
   String();
-
   static const char* FormatText(const char* format, ...) {
     va_list args;
     va_start(args, format);

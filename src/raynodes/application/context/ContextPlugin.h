@@ -23,6 +23,8 @@
 
 struct Plugin {
   static constexpr int MAX_NAME_LEN = 17;  //16 with terminator ('\0')
+  static constexpr auto* PLUGIN_PATH = "plugins/";
+
   std::vector<RaynodesPluginI*> plugins;
 
   bool loadPlugins(EditorContext& ec);

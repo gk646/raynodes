@@ -20,6 +20,9 @@
 
 #include "application/NodeEditor.h"
 
+#define RAYGUI_IMPLEMENTATION
+#include <raygui.h>
+
 int main(int argc, char* argv[]) {
   NodeEditor editor{argc, argv};
   if (editor.start()) {
