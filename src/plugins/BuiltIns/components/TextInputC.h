@@ -22,7 +22,7 @@
 #define RAYNODES_SRC_NODES_ELEMENTS_TEXTINPUTFIELD_H_
 
 #include "component/Component.h"
-#include "graphics/TextField.h"
+#include "ui/TextField.h"
 #include "application/elements/Action.h"
 
 class TextInputC final : public Component {

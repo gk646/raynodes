@@ -28,6 +28,8 @@
 #include "component/Component.h"
 
 //TODO clean up - make ready for templates
+//TODO remove raylib include
+
 struct Node {
   static constexpr float PADDING = 3;
   static constexpr float OFFSET_Y = 20;
