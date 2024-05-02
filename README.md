@@ -6,15 +6,15 @@ bigger projects like games, editors...
 
 A small showcase of its major features:
 
-- Clean, modularized and documented source code
-- Fast and optimized import and export functionalities without dependencies!
+- **Clean**, **modularized** and **documented** source code
+- **Fast** and **optimized** import and export functionalities without dependencies!
 - Cross-platform support
-- Documented plugin interface and capabilities
-- User created node templates at runtime
-- Easily extendable with event-driven Component interface
+- Documented **plugin interface** and capabilities
+- **User created** node templates at runtime
+- Easily **extendable** with **event-driven** Component interface
 
-
-In a lot of places it uses my (header only) C++ helper library [cxstructs](https://github.com/gk646/cxstructs).
+In a lot of places it uses my (header only) C++ helper library [cxstructs](https://github.com/gk646/cxstructs).  
+For more infos on the design choices go to [Software Design](#Software-Design)
 
 **1.** [Controls](#Controls)   
 **2.** [Editor Features](#Editor-Features)   
@@ -216,8 +216,10 @@ Plugins will be loaded from the `./plugins` folder relative to the executable
 
 ## Software Design
 
+### Software General
+
 - Prefer fixed size containers for lower level structs for better cache efficiency
-  - Also helps to reduce allocations
+    - Also helps to reduce allocations
 - No global state to allow for modularity if needed (and testability...)
 - Move away from providing source code extensibility in favour of in-editor extensibility
     - Project isn't centered around code interaction but in-editor interaction
@@ -226,9 +228,9 @@ Plugins will be loaded from the `./plugins` folder relative to the executable
     - ~~Through clean code structure critical sections can easily be defined~~
 - 1 Thread is enough - 2 Threads introduce code complexity
     - Logic overhead is very small
-- Structured code through exporting big functions into headers
+- Structure code by exporting big functions into headers
 
-### Concepts
+### Software Concepts
 
 EditorContext - DataBackend
 
@@ -243,3 +245,29 @@ NodeEditor - Logic
 ### Format and Style
 
 - General style guide [cxutil/cxtips.h](https://github.com/gk646/cxstructs/blob/master/src/cxutil/cxtips.h)
+
+### Node Editor Concepts
+
+The main inspiration was to create a editor that just provides a basic interface that can be used to create anything
+node based like:
+
+- Blender Node Editor
+- Quest Tree (for games, DialogueTree and choices)
+- Basic Logic Circuit
+
+`raynodes` is a component-centric editor meaning that most things happen in and around components.
+In turn nodes are just glorified component containers that you can move around.
+
+This choice was made due to a number of reasons:
+
+- Having reusable building blocks (components) throughout nodes is good
+- With only a node it's not clear who handles the input and outputs
+    - Now each node has its dedicated input and outputs -> might add node level connections aswell
+- Components can be tied to some identifier (a string here) which allows nodes to built at runtime
+    - This allows for instructions in string form on how to build a specific node -> plugins
+
+However this also has some drawbacks:
+
+- A node doesnt have the functionality of all its components combined
+    - Its just a container... -> this could be improved with inter-component data transfers
+- Having a nested structure adds extra complexity to reading and saving
