@@ -32,7 +32,6 @@ struct Node {
   static constexpr float PADDING = 3;
   static constexpr float OFFSET_Y = 20;
   inline static Vector2 DRAG_OFFSET;
-
   cxstructs::StackVector<Component*, 6> components{};  //Current limit
   const char* name;                                    //Unique allocated name
   Vector2 position{};
