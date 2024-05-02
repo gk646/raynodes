@@ -3,14 +3,14 @@
 #include "components/MathC.h"
 #include "components/DisplayC.h"
 #include "components/StringToNumberC.h"
-#include "components/TextInputField.h"
+#include "components/TextInputC.h"
 
 void BuiltIns::registerComponents(ComponentRegister& cr) {
   cr.registerComponent<MathC>("MathOp");
   cr.registerComponent<DisplayC>("Display");
   cr.registerComponent<StringToNumberC>("StrToNum");
-  cr.registerComponent<TextInputField<NONE>>("TextInput");
-  cr.registerComponent<TextInputField<NUMERIC>>("NumberInput");
+  cr.registerComponent<TextInputC>("TextInput");
+  cr.registerComponent<TextInputC>("NumberInput");
 }
 
 void BuiltIns::registerNodes(NodeRegister& nr) {
