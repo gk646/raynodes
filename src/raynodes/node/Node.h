@@ -30,12 +30,12 @@
 //TODO clean up - make ready for templates
 //TODO remove raylib include
 
-struct Node {
+struct Node final {
   static constexpr float PADDING = 3;
   static constexpr float OFFSET_Y = 20;
   inline static Vector2 DRAG_OFFSET;
-  cxstructs::StackVector<Component*, 6> components{};  //Current limit
-  const char* name;                                    //Unique allocated name
+  cxstructs::StackVector<Component*, COMPONENTS_PER_NODE> components{};  //Current limit
+  const char* name = nullptr;                                            //Unique allocated name
   Vector2 position{};
   Vector2 size;
   Color color;

@@ -37,16 +37,16 @@
 //  These functions respect the ui layers, otherwise you will get weird interactions
 
 struct Component {
-  cxstructs::StackVector<InputPin, 3> inputs{};    //Current limit (could be changed to a std::vector)
-  cxstructs::StackVector<OutputPin, 3> outputs{};  //Current limit (could be changed to a std::vector)
-  const char* const id;                            //Uniquely identifiyin name id (constant allocated ptr)
-  const char* const label;                         //Display name (and access name)
-  float x = 0;                                     //Internal state (don't change, only read)
-  float y = 0;                                     //Internal state (don't change, only read)
-  uint16_t width = 50;                             //Dynamically adjustable
-  uint16_t height = 20;                            //Dynamically adjustable
-  bool isFocused = false;                          //Internal state (don't change, only read)
-  bool isHovered = false;                          //Internal state (don't change, only read)
+  cxstructs::StackVector<InputPin, INPUT_PINS> inputs{};     //Current limit
+  cxstructs::StackVector<OutputPin, OUTPUT_PINS> outputs{};  //Current limit
+  const char* const id;       //Uniquely identifiyin name id (constant allocated ptr)
+  const char* const label;    //Display name (and access name)
+  float x = 0;                //Internal state (don't change, only read)
+  float y = 0;                //Internal state (don't change, only read)
+  uint16_t width = 50;        //Dynamically adjustable
+  uint16_t height = 20;       //Dynamically adjustable
+  bool isFocused = false;     //Internal state (don't change, only read)
+  bool isHovered = false;     //Internal state (don't change, only read)
   bool internalLabel = true;  //Whether the label should be drawn or the component handles it
 
   explicit Component(const ComponentTemplate ct, const uint16_t w = 0, const uint16_t h = 0)

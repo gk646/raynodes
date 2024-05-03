@@ -21,7 +21,6 @@
 #ifndef RAYNODES_SRC_APPLICATION_EDITOR_EDITORUI_H_
 #define RAYNODES_SRC_APPLICATION_EDITOR_EDITORUI_H_
 
-
 namespace {
 void CreateNewNode(EditorContext& ec, Vector2 pos, const char* name) {
   const auto newN = ec.core.createNode(ec, name, GetScreenToWorld2D(pos, ec.display.camera));
@@ -34,6 +33,7 @@ void CreateNewNode(EditorContext& ec, Vector2 pos, const char* name) {
 
 namespace Editor {
 inline void DrawGrid(const EditorContext& ec) {
+  if (!ec.ui.showGrid) return;
   constexpr Color color{58, 68, 102, 255};
   const float baseGridSpacing = ec.display.gridSpacing;
   const auto& camera = ec.display.camera;
@@ -66,6 +66,7 @@ inline void DrawGrid(const EditorContext& ec) {
   }
 }
 inline void DrawContextMenu(EditorContext& ec) {
+  if (!ec.logic.showContextMenu) return;
   constexpr float menuWidth = 170.0F;
   auto& categories = ec.ui.contextMenu.categories;
   const auto& font = ec.display.editorFont;
@@ -185,10 +186,64 @@ inline void DrawActions(EditorContext& ec) {
   }
 }
 inline void DrawTopBar(EditorContext& ec) {
-  int active = 0;
-  if (GuiDropdownBox({20, 5, 100, 25}, ec.ui.fileMenuText, &active, ec.ui.fileMenuDropDown)) {
-    ec.ui.fileMenuDropDown = !ec.ui.fileMenuDropDown;
-    ec.ui.invokeFileMenu(active);
+  constexpr auto dropDown = [](EditorContext& ec, const Rectangle& r, const char* text, bool& state) {
+    // Always reset to 0 cause its a dropdown
+    int active = 0;
+    // We use extra getter to properly scale it
+    if (GuiDropdownBox(ec.display.getSmartScaled(r), text, &active, state)) {
+      state = !state;
+      ec.input.consumeMouse();
+      ec.logic.isDraggingScreen = false;
+      return active;
+    }
+    return -1;
+  };
+
+  const auto height = ec.ui.topBarHeight;
+  int res = -1;
+  res = dropDown(ec, {20, 5, 100, height}, ec.ui.fileMenuText, ec.ui.fileMenuState);
+  ec.ui.invokeFileMenu(ec, res);
+
+  res = dropDown(ec, {120, 5, 100, height}, ec.ui.editMenuText, ec.ui.editMenuState);
+  ec.ui.invokeEditMenu(ec, res);
+
+  res = dropDown(ec, {220, 5, 100, height}, ec.ui.viewMenuText, ec.ui.viewMenuState);
+  ec.ui.invokeViewMenu(ec, res);
+}
+inline void DrawStatusBar(EditorContext& ec) {
+  float x = 0;
+  constexpr float height = 18.0F;
+  constexpr float y = 1080 - height;
+
+  constexpr auto statusBar = [](EditorContext& ec, float& x, float y, float w, float h, const char* text) {
+    GuiStatusBar(ec.display.getFullyScaled({x, y, w, h}), text);
+    x += w;
+  };
+
+  statusBar(ec, x, y, 1200.0F, height, nullptr);
+
+  // Show mouse position
+  auto* text = String::FormatText("#021# %d/%d", (int)ec.logic.worldMouse.x, (int)ec.logic.worldMouse.y);
+  statusBar(ec, x, y, 150.0F, height, text);
+
+  const auto lastWidth = 1920.0F - x;
+  statusBar(ec, x, y, lastWidth, height, nullptr);
+
+  // Draw the Zoom slider
+  const auto bounds = ec.display.getFullyScaled({x - lastWidth + 25, y, lastWidth - 50, height});
+  GuiSliderBar(bounds, nullptr, nullptr, &ec.display.camera.zoom, 0.1F, 3.0F);
+
+  // Workaround - raygui sadly doesnt properly handle return value here
+  if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(ec.logic.mouse, bounds)) {
+    ec.input.consumeMouse();
+  }
+
+  // Draw zoom labels
+  if (GuiButton(ec.display.getFullyScaled({x - lastWidth, y, 25, 18}), "#221#")) {
+    ec.display.zoomOut();
+  }
+  if(GuiButton(ec.display.getFullyScaled({x - 25, y, 25, 18}), "#220#")) {
+    ec.display.zoomIn();
   }
 }
 }  // namespace Editor

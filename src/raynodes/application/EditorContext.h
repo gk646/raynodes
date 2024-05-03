@@ -39,15 +39,15 @@
 #include "context/ContextInput.h"
 #include "context/ContextTemplates.h"
 #include "context/ContextPlugin.h"
-#include "context/ContextUserInterface.h"
+#include "context/ContextUI.h"
 
 struct EditorContext {
   Core core{};
   Display display{};
   Logic logic{};
   Template templates{};
-  Plugin plugin{};
   UserInterface ui{};
+  Plugin plugin{};
   Persist persist{};
   Input input{};
   Info info{};

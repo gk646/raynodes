@@ -28,6 +28,7 @@ inline void SetupDisplay(EditorContext& ec) {
   // Initialize the window with the initial size
   SetTraceLogLevel(LOG_WARNING);
   InitWindow(1280, 720, ec.persist.openedFile);
+  SetTargetFPS(START_FPS);
 
   // Get the current monitor size
   const int m = GetCurrentMonitor();
@@ -50,7 +51,6 @@ inline void SetupDisplay(EditorContext& ec) {
   // Center the window on the screen
   SetWindowPosition((monitorWidth - screenWidth) / 2, (monitorHeight - screenHeight) / 2);
 
-  SetTargetFPS(144);
   SetExitKey(0);
   DisableEventWaiting();
 }

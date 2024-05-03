@@ -45,10 +45,20 @@ struct ContextMenu {
 struct UserInterface {
   ContextMenu contextMenu;
   const char* fileMenuText = "#001#File;#008#New;#005#Open;#002#Save;#006#Save As;#159#Exit";
+  const char* editMenuText =
+      "#022#Edit;#072#Undo;#073#Redo;#017#Cut;#016#Copy;#018#Paste;#143#Erase;#099#Select All";
+  const char* viewMenuText = "#044#View;#220#Zoom In;#221#Zoom Out;#107#Zoom to Fit;#097#Grid";
+  float topBarHeight = 18;
   bool showTopBarOnlyOnHover = true;
-  bool fileMenuDropDown = false;  // FileMenu dropdown state
+  bool showGrid = true;
+  bool showContinueWithouSave = false;
+  bool fileMenuState = false;  // FileMenu dropdown state
+  bool editMenuState = false;  // EditMenu dropdown state
+  bool viewMenuState = false;  // ViewMenu dropdown state
 
-  void invokeFileMenu(int i) {}
+  void invokeFileMenu(EditorContext& ec, int i);
+  void invokeEditMenu(EditorContext& ec, int i);
+  void invokeViewMenu(EditorContext& ec, int i);
 };
 
 #endif  //CONTEXTUI_H

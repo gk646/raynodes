@@ -50,7 +50,7 @@ enum MOperation : uint8_t {
 
 struct MathC final : Component {
   int selectedMode = ADD;
-  DropDown dropDown{};
+  DropDown dropDown{};  // This is need as raygui controls dont work in camera space
   explicit MathC(const ComponentTemplate ct) : Component(ct, 250, 20) {}
   Component* clone() override { return new MathC(*this); };
   void draw(EditorContext& ec, Node& parent) override;

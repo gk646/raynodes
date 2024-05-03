@@ -31,8 +31,8 @@ void StartUpdateTick(EditorContext& ec) {
   camera.offset = {ec.display.screenSize.x / 2.0f, ec.display.screenSize.y / 2.0f};
 
   camera.zoom += GetMouseWheelMove() * 0.05f;
-  camera.zoom = (camera.zoom > 3.0f) ? 3.0f : camera.zoom;
-  camera.zoom = (camera.zoom < 0.1f) ? 0.1f : camera.zoom;
+  camera.zoom = (camera.zoom > Display::MAX_ZOOM) ? Display::MAX_ZOOM : camera.zoom;
+  camera.zoom = (camera.zoom < Display::MIN_ZOOM) ? Display::MIN_ZOOM : camera.zoom;
 
   // Scale to normal screen space
   const auto mouse = GetMousePosition();
@@ -43,7 +43,6 @@ void StartUpdateTick(EditorContext& ec) {
   ec.logic.isAnyNodeDragged = false;  // Reset each tick
   ec.input.reset();                   //Reset input for tick
 }
-
 void FormatSelectRectangle(EditorContext& ec) {
   {
     auto& [x, y, width, height] = ec.logic.selectRect;
@@ -82,6 +81,7 @@ void FormatSelectRectangle(EditorContext& ec) {
   }
 }
 }  // namespace
+
 namespace Editor {
 inline void UpdateTick(EditorContext& ec) {
   StartUpdateTick(ec);
