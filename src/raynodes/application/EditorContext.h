@@ -24,6 +24,11 @@
 #include "shared/fwd.h"
 
 #include <cstdio>
+#include <string>
+#include <deque>
+#include <unordered_map>
+#include <vector>
+
 #include <raylib.h>
 #include <cxutil/cxstring.h>
 
@@ -56,14 +61,11 @@ struct EditorContext {
   explicit EditorContext(int argc, char* argv[]) {
     if (argc == 2) {
       if (*argv[1] == '.') {  // Relative path
-        persist.openedFile = String::FormatText("%s%s", string.applicationDir, argv[1]);
+        persist.openedFilePath = String::FormatText("%s%s", string.applicationDir, argv[1]);
       } else {
-        persist.openedFile = argv[1];
+        persist.openedFilePath = argv[1];
       }
-    } else {
-      persist.openedFile = String::FormatText("%s%s", string.applicationDir, "NewNodeSheet.rn");
     }
-    persist.openedFile = cxstructs::str_dup(persist.openedFile);  // Allocate it
 
     printf("raynodes - Version %d.%d\n", Info::majorVersion, Info::minorVersion);
   }

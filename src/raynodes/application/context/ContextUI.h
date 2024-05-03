@@ -28,7 +28,7 @@ struct ContextMenuCategory {
 };
 
 struct ContextMenu {
-  std::vector<ContextMenuCategory> categories;
+  std::vector<ContextMenuCategory> categories{};
   void addNode(const char* category, const char* name) {
     for (auto& c : categories) {
       if (cxstructs::str_cmp(c.name, category)) {
@@ -44,14 +44,15 @@ struct ContextMenu {
 
 struct UserInterface {
   ContextMenu contextMenu;
-  const char* fileMenuText = "#001#File;#008#New;#005#Open;#002#Save;#006#Save As;#159#Exit";
-  const char* editMenuText =
-      "#022#Edit;#072#Undo;#073#Redo;#017#Cut;#016#Copy;#018#Paste;#143#Erase;#099#Select All";
-  const char* viewMenuText = "#044#View;#220#Zoom In;#221#Zoom Out;#107#Zoom to Fit;#097#Grid";
+  const char* fileMenuText = "#001#File;#008#New (Ctrl+N);#005#Open;#002#Save Ctrl+S;#006#Save As;#159#Exit";
+  const char* editMenuText = "#022#Edit;#072#Undo (Ctrl+Z);#073#Redo (Ctrl+Y);#017#Cut (Ctrl+X);#016#Copy "
+                             "(Ctrl+C);#018#Paste (Ctrl+V);#143#Erase (Del);#099#Select All (Ctrl+A)";
+  const char* viewMenuText =
+      "#044#View;#220#Zoom In (Ctrl++);#221#Zoom Out (Ctrl+-);#107#Zoom to Fit;#097#Grid";
   float topBarHeight = 18;
   bool showTopBarOnlyOnHover = true;
   bool showGrid = true;
-  bool showContinueWithouSave = false;
+  bool showUnsavedChanges = false;
   bool fileMenuState = false;  // FileMenu dropdown state
   bool editMenuState = false;  // EditMenu dropdown state
   bool viewMenuState = false;  // ViewMenu dropdown state

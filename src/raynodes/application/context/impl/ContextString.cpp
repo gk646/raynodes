@@ -24,7 +24,11 @@ String::String() {
   applicationDir = GetApplicationDirectory();
 }
 
-const char* String::GetWindowTitle(const char* fileName) {
-
-  return FormatText("%s - %s", Info::applicationName, fileName);
+void String::updateWindowTitle(EditorContext& ec) {
+  const char* fileName = GetFileName(ec.persist.openedFilePath.c_str());
+  if (fileName == nullptr || *fileName == '\0') {
+    fileName = "Untitled";
+  }
+  if (ec.core.hasUnsavedChanges) SetWindowTitle(FormatText("*%s - %s", fileName, Info::applicationName));
+  else SetWindowTitle(FormatText("%s - %s", fileName, Info::applicationName));
 }

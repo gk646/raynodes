@@ -36,8 +36,6 @@ struct Logic {
   Vector2 worldMouse = {};      // Mouse pos in world space
   Vector2 contextMenuPos = {};  // Position of the context menu
   Vector2 draggedPinPos = {};   // Position of the dragged pin
-  bool closeApplication = false;
-  bool hasUnsavedChanges = false;
   bool isMakingConnection = false;  // Is user trying to connect pins
   bool isDraggingScreen = false;
   bool showContextMenu = false;

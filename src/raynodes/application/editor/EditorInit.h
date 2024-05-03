@@ -27,7 +27,7 @@ inline void SetupDisplay(EditorContext& ec) {
 
   // Initialize the window with the initial size
   SetTraceLogLevel(LOG_WARNING);
-  InitWindow(1280, 720, ec.persist.openedFile);
+  InitWindow(1280, 720, Info::applicationName);
   SetTargetFPS(START_FPS);
 
   // Get the current monitor size
@@ -47,6 +47,7 @@ inline void SetupDisplay(EditorContext& ec) {
 
   // Set the new window size
   SetWindowSize(screenWidth, screenHeight);
+  SetWindowMinSize(640, 480);
 
   // Center the window on the screen
   SetWindowPosition((monitorWidth - screenWidth) / 2, (monitorHeight - screenHeight) / 2);
