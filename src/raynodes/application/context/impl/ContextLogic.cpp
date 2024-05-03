@@ -20,8 +20,6 @@
 
 #include "application/EditorContext.h"
 
-#include "node/Node.h"
-#include "blocks/Connection.h"
 
 namespace {
 void AssignConnection(EditorContext& ec, Node& fromNode, Component& from, OutputPin& out, Node& toNode,

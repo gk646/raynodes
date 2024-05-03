@@ -18,15 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "application/context/ContextPersist.h"
+#include "application/EditorContext.h"
 
 #include <cxutil/cxio.h>
-
-#include "application/EditorContext.h"
-#include "node/Node.h"
-
 #include <cxstructs/Constraint.h>
-#include <shared/fwd.h>
 
 namespace {
 void SaveEditorData(FILE* file, EditorContext& ec) {
@@ -136,49 +131,62 @@ int LoadConnections(FILE* file, EditorContext& ec) {
 }  // namespace
 
 bool Persist::saveToFile(EditorContext& ec) const {
-  if (openedFile == nullptr) return true;
+  if (openedFilePath.empty() || !ec.core.hasUnsavedChanges) return true;
+
   const int size = std::max(static_cast<int>(ec.core.nodes.size()), 1);
 
   int nodes, connections;
   //We assume 1000 bytes on average per node for the buffer
-  const auto res = cxstructs::io_save_buffered_write(openedFile, size * 1000, [&](FILE* file) {
+  const auto res = cxstructs::io_save_buffered_write(openedFilePath.c_str(), size * 1000, [&](FILE* file) {
     SaveEditorData(file, ec);
     nodes = SaveNodes(file, ec);
     connections = SaveConnections(file, ec);
   });
   if (!res) {
-    fprintf(stderr, "Error saving to %s", openedFile);
+    fprintf(stderr, "Error saving to %s", openedFilePath.c_str());
     return false;
   }
+
+  // Successfully saved - reflect in the title
+  ec.core.hasUnsavedChanges = false;
+  ec.string.updateWindowTitle(ec);
 
   printf("Saved %s nodes\n", String::GetPaddedNum(nodes));
   printf("Saved %s connections\n", String::GetPaddedNum(connections));
   return true;
 }
 
-bool Persist::loadFromFile(EditorContext& ec) const {
-  SetWindowTitle(String::FormatText("%s - %s", Info::applicationName, openedFile));
+bool Persist::loadFromFile(EditorContext& ec) {
+  const auto* path = openedFilePath.c_str();
 
   FILE* file;
-  if (openedFile == nullptr) return true;
 
-  if (fopen_s(&file, openedFile, "r") != 0) return true;
-
-  if (!file) {
-    fprintf(stderr, "Unable to open file %s\n", openedFile);
+  if (openedFilePath.empty()) {
+    String::updateWindowTitle(ec);
     return true;
   }
 
+  if (fopen_s(&file, path, "r") != 0) return false;
+
+  if (!file) {
+    fprintf(stderr, "Unable to open file %s\n", path);
+    return false;
+  }
+
   //Load data
-  int nodes, connections;
   LoadEditorData(file, ec);
-  nodes = LoadNodes(file, ec);
-  connections = LoadConnections(file, ec);
+  int nodes = LoadNodes(file, ec);
+  int connections = LoadConnections(file, ec);
 
   printf("Loaded %s nodes\n", String::GetPaddedNum(nodes));
   printf("Loaded %s connections\n", String::GetPaddedNum(connections));
 
   if (fclose(file) != 0) return false;
+
+  // Successfully loaded - reflect in the title
+  String::updateWindowTitle(ec);
+  fileName = GetFileName(openedFilePath.c_str());
+
   return true;
 }
 

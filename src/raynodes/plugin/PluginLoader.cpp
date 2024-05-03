@@ -26,14 +26,25 @@
 #endif
 
 #include <cstdio>
-
-#include <cxutil/cxstring.h>
 #include "plugin/PluginLoader.h"
-#include "application/context/ContextString.h"
 
 //Hide all the ugly #ifdefs
 
+namespace {
+const char* getLastError(char* buffer, int size) {
+#if defined(_WIN32)
+  FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, GetLastError(),
+                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buffer, size, nullptr);
+
+  return buffer;
+#else
+  return dlerror();
+#endif
+}
+}  // namespace
+
 RaynodesPluginI* PluginLoader::GetPluginInstance(const char* absolutePath, const char* funcName) {
+  char buff[64]{0};
   void* handle;
 #if defined(_WIN32)
   handle = LoadLibraryA(absolutePath);
@@ -42,7 +53,7 @@ RaynodesPluginI* PluginLoader::GetPluginInstance(const char* absolutePath, const
 #endif
 
   if (!handle) {
-    fprintf(stderr, "Filed to load plugin %s", getLastError());
+    fprintf(stderr, "Filed to load plugin %s", getLastError(buff,64));
     return nullptr;
   }
 
@@ -54,7 +65,7 @@ RaynodesPluginI* PluginLoader::GetPluginInstance(const char* absolutePath, const
 #endif
 
   if (!symbol) {
-    fprintf(stderr, "Filed to load symbol %s", getLastError());
+    fprintf(stderr, "Filed to load symbol %s", getLastError(buff,64));
 #if defined(_WIN32)
     FreeLibrary(static_cast<HMODULE>(handle));
 #else
@@ -62,16 +73,5 @@ RaynodesPluginI* PluginLoader::GetPluginInstance(const char* absolutePath, const
 #endif
     return nullptr;
   }
-  return reinterpret_cast<RaynodesPluginI* (*)()>(symbol)();;
-}
-
-const char* PluginLoader::getLastError() {
-#if defined(_WIN32)
-  FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, GetLastError(),
-                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), String::buffer, String::BUFFER_SIZE, nullptr);
-
-  return String::buffer;
-#else
-  return dlerror();
-#endif
+  return reinterpret_cast<RaynodesPluginI* (*)()>(symbol)();
 }

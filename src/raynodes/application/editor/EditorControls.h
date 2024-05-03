@@ -66,7 +66,7 @@ inline void PollControls(EditorContext& ec) {
       if (avgDist < Logic::MIN_DIST_THRESHOLD) {
         delete moveAction;
       } else {
-        ec.core.addEditorAction(moveAction);
+        ec.core.addEditorAction(ec, moveAction);
       }
       moveAction = nullptr;
     }
@@ -97,7 +97,7 @@ inline void PollControls(EditorContext& ec) {
     //Skip if empty
     if (!selectedNodes.empty()) {
       const auto action = new NodeDeleteAction(ec, selectedNodes);
-      ec.core.addEditorAction(action);
+      ec.core.addEditorAction(ec, action);
       selectedNodes.clear();
     }
   }
@@ -115,7 +115,7 @@ inline void PollControls(EditorContext& ec) {
     ec.core.undo(ec);
   }
 
-  //CTRL + (V,C,X) shortcuts
+  //CTRL + (V,C,X,+,-,S) shortcuts
   if (ec.input.isKeyDown(KEY_LEFT_CONTROL)) {
     auto& copiedNodes = ec.core.copiedNodes;
     if (ec.input.isKeyPressed(KEY_C) && !selectedNodes.empty()) {
@@ -129,7 +129,7 @@ inline void PollControls(EditorContext& ec) {
         copiedNodes.push_back(n);
       }
       const auto action = new NodeDeleteAction(ec, selectedNodes);
-      ec.core.addEditorAction(action);
+      ec.core.addEditorAction(ec, action);
       selectedNodes.clear();
     } else if (ec.input.isKeyPressed(KEY_V) && !copiedNodes.empty()) {
       Vector2 delta = {worldMouse.x - copiedNodes[0]->position.x, worldMouse.y - copiedNodes[0]->position.y};
@@ -141,9 +141,19 @@ inline void PollControls(EditorContext& ec) {
         action->createdNodes.push_back(newNode);
         ec.core.insertNode(ec, newNode->id, newNode);
       }
-      ec.core.addEditorAction(action);
+      ec.core.addEditorAction(ec, action);
+    } else if (ec.input.isKeyPressed(KEY_S)) {
+      ec.persist.saveToFile(ec);
+      //TODO add dialogue if not name given
+    } else if (ec.input.isKeyPressed(KEY_SLASH)) {
+      ec.display.zoomOut();
+    } else if (ec.input.isKeyPressed(KEY_RIGHT_BRACKET)) {
+      ec.display.zoomIn();
     }
   }
+
+  //TODO remove debug
+  // printf("%d\n", GetKeyPressed());
   if (ec.input.isKeyDown(KEY_B)) {
     ec.core.createNode(ec, "Display", {(float)GetRandomValue(0, 1000), (float)GetRandomValue(0, 1000)});
     printf("%d\n", static_cast<int>(ec.core.nodes.size()));

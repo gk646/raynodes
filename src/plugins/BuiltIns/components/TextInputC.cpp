@@ -68,7 +68,7 @@ void TextInputC::onFocusLoss(EditorContext& ec) {
     }
     //TRANSFER OWNERSHIP
     currentAction->setAfter(textField.buffer);
-    ec.core.addEditorAction(currentAction);
+    ec.core.addEditorAction(ec,currentAction);
     currentAction = nullptr;
   }
 }

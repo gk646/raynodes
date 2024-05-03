@@ -21,8 +21,8 @@
 #include "NodeEditor.h"
 
 #include <ranges>
-#include <cxstructs/Constraint.h>
 #include <raygui.h>
+#include <cxstructs/Constraint.h>
 
 #include "node/Node.h"
 #include "shared/rayutils.h"
@@ -43,6 +43,7 @@ NodeEditor::NodeEditor(const int argc, char* argv[]) : context(argc, argv) {
 bool NodeEditor::start() {
   cxstructs::Constraint<true> c;
 
+  c + context.core.loadCore(context);
   c + context.persist.loadWorkingDirectory(context);
   c + context.display.loadFont(context);
   c + context.display.loadIcons(context);
@@ -71,6 +72,8 @@ void DrawContent(EditorContext& ec) {
   }
 }
 void DrawForeGround(EditorContext& ec) {
+  Editor::DrawUnsavedChanges(ec);
+
   Editor::UpdateTick(ec);  //Updates all nodes
 
   Editor::DrawContextMenu(ec);
@@ -89,20 +92,26 @@ void DrawForeGround(EditorContext& ec) {
 int NodeEditor::run() {
   const auto& camera = context.display.camera;
 
-  while (!context.logic.closeApplication && !WindowShouldClose()) {
-    BeginDrawing();
-    ClearBackground({90, 105, 136});
-    {
-      DrawBackGround(context);
+  // Double loop to catch the window close event from raylib
+  // Would require native handling and overriding the window function otherwise
+  while (!context.core.closeApplication) {
+    while (!context.core.closeApplication && !WindowShouldClose()) {
+      BeginDrawing();
+      ClearBackground({90, 105, 136});
       {
-        BeginMode2D(camera);
-        { DrawContent(context); }
-        EndMode2D();
+        DrawBackGround(context);
+        {
+          BeginMode2D(camera);
+          { DrawContent(context); }
+          EndMode2D();
+        }
+        DrawForeGround(context);
       }
-      DrawForeGround(context);
+      EndDrawing();
     }
-    EndDrawing();
-  }
 
-  return Editor::Exit(context);
+    context.core.closeApplication = Editor::CheckForExit(context);
+  }
+  CloseWindow();
+  return 0;
 }

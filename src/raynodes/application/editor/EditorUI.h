@@ -27,7 +27,7 @@ void CreateNewNode(EditorContext& ec, Vector2 pos, const char* name) {
   if (!newN) return;
   const auto action = new NodeCreateAction(2);
   action->createdNodes.push_back(newN);
-  ec.core.addEditorAction(action);
+  ec.core.addEditorAction(ec, action);
 }
 }  // namespace
 
@@ -200,14 +200,15 @@ inline void DrawTopBar(EditorContext& ec) {
   };
 
   const auto height = ec.ui.topBarHeight;
+  const auto width = 120.0F;
   int res = -1;
-  res = dropDown(ec, {20, 5, 100, height}, ec.ui.fileMenuText, ec.ui.fileMenuState);
+  res = dropDown(ec, {20, 5, width, height}, ec.ui.fileMenuText, ec.ui.fileMenuState);
   ec.ui.invokeFileMenu(ec, res);
 
-  res = dropDown(ec, {120, 5, 100, height}, ec.ui.editMenuText, ec.ui.editMenuState);
+  res = dropDown(ec, {140, 5, width, height}, ec.ui.editMenuText, ec.ui.editMenuState);
   ec.ui.invokeEditMenu(ec, res);
 
-  res = dropDown(ec, {220, 5, 100, height}, ec.ui.viewMenuText, ec.ui.viewMenuState);
+  res = dropDown(ec, {260, 5, width, height}, ec.ui.viewMenuText, ec.ui.viewMenuState);
   ec.ui.invokeViewMenu(ec, res);
 }
 inline void DrawStatusBar(EditorContext& ec) {
@@ -242,8 +243,56 @@ inline void DrawStatusBar(EditorContext& ec) {
   if (GuiButton(ec.display.getFullyScaled({x - lastWidth, y, 25, 18}), "#221#")) {
     ec.display.zoomOut();
   }
-  if(GuiButton(ec.display.getFullyScaled({x - 25, y, 25, 18}), "#220#")) {
+  if (GuiButton(ec.display.getFullyScaled({x - 25, y, 25, 18}), "#220#")) {
     ec.display.zoomIn();
+  }
+}
+inline void DrawUnsavedChanges(EditorContext& ec) {
+  if (ec.ui.showUnsavedChanges) {
+    // Centered window
+    constexpr auto winX = 790;
+    constexpr auto winW = 360;
+    constexpr auto winY = 450;
+    constexpr auto winH = 180;
+
+    auto windowRect = Rectangle{winX, winY, winW, winH};
+
+    // Get information string
+    const char* fileName = GetFileName(ec.persist.openedFilePath.c_str());
+    if (fileName == nullptr || *fileName == '\0') fileName = "Untitled.rn";
+    const char* infoText = String::FormatText("%s has unsaved changes. What would you like to do?", fileName);
+
+    if (GuiWindowBox(ec.display.getFullyScaled(windowRect), infoText)) {
+      ec.input.consumeMouse();
+      ec.ui.showUnsavedChanges = false;
+    }
+
+    // Button draw func
+    static constexpr auto button = [](EditorContext& ec, Rectangle& r, const char* text) {
+      const auto res = GuiButton(ec.display.getFullyScaled(r), text);
+      constexpr auto buttonHeight = 50;
+      r.y += buttonHeight;
+      if (res) ec.input.consumeMouse();  // Consume mouse so click doesnt propagate
+      return res;
+    };
+
+    windowRect.y += 30;
+    windowRect.height = 50;
+
+    if (button(ec, windowRect, "#002#Save")) {
+      //TODO dialogue if no filename given
+      ec.persist.saveToFile(ec);
+    }
+
+    if (button(ec, windowRect, "#159#Don't Save")) {
+      ec.ui.showUnsavedChanges = false;
+      ec.core.hasUnsavedChanges = false;
+      ec.core.closeApplication = true;
+    }
+
+    if (button(ec, windowRect, "#072#Cancel")) {
+      ec.ui.showUnsavedChanges = false;
+    }
   }
 }
 }  // namespace Editor
