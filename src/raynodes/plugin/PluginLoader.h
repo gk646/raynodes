@@ -25,7 +25,6 @@
 
 struct PluginLoader {
   static RaynodesPluginI* GetPluginInstance(const char* absolutePath, const char* funcName);
-  static const char* getLastError();
 };
 
 #endif  //PLUGIN_H

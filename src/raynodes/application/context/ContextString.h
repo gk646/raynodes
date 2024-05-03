@@ -22,7 +22,7 @@
 #define RAYNODES_SRC_APPLICATION_CONTEXTSTRING_H_
 
 struct String {
-  static constexpr int BUFFER_SIZE = 1024;
+  static constexpr int BUFFER_SIZE = 512;
   inline static char buffer[BUFFER_SIZE];
 
   const char* applicationDir;
@@ -35,13 +35,13 @@ struct String {
     va_end(args);
     return buffer;
   }
-  static const char* GetWindowTitle(const char* fileName);
   static const char* GetPaddedNum(const int num) {
     char buff[4];
-    snprintf(buff,4,"%d",num);
+    snprintf(buff, 4, "%d", num);
     cxstructs::str_pad(buffer, 4, buff, '.');
     return buffer;
   }
+  static void updateWindowTitle(EditorContext& ec);
 };
 
 #endif  //RAYNODES_SRC_APPLICATION_CONTEXTSTRING_H_

@@ -19,23 +19,20 @@
 // SOFTWARE.
 
 #include "application/EditorContext.h"
-
-#include "node/Node.h"
-#include "application/context/ContextCore.h"
 #include "application/elements/Action.h"
 
-#include <shared/fwd.h>
+bool Core::loadCore(EditorContext& ec) {
+  addEditorAction(ec, new NewCanvasAction());  // Add first dummy action
 
-Core::Core() {
+  // Reserve healthy amount
   selectedNodes.reserve(200);
   nodeMap.reserve(200);
   nodes.reserve(200);
   copiedNodes.reserve(200);
   connections.reserve(50);
-  addEditorAction(new NewCanvasAction());
+  return true;
 }
 
-//-----------NODES-----------//
 Node* Core::createNode(EditorContext& ec, const char* name, const Vector2 worldPos, uint16_t hint) {
   //Use the hint when provided
   auto newNode = ec.templates.createNode(name);
@@ -70,9 +67,17 @@ void Core::removeNode(EditorContext& ec, NodeID id) {
     c->onRemovedFromScreen(ec, *node);
   }
 }
-//-----------ACTIONS-----------//
-void Core::addEditorAction(Action* action) {
+
+void Core::addEditorAction(EditorContext& ec, Action* action) {
   if (!action) return;
+
+  // Correctly handle unsaved changes
+  // We never unset it even if the user undoes the action - cause its straightforward
+  if (!hasUnsavedChanges) {
+    ec.string.updateWindowTitle(ec);
+  }
+  hasUnsavedChanges = true;
+
   // If we're not at the end, remove all forward actions
   while (currentActionIndex < static_cast<int>(actionQueue.size()) - 1) {
     delete actionQueue.back();  //Delete ptr

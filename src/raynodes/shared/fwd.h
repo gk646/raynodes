@@ -64,6 +64,7 @@ struct RaynodesPluginI;        // Base class for the plugin interface
 struct NodeTemplate;           // Template to create a node (list of component names)
 struct ComponentRegister;      // Interface that encaspulate registering components
 struct NodeRegister;           // Interface that encaspulate registering nodes
+struct EditorContext;          // Central backend data holder
 using ComponentCreateFunc = Component* (*)(ComponentTemplate);  // Takes a name and returns a new Component
 
 //Raylib types

@@ -21,10 +21,6 @@
 #ifndef RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTCORE_H_
 #define RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTCORE_H_
 
-#include <deque>
-#include <unordered_map>
-#include <vector>
-
 struct Core {
   static constexpr int TARGET_FPS = 100;
   static constexpr int MAX_ACTIONS = 50;
@@ -38,9 +34,10 @@ struct Core {
   int drawTickTime = 0;
   int currentActionIndex = -1;
   NodeID UID = static_cast<NodeID>(1);
-  bool logicThreadRunning = true;
+  bool hasUnsavedChanges = false;
+  bool closeApplication = false;
 
-  Core();
+  bool loadCore(EditorContext& ec);
   auto getNextID() -> NodeID {
     UID = static_cast<NodeID>(UID + 1);
     return UID;
@@ -78,7 +75,7 @@ struct Core {
   }
 
   //-------------EditorActions--------------//
-  void addEditorAction(Action* action);
+  void addEditorAction(EditorContext& ec, Action* action);
   void undo(EditorContext& ec);
   void redo(EditorContext& ec);
 };

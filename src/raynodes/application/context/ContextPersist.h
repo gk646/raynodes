@@ -21,12 +21,12 @@
 #ifndef RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTPERSIST_H_
 #define RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTPERSIST_H_
 
-struct EditorContext;
-
 struct Persist {
-  const char* openedFile;
+  std::string openedFilePath;  // This is a string cause it can be reassigned often
+  const char* fileName = nullptr;
+  bool isNewFile = false;
   bool loadWorkingDirectory(EditorContext& ec);
-  bool loadFromFile(EditorContext& ec) const;
+  bool loadFromFile(EditorContext& ec);
   bool saveToFile(EditorContext& ec) const;
 };
 

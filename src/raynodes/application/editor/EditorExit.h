@@ -21,18 +21,18 @@
 #ifndef RAYNODES_SRC_APPLICATION_EDITOR_EDITOREXIT_H_
 #define RAYNODES_SRC_APPLICATION_EDITOR_EDITOREXIT_H_
 
-
 namespace Editor {
 
-inline int Exit(EditorContext& ec) {
-  cxstructs::Constraint<true> c;
+inline int CheckForExit(EditorContext& ec) {
+  //TODO handle no filename given
+  if (!ec.core.hasUnsavedChanges) return true;
 
-  c + ec.persist.saveToFile(ec);
-  ec.core.logicThreadRunning = false;
+  ec.ui.showUnsavedChanges = true;  // Show confirmation window
 
-  CloseWindow();
+  // Manually poll again to reset shouldCloseFlag
+  PollInputEvents();
 
-  return c.exitcode();
+  return false;
 }
 }  // namespace Editor
 #endif  //RAYNODES_SRC_APPLICATION_EDITOR_EDITOREXIT_H_
