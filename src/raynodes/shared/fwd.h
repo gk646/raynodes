@@ -23,6 +23,8 @@
 
 #include <cstdint>
 
+#include "shared/defines.h"
+
 // Defines for the plugin exports
 #ifdef _EXPORTING
 #  define EXPORT __declspec(dllexport)
@@ -41,7 +43,7 @@ struct ComponentTemplate {
 };
 
 struct NodeTemplate {
-  ComponentTemplate components[10];
+  ComponentTemplate components[COMPONENTS_PER_NODE];  // Current limit
 };
 
 enum class PinType : uint8_t;  // Datatype of connection pins
@@ -55,7 +57,8 @@ struct InputPin;               // InputPin specialization
 struct OutputPin;              // OutputPin specialization
 struct Node;                   // Base class for node
 struct Action;                 // Base class for any editor action (anything able to be undone/redone)
-struct TextAction;             // Special action that represent a text change
+struct TextAction;             // Special action that represents a text change
+struct NodeMovedAction;        // Special action that represents node movement
 struct EditorContext;          // Core data holder for the editor
 struct RaynodesPluginI;        // Base class for the plugin interface
 struct NodeTemplate;           // Template to create a node (list of component names)

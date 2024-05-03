@@ -31,7 +31,6 @@ Connection::Connection(Node& fromNode, Component& from, OutputPin& out, Node& to
 Vector2 Connection::getFromPos() const {
   return {fromNode.position.x + fromNode.size.x, out.yPos};
 }
-
 Vector2 Connection::getToPos() const {
   return {to.x, in.yPos};
 }

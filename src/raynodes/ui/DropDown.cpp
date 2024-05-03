@@ -22,18 +22,16 @@
 
 #include <raylib.h>
 
-#include "../application/EditorContext.h"
+#include "application/EditorContext.h"
 
 void DropDown::draw(EditorContext& ec, float dx, float dy) {
-  x = dx;
-  y = dy;
+  x = dx, y = dy;
+
   const Font& f = ec.display.editorFont;
-  const int fs = ec.display.fontSize;
-  Rectangle bounds = {x, y, w, h};
+  const auto fs = ec.display.fontSize;
+  Rectangle bounds = {x, y, w, h * (isExpanded ? static_cast<float>(items.size()) + 1.0F : 1.0F)};
 
-  bounds.height = h * (isExpanded ? items.size() + 1 : 1);
-
-  DrawRectangleRec(bounds, LIGHTGRAY);
+  DrawRectangleRec(bounds, LIGHTGRAY);  // Draw outer bounds
 
   Vector2 textPos = {x + 5, y + 3};
   DrawTextEx(f, items[selectedIndex].c_str(), textPos, fs, 1, BLACK);

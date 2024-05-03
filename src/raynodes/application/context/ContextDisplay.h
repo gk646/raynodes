@@ -33,16 +33,20 @@ enum AnchorPos : uint8_t {
   RIGHT_BOTTOM
 };
 
-struct Display {
+struct Display final {
+  static constexpr float MAX_ZOOM = 3.0F;
+  static constexpr float MIN_ZOOM = 0.1F;
   Font editorFont = {};
   Camera2D camera = {};
   Vector2 screenSize = {};
   float fontSize = 17;
   float gridSpacing = 20;
 
-  bool loadFont(EditorContext& ec);
-  [[nodiscard]] Vector2 getAnchor(const AnchorPos a, const float relativeInset, const float w,
-                                  const float h) const {
+  void zoomIn() { camera.zoom = std::min(MAX_ZOOM, camera.zoom + MAX_ZOOM / 10.0F); }
+  void zoomOut() { camera.zoom = std::max(MIN_ZOOM, camera.zoom - MAX_ZOOM / 10.0F); }
+
+  // Getters
+  [[nodiscard]] auto getAnchor(AnchorPos a, float relativeInset, float w, float h) const -> Vector2 {
     Vector2 position;
     const float inset = getSpace(relativeInset);
 
@@ -80,10 +84,47 @@ struct Display {
     }
     return position;
   }
-  [[nodiscard]] float getSpace(const float size) const {
+  [[nodiscard]] auto getSpace(const float size) const -> float {
     const float minDimension = (screenSize.x < screenSize.y) ? screenSize.x : screenSize.y;
     return minDimension * size;
   }
+  [[nodiscard]] auto getSmartScaled(const Rectangle& bounds) const -> Rectangle {
+    Rectangle ret;
+
+    ret.width = bounds.width;
+    ret.height = bounds.height;
+
+    const float scaleX = screenSize.x / 1920.0F;
+    if (bounds.x > screenSize.x) {
+      ret.x = bounds.x * scaleX;
+    } else {
+      ret.x = bounds.x;
+    }
+
+    if (bounds.y > screenSize.y) {
+      const float scaleY = screenSize.y / 1080.0F;
+      ret.y = bounds.y * scaleY;
+
+    } else {
+      ret.y = bounds.y;
+    }
+
+    if (scaleX > 1.0F) ret.width *= scaleX, ret.height *= scaleX;
+    return ret;
+  }
+  [[nodiscard]] auto getFullyScaled(const Rectangle& bounds) const -> Rectangle {
+    Rectangle ret;
+    const float scaleX = screenSize.x / 1920.0F;
+    const float scaleY = screenSize.y / 1080.0F;
+    ret.x = bounds.x * scaleX;
+    ret.y = bounds.y * scaleY;
+    ret.width = bounds.width * scaleX;
+    ret.height = bounds.height * scaleY;
+    return ret;
+  }
+
+  bool loadFont(EditorContext& ec);
+  bool loadIcons(EditorContext& ec);
 };
 
 #endif  //RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTDISPLAY_H_

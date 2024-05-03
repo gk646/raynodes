@@ -20,7 +20,14 @@
 
 #include "application/EditorContext.h"
 
+#include <raygui.h>
+
 bool Display::loadFont(EditorContext& ec) {
   editorFont = LoadFont("res/monogram.ttf");
   return editorFont.texture.id != 0 || GetFontDefault().texture.id != 0;
+}
+
+bool Display::loadIcons(EditorContext& ec) {
+  GuiLoadIcons("res/iconset.rgi", false);
+  return true;
 }

@@ -45,6 +45,7 @@ bool NodeEditor::start() {
 
   c + context.persist.loadWorkingDirectory(context);
   c + context.display.loadFont(context);
+  c + context.display.loadIcons(context);
   c + context.plugin.loadPlugins(context);
   c + context.persist.loadFromFile(context);
 
@@ -72,13 +73,10 @@ void DrawContent(EditorContext& ec) {
 void DrawForeGround(EditorContext& ec) {
   Editor::UpdateTick(ec);  //Updates all nodes
 
-  // Normalize UI to FullHD
-  if (ec.logic.showContextMenu) {
-    Editor::DrawContextMenu(ec);
-  }
-
+  Editor::DrawContextMenu(ec);
   Editor::DrawActions(ec);
   Editor::DrawTopBar(ec);
+  Editor::DrawStatusBar(ec);
 
   char buff[8];
   snprintf(buff, 8, "%d", GetFPS());
@@ -91,7 +89,7 @@ void DrawForeGround(EditorContext& ec) {
 int NodeEditor::run() {
   const auto& camera = context.display.camera;
 
-  while (!WindowShouldClose()) {
+  while (!context.logic.closeApplication && !WindowShouldClose()) {
     BeginDrawing();
     ClearBackground({90, 105, 136});
     {
