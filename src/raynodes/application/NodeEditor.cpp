@@ -20,7 +20,6 @@
 
 #include "NodeEditor.h"
 
-#include <ranges>
 #include <raygui.h>
 #include <cxstructs/Constraint.h>
 #include <tinyfiledialogs.h>
