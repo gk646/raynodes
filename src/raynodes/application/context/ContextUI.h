@@ -45,7 +45,7 @@ struct ContextMenu {
 struct UserInterface {
   ContextMenu contextMenu;
   const char* fileMenuText =
-      "#001#File;#008#New (Ctrl+N);#005#Open (Ctrl+O);#002#Save (Ctrl+S);#006#Save As;#159#Exit";
+      "#001#File;#008#New (Ctrl+N);#005#Open (Ctrl+O);#002#Save (Ctrl+S);#006#Save As (Ctrl+Shift+S);#159#Exit";
   const char* editMenuText = "#022#Edit;#072#Undo (Ctrl+Z);#073#Redo (Ctrl+Y);#017#Cut (Ctrl+X);#016#Copy "
                              "(Ctrl+C);#018#Paste (Ctrl+V);#143#Erase (Del);#099#Select All (Ctrl+A)";
   const char* viewMenuText =
@@ -58,9 +58,9 @@ struct UserInterface {
   bool editMenuState = false;  // EditMenu dropdown state
   bool viewMenuState = false;  // ViewMenu dropdown state
 
-  void invokeFileMenu(EditorContext& ec, int i);
-  void invokeEditMenu(EditorContext& ec, int i);
-  void invokeViewMenu(EditorContext& ec, int i);
+  static void invokeFileMenu(EditorContext& ec, int i);
+  static void invokeEditMenu(EditorContext& ec, int i);
+  static void invokeViewMenu(EditorContext& ec, int i);
 };
 
 #endif  //CONTEXTUI_H

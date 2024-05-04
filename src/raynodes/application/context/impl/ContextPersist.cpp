@@ -24,17 +24,20 @@
 #include <cxstructs/Constraint.h>
 #include <tinyfiledialogs.h>
 
+//TODO make save format that combines both saving and loading
+//-> should be easy as its symmetric - function wrapper and boolean for loading-saving
 namespace {
 void SaveEditorData(FILE* file, EditorContext& ec) {
-  //TODO make save format that generate both saving and loading
   //TODO save more data
   cxstructs::io_save_section(file, "EditorData");
   cxstructs::io_save(file, ec.display.camera.target.x);
   cxstructs::io_save(file, ec.display.camera.target.y);
   cxstructs::io_save(file, ec.display.camera.zoom);
+  cxstructs::io_save(file, ec.ui.showGrid);
+  cxstructs::io_save(file, static_cast<int>(ec.core.nodes.size()));        // Total nodes
+  cxstructs::io_save(file, static_cast<int>(ec.core.connections.size()));  // Total connections
   cxstructs::io_save_newline(file);
 }
-
 int SaveNodes(FILE* file, EditorContext& ec) {
   cxstructs::io_save_section(file, "Nodes");
   int count = 0;
@@ -45,7 +48,6 @@ int SaveNodes(FILE* file, EditorContext& ec) {
   }
   return count;
 }
-
 int SaveConnections(FILE* file, EditorContext& ec) {
   cxstructs::io_save_section(file, "Connections");
   int count = 0;
@@ -73,6 +75,7 @@ void LoadEditorData(FILE* file, EditorContext& ec) {
   cxstructs::io_load(file, ec.display.camera.target.x);
   cxstructs::io_load(file, ec.display.camera.target.y);
   cxstructs::io_load(file, ec.display.camera.zoom);
+  cxstructs::io_load(file, ec.ui.showGrid);
   cxstructs::io_load_newline(file);
 }
 int LoadNodes(FILE* file, EditorContext& ec) {
@@ -140,11 +143,13 @@ bool Persist::saveToFile(EditorContext& ec, bool saveAsMode) {
   // Strictly enforce this to limit saving -> Actions need to be accurate
   if (!ec.core.hasUnsavedChanges && !saveAsMode) return true;
 
-  // If in SaveAs we want to save with a new name - regardless of an existing one
+  // If "SaveAs" we want to save with a new name - regardless of an existing one
   if (openedFilePath.empty() || saveAsMode) {
     auto* res = tinyfd_saveFileDialog("Save File", nullptr, 1, Info::fileFilter, Info::fileDescription);
     if (res != nullptr) {
       openedFilePath = res;
+    } else {
+      return true;
     }
   }
 
@@ -157,6 +162,7 @@ bool Persist::saveToFile(EditorContext& ec, bool saveAsMode) {
     nodes = SaveNodes(file, ec);
     connections = SaveConnections(file, ec);
   });
+
   if (!res) {
     fprintf(stderr, "Error saving to %s", openedFilePath.c_str());
     return false;
@@ -182,7 +188,7 @@ bool Persist::loadFromFile(EditorContext& ec) {
 
   const auto* path = openedFilePath.c_str();
 
-  if (fopen_s(&file, path, "r") != 0) return false;
+  if (fopen_s(&file, path, "rb") != 0) return false;
 
   if (!file) {
     fprintf(stderr, "Unable to open file %s\n", path);

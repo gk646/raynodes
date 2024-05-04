@@ -73,8 +73,8 @@ inline void PollControls(EditorContext& ec) {
     isDragging = false;
   }
   if (isDragging) {
-    camera.target.x -= (worldMouse.x - dragStart.x);
-    camera.target.y -= (worldMouse.y - dragStart.y);
+    camera.target.x -= worldMouse.x - dragStart.x;
+    camera.target.y -= worldMouse.y - dragStart.y;
     dragStart = GetScreenToWorld2D(ec.logic.mouse, camera);
   }
 
@@ -94,12 +94,7 @@ inline void PollControls(EditorContext& ec) {
 
   //Delete
   if (ec.input.isKeyPressed(KEY_DELETE)) {
-    //Skip if empty
-    if (!selectedNodes.empty()) {
-      const auto action = new NodeDeleteAction(ec, selectedNodes);
-      ec.core.addEditorAction(ec, action);
-      selectedNodes.clear();
-    }
+    ec.core.erase(ec);
   }
 
   //My keyboard...
@@ -117,31 +112,12 @@ inline void PollControls(EditorContext& ec) {
 
   //CTRL + (V,C,X,+,-,S,O,N) shortcuts
   if (ec.input.isKeyDown(KEY_LEFT_CONTROL)) {
-    auto& copiedNodes = ec.core.copiedNodes;
-    if (ec.input.isKeyPressed(KEY_C) && !selectedNodes.empty()) {
-      copiedNodes.clear();
-      for (const auto& node : selectedNodes | std::views::values) {
-        copiedNodes.push_back(node);
-      }
-    } else if (ec.input.isKeyPressed(KEY_X) && !selectedNodes.empty()) {
-      copiedNodes.clear();
-      for (const auto n : selectedNodes | std::views::values) {
-        copiedNodes.push_back(n);
-      }
-      const auto action = new NodeDeleteAction(ec, selectedNodes);
-      ec.core.addEditorAction(ec, action);
-      selectedNodes.clear();
-    } else if (ec.input.isKeyPressed(KEY_V) && !copiedNodes.empty()) {
-      Vector2 delta = {worldMouse.x - copiedNodes[0]->position.x, worldMouse.y - copiedNodes[0]->position.y};
-      const auto action = new NodeCreateAction(static_cast<int>(copiedNodes.size()) + 1);
-      for (const auto n : copiedNodes) {
-        const auto newNode = n->clone(ec.core.getNextID());
-        newNode->position.x += delta.x;
-        newNode->position.y += delta.y;
-        action->createdNodes.push_back(newNode);
-        ec.core.insertNode(ec, newNode->id, newNode);
-      }
-      ec.core.addEditorAction(ec, action);
+    if (ec.input.isKeyPressed(KEY_C)) {
+      ec.core.copy(ec);
+    } else if (ec.input.isKeyPressed(KEY_X)) {
+      ec.core.cut(ec);
+    } else if (ec.input.isKeyPressed(KEY_V)) {
+      ec.core.paste(ec);
     } else if (ec.input.isKeyPressed(KEY_S)) {
       bool saveAs = ec.input.isKeyDown(KEY_LEFT_SHIFT);
       ec.persist.saveToFile(ec, saveAs);
@@ -150,17 +126,18 @@ inline void PollControls(EditorContext& ec) {
     } else if (ec.input.isKeyPressed(KEY_RIGHT_BRACKET)) {  // +, *, ~
       ec.display.zoomIn();
     } else if (ec.input.isKeyPressed(KEY_O)) {
-      if (ec.core.hasUnsavedChanges) ec.ui.showUnsavedChanges = true;
-      else {
-        auto* res =
-            tinyfd_openFileDialog("Open File", nullptr, 1, Info::fileFilter, Info::fileDescription, 0);
-        if (res != nullptr) ec.persist.openedFilePath = res;
-        ec.persist.loadFromFile(ec);
-        ec.input.consumeKeyboard();
-      }
+      ec.core.open(ec);
     } else if (ec.input.isKeyPressed(KEY_N)) {
-
+      ec.core.newFile(ec);
+    } else if (ec.input.isKeyPressed(KEY_A)) {
+      ec.core.selectAll(ec);
     }
+  }
+
+  if (ec.input.isKeyDown(KEY_B)) {
+    ec.core.createNode(ec, "Display",
+                       {(float)GetRandomValue(0, 1000), (float)GetRandomValue(0, 1000)});
+    printf("%d\n", static_cast<int>(ec.core.nodes.size()));
   }
 }
 

@@ -18,25 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "BuiltIns.h"
+#include "Importer.h"
 
-#include "components/MathC.h"
-#include "components/DisplayC.h"
-#include "components/StringToNumberC.h"
-#include "components/TextInputC.h"
-
-void BuiltIns::registerComponents(ComponentRegister& cr) {
-  cr.registerComponent<MathC>("MathOp");
-  cr.registerComponent<DisplayC>("Display");
-  cr.registerComponent<StringToNumberC>("StrToNum");
-  cr.registerComponent<TextInputC>("TextInput");
-  cr.registerComponent<TextInputC>("NumberInput");
-}
-
-void BuiltIns::registerNodes(NodeRegister& nr) {
-  nr.registerNode("MathOp", {{"Operation", "MathOp"}});
-  nr.registerNode("TextField", {{"TextField", "TextInput"}});
-  nr.registerNode("StringToNum", {{"Converter", "StrToNum"}});
-  nr.registerNode("Display", {{"Display", "Display"}});
-  nr.registerNode("NumberField", {{"Number", "NumberInput"}});
-}
+// Only here for CMake to pickup the header

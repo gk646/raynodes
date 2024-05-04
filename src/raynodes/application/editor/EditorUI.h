@@ -186,30 +186,37 @@ inline void DrawActions(EditorContext& ec) {
   }
 }
 inline void DrawTopBar(EditorContext& ec) {
-  constexpr auto dropDown = [](EditorContext& ec, const Rectangle& r, const char* text, bool& state) {
+  constexpr auto dropDown = [](EditorContext& ec, Rectangle& r, const char* text, bool& state) {
     // Always reset to 0 cause its a dropdown
     int active = 0;
     // We use extra getter to properly scale it
-    if (GuiDropdownBox(ec.display.getSmartScaled(r), text, &active, state)) {
+    const auto bounds = ec.display.getSmartScaled(r);
+    r.x += bounds.width;
+    if (GuiDropdownBox(bounds, text, &active, state)) {
       state = !state;
       ec.input.consumeMouse();
       ec.logic.isDraggingScreen = false;
       return active;
+    }
+    if (state) {
+      ec.input.consumeMouse();
     }
     return -1;
   };
 
   const auto height = ec.ui.topBarHeight;
   const auto width = 140.0F;
+  auto bounds = Rectangle{20, 5, width, height};
+
   int res = -1;
-  res = dropDown(ec, {20, 5, width, height}, ec.ui.fileMenuText, ec.ui.fileMenuState);
-  ec.ui.invokeFileMenu(ec, res);
+  res = dropDown(ec, bounds, ec.ui.fileMenuText, ec.ui.fileMenuState);
+  UserInterface::invokeFileMenu(ec, res);
 
-  res = dropDown(ec, {160, 5, width, height}, ec.ui.editMenuText, ec.ui.editMenuState);
-  ec.ui.invokeEditMenu(ec, res);
+  res = dropDown(ec, bounds, ec.ui.editMenuText, ec.ui.editMenuState);
+  UserInterface::invokeEditMenu(ec, res);
 
-  res = dropDown(ec, {300, 5, width, height}, ec.ui.viewMenuText, ec.ui.viewMenuState);
-  ec.ui.invokeViewMenu(ec, res);
+  res = dropDown(ec, bounds, ec.ui.viewMenuText, ec.ui.viewMenuState);
+  UserInterface::invokeViewMenu(ec, res);
 }
 inline void DrawStatusBar(EditorContext& ec) {
   float x = 0;
@@ -238,10 +245,10 @@ inline void DrawStatusBar(EditorContext& ec) {
   }
 
   // Draw zoom labels
-  if (GuiButton(ec.display.getFullyScaled({x - lastWidth, y, 25, 18}), "#221#")) {
+  if (GuiButton(ec.display.getFullyScaled({x - lastWidth, y, 25, height}), "#221#")) {
     ec.display.zoomOut();
   }
-  if (GuiButton(ec.display.getFullyScaled({x - 25, y, 25, 18}), "#220#")) {
+  if (GuiButton(ec.display.getFullyScaled({x - 25, y, 25, height}), "#220#")) {
     ec.display.zoomIn();
   }
 }
