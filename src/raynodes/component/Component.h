@@ -49,20 +49,21 @@ struct Component {
   bool isHovered = false;     //Internal state (don't change, only read)
   bool internalLabel = true;  //Whether the label should be drawn or the component handles it
 
-  explicit Component(const ComponentTemplate ct, const uint16_t w = 0, const uint16_t h = 0)
+  explicit Component(const ComponentTemplate ct, uint16_t w = 0, uint16_t h = 0)
       : id(ct.component), label(ct.label), width(w), height(h) {}
   virtual ~Component() = default;
 
   //-----------CORE-----------//
-  //Necessary to copy the component
+  // Necessary to copy the component
   virtual Component* clone() = 0;
-  //IMPORTANT: Only called when its bounds are visible on the screen!
+  // IMPORTANT: Only called when its bounds are visible on the screen!
   virtual void draw(EditorContext& ec, Node& parent) = 0;
-  //Guaranteed to be called once per tick (on the main thread) (not just when focused)
+  // Guaranteed to be called once per tick (on the main thread) (not just when focused)
   virtual void update(EditorContext& ec, Node& parent) = 0;
-  //Use the symmetric helpers : cx_save(file,myFloat)...
+  // Use the symmetric helpers : io_save(file,myFloat)...
+  // IMPORTANT: Save your data values first then misc component data (cx_save(file,myFloat), then cx_save(file,additionalData))
   virtual void save(FILE* file) = 0;
-  //Use the symmetric helpers : cx_load(file,myFloat)...
+  //Use the symmetric helpers : io_load(file,myFloat)...
   virtual void load(FILE* file) = 0;
 
   //-----------EVENTS-----------//
@@ -73,20 +74,20 @@ struct Component {
   virtual void onFocusLoss(EditorContext& ec) {}
 
   //-----------LIFE CYCLE-----------//
-  //Called once at creation time after the constructor
+  // Called once at creation time after the constructor
   virtual void onCreate(EditorContext& ec, Node& parent) {}
-  //IMPORTANT: Only called once when the node is finally destroyed (only happens after its delete action is destroyed)
-  //This may happen very delayed or even never!
+  // IMPORTANT: Only called once when the node is finally destroyed (only happens after its delete action is destroyed)
+  // This may happen very delayed or even never!
   virtual void onDestruction(Node& parent) {}
-  //Called whenever component is removed from the screen (delete/cut)
+  // Called whenever component is removed from the screen (delete/cut)
   virtual void onRemovedFromScreen(EditorContext& ec, Node& parent) {}
-  //Called whenever component is added to the screen (paste)
+  // Called whenever component is added to the screen (paste)
   virtual void onAddedToScreen(EditorContext& ec, Node& parent) {}
 
   //-----------CONNECTIONS-----------//
-  //Called once when a new connection is added
+  // Called once when a new connection is added
   virtual void onConnectionAdded(EditorContext& ec, const Connection& con) {}
-  //Called once when an existing connection is removed
+  // Called once when an existing connection is removed
   virtual void onConnectionRemoved(EditorContext& ec, const Connection& con) {}
 
   //-----------PINS-----------//
@@ -107,9 +108,10 @@ struct Component {
 
   // Abstract data getters for external access
   virtual const char* getString() { return nullptr; }
-  virtual int getInt() { return 0; }
-  virtual float getFloat() { return 0.0F; }
+  virtual int64_t getInt() { return 0; }
+  virtual double getFloat() { return 0.0F; }
   virtual void* getData() { return nullptr; }
+  virtual bool getBool() { return false; }
 
   // Getters
   [[nodiscard]] const char* getName() const { return label; }

@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <array>
+#include <cstdio>
 #include <corecrt_io.h>
 #include <fcntl.h>
 
