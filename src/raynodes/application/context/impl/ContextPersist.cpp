@@ -22,9 +22,12 @@
 
 #include <cxutil/cxio.h>
 #include <cxstructs/Constraint.h>
+#include <tinyfiledialogs.h>
 
 namespace {
 void SaveEditorData(FILE* file, EditorContext& ec) {
+  //TODO make save format that generate both saving and loading
+  //TODO save more data
   cxstructs::io_save_section(file, "EditorData");
   cxstructs::io_save(file, ec.display.camera.target.x);
   cxstructs::io_save(file, ec.display.camera.target.y);
@@ -130,8 +133,16 @@ int LoadConnections(FILE* file, EditorContext& ec) {
 }
 }  // namespace
 
-bool Persist::saveToFile(EditorContext& ec) const {
-  if (openedFilePath.empty() || !ec.core.hasUnsavedChanges) return true;
+bool Persist::saveToFile(EditorContext& ec) {
+  // Strictly enforce this to limit saving -> Actions need to be accurate
+  if (!ec.core.hasUnsavedChanges) return true;
+
+  if (openedFilePath.empty()) {
+    auto* res = tinyfd_saveFileDialog("Save File", nullptr, 1, Info::fileFilter, Info::fileDescription);
+    if (res != nullptr) {
+      openedFilePath = res;
+    }
+  }
 
   const int size = std::max(static_cast<int>(ec.core.nodes.size()), 1);
 
@@ -149,7 +160,7 @@ bool Persist::saveToFile(EditorContext& ec) const {
 
   // Successfully saved - reflect in the title
   ec.core.hasUnsavedChanges = false;
-  ec.string.updateWindowTitle(ec);
+  String::updateWindowTitle(ec);
 
   printf("Saved %s nodes\n", String::GetPaddedNum(nodes));
   printf("Saved %s connections\n", String::GetPaddedNum(connections));
@@ -157,14 +168,15 @@ bool Persist::saveToFile(EditorContext& ec) const {
 }
 
 bool Persist::loadFromFile(EditorContext& ec) {
-  const auto* path = openedFilePath.c_str();
-
   FILE* file;
 
   if (openedFilePath.empty()) {
-    String::updateWindowTitle(ec);
-    return true;
+    //TODO save and reuse default path
+    auto* res = tinyfd_openFileDialog("Open File", nullptr, 1, Info::fileFilter, Info::fileDescription, 0);
+    if (res != nullptr) openedFilePath = res;
   }
+
+  const auto* path = openedFilePath.c_str();
 
   if (fopen_s(&file, path, "r") != 0) return false;
 

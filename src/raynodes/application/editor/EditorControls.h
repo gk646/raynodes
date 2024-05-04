@@ -115,7 +115,7 @@ inline void PollControls(EditorContext& ec) {
     ec.core.undo(ec);
   }
 
-  //CTRL + (V,C,X,+,-,S) shortcuts
+  //CTRL + (V,C,X,+,-,S,O) shortcuts
   if (ec.input.isKeyDown(KEY_LEFT_CONTROL)) {
     auto& copiedNodes = ec.core.copiedNodes;
     if (ec.input.isKeyPressed(KEY_C) && !selectedNodes.empty()) {
@@ -144,11 +144,18 @@ inline void PollControls(EditorContext& ec) {
       ec.core.addEditorAction(ec, action);
     } else if (ec.input.isKeyPressed(KEY_S)) {
       ec.persist.saveToFile(ec);
-      //TODO add dialogue if not name given
     } else if (ec.input.isKeyPressed(KEY_SLASH)) {
       ec.display.zoomOut();
     } else if (ec.input.isKeyPressed(KEY_RIGHT_BRACKET)) {
       ec.display.zoomIn();
+    } else if (ec.input.isKeyPressed(KEY_O)) {
+      if (ec.core.hasUnsavedChanges) ec.ui.showUnsavedChanges = true;
+      else {
+        auto* res =
+            tinyfd_openFileDialog("Open File", nullptr, 1, Info::fileFilter, Info::fileDescription, 0);
+        if (res != nullptr) ec.persist.openedFilePath = res;
+        ec.persist.loadFromFile(ec);
+      }
     }
   }
 

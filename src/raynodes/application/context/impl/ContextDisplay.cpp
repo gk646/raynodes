@@ -24,6 +24,7 @@
 
 bool Display::loadFont(EditorContext& ec) {
   editorFont = LoadFont("res/monogram.ttf");
+  GuiSetFont(editorFont);
   return editorFont.texture.id != 0 || GetFontDefault().texture.id != 0;
 }
 

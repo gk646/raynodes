@@ -23,6 +23,9 @@
 
 struct Info {
   static constexpr auto applicationName = "raynodes";
+  static constexpr auto fileEnding = ".rn";
+  static constexpr const char* fileFilter[1] = {"*.rn"};
+  static constexpr auto fileDescription = "raynodes save (.rn)";
   static constexpr int majorVersion = 0;
   static constexpr int minorVersion = 9;
 };

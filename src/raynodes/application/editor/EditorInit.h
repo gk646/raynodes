@@ -54,6 +54,12 @@ inline void SetupDisplay(EditorContext& ec) {
 
   SetExitKey(0);
   DisableEventWaiting();
+
+  // raygui
+  GuiSetStyle(DEFAULT, TEXT_SIZE, 14);
+  GuiSetStyle(DEFAULT, TEXT_SPACING, 0);
+  GuiSetStyle(DROPDOWNBOX, TEXT_PADDING, 2);
+  GuiSetStyle(DROPDOWNBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
 }
 
 inline void SetupCamera(EditorContext& ec) {

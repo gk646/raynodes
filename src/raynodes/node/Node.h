@@ -34,8 +34,8 @@ struct Node final {
   static constexpr float PADDING = 3;
   static constexpr float OFFSET_Y = 20;
   inline static Vector2 DRAG_OFFSET;
-  cxstructs::StackVector<Component*, COMPONENTS_PER_NODE> components{};  //Current limit
-  const char* name = nullptr;                                            //Unique allocated name
+  cxstructs::StackVector<Component*, COMPONENTS_PER_NODE, int8_t> components{};  //Current limit
+  const char* name = nullptr;                                                    //Unique allocated name
   Vector2 position{};
   Vector2 size;
   Color color;
@@ -58,7 +58,7 @@ struct Node final {
       components.push_back(clone);
     }
   }
-  virtual ~Node();
+  ~Node();
   //Core
   void update(EditorContext& ec);
   void draw(EditorContext& ec);
@@ -75,9 +75,8 @@ struct Node final {
   }
   void addComponent(Component* comp);
 
-  //Virtuals
-  virtual Node* clone(const NodeID nid) { return new Node(*this, nid); }
-  virtual void exportToMQQS(std::ostream& out) {}
+  Node* clone(const NodeID nid) { return new Node(*this, nid); }
+  void exportToMQQS(std::ostream& out) {}
 
   //Helpers
   [[nodiscard]] Rectangle getExtendedBounds(const float ext) const {
