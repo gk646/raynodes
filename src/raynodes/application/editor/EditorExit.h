@@ -24,7 +24,8 @@
 namespace Editor {
 
 inline int CheckForExit(EditorContext& ec) {
-  //TODO handle no filename given
+  ec.core.requestedClose = true;
+
   if (!ec.core.hasUnsavedChanges) return true;
 
   ec.ui.showUnsavedChanges = true;  // Show confirmation window

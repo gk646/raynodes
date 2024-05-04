@@ -23,6 +23,7 @@
 #include <ranges>
 #include <raygui.h>
 #include <cxstructs/Constraint.h>
+#include <tinyfiledialogs.h>
 
 #include "node/Node.h"
 #include "shared/rayutils.h"
@@ -48,7 +49,11 @@ bool NodeEditor::start() {
   c + context.display.loadFont(context);
   c + context.display.loadIcons(context);
   c + context.plugin.loadPlugins(context);
-  c + context.persist.loadFromFile(context);
+
+  // Only load file if path is given - automatically opens picker
+  if (!context.persist.openedFilePath.empty()) {
+    c + context.persist.loadFromFile(context);
+  }
 
   return c.holds();
 }
@@ -95,6 +100,7 @@ int NodeEditor::run() {
   // Double loop to catch the window close event from raylib
   // Would require native handling and overriding the window function otherwise
   while (!context.core.closeApplication) {
+
     while (!context.core.closeApplication && !WindowShouldClose()) {
       BeginDrawing();
       ClearBackground({90, 105, 136});
@@ -109,7 +115,6 @@ int NodeEditor::run() {
       }
       EndDrawing();
     }
-
     context.core.closeApplication = Editor::CheckForExit(context);
   }
   CloseWindow();
