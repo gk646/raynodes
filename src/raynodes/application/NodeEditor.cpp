@@ -62,6 +62,7 @@ namespace {
 void DrawBackGround(EditorContext& ec) {
   Editor::DrawGrid(ec);
 }
+
 void DrawContent(EditorContext& ec) {
   Editor::DrawNodes(ec);
 
@@ -76,6 +77,7 @@ void DrawContent(EditorContext& ec) {
     DrawLineBezier(ec.logic.draggedPinPos, ec.logic.worldMouse, 2, ec.logic.draggedPin->getColor());
   }
 }
+
 void DrawForeGround(EditorContext& ec) {
   Editor::DrawUnsavedChanges(ec);
 
@@ -90,7 +92,7 @@ void DrawForeGround(EditorContext& ec) {
   snprintf(buff, 8, "%d", GetFPS());
   DrawTextEx(ec.display.editorFont, buff, {25, 25}, 16, 1.0F, GREEN);
 
-  Editor::PollControls(ec);
+  Editor::PollControls(ec);  // Poll input last as its the lowest priority
 }
 }  // namespace
 
@@ -100,7 +102,6 @@ int NodeEditor::run() {
   // Double loop to catch the window close event from raylib
   // Would require native handling and overriding the window function otherwise
   while (!context.core.closeApplication) {
-
     while (!context.core.closeApplication && !WindowShouldClose()) {
       BeginDrawing();
       ClearBackground({90, 105, 136});
@@ -115,6 +116,7 @@ int NodeEditor::run() {
       }
       EndDrawing();
     }
+    // Handle exit event
     context.core.closeApplication = Editor::CheckForExit(context);
   }
   CloseWindow();

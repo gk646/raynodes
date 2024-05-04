@@ -49,7 +49,7 @@ struct NodeTemplate {
 enum class PinType : uint8_t;  // Datatype of connection pins
 enum MOperation : uint8_t;     // Type of math operation
 enum Direction : bool;         // Which directiont the pin is factin (in/out)
-enum NodeID : uint16_t;        // Unique NodeID counting up
+enum NodeID : uint16_t;        // Unique NodeID counting up - Limits to 65536 nodes!
 struct Connection;             // A connection between two components
 struct Component;              // Base class for all components
 struct Pin;                    // Base class for both pin types

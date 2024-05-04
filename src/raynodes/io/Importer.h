@@ -4,17 +4,22 @@
 #include <vector>
 #include <string>
 #include <array>
-#include <corecrt_io.h>
-#include <fcntl.h>
+#include <cstdio>
 
 // This is meant to be included in any project using a ".rn" save file
 // The focus here is on reducing allocations and memory usage with more runtime overhead
 
+// Current memory footprint (bytes):
+// Total Memory = FileSize + nodeCount * NodeData(52) + connectionCount * ConnectionData(8)
+// ComponentData = COMPONENTS_PER_NODE * ComponentData(4) + NameHash(4)
+
 namespace raynodes {
-#define MAX_NODES_PER_COMPONENT 6
+#define COMPONENTS_PER_NODE 6
+#define DATAPOINTS_PER_COMPONENT 4
 #define USED_LINE_SEPARATOR '|'  // Set this to the linesep used by cxio (default '|')
-using IndexType = uint32_t;      // Adjust this if your dealing with small files (below 65kb use uin16_t)
+using IndexType = uint32_t;
 using NodeID = uint16_t;
+using ComponentID = uint8_t;
 
 enum class DataType : uint8_t {
   BOOLEAN,
@@ -26,41 +31,6 @@ enum class DataType : uint8_t {
   VECTOR_2,
 };
 
-struct ComponentData {
-  IndexType startIndex = 0;
-  uint32_t nameHash = 0;  // Hash of the component label  //TODO add error message on save if collisions
-
-  // Returns the requested data by value
-  // IMPORTANT: strings will be returned as allocated "char*"
-  template <DataType dt>
-  auto getData(char* fileBuffer) const {
-    if constexpr (dt == DataType::BOOLEAN) {
-      return std::strtol(fileBuffer + startIndex, nullptr, 10) == 1;
-    } else if (dt == DataType::STRING) {
-      char* start = fileBuffer + startIndex;
-      int count = 0;
-      while (*(start + count) != USED_LINE_SEPARATOR && *(start + count) != '\0') {
-        count++;
-      }
-      const char temp = *(start + count);
-      *(start + count) = '\0';
-      char* allocatedString = _strdup(start);
-      *(start + count) = temp;
-      return allocatedString;
-    } else if (dt == DataType::INTEGER) {
-      return std::strtoll(fileBuffer + startIndex, nullptr, 10);
-    } else if (dt == DataType::FLOAT) {
-      return std::strtof(fileBuffer + startIndex, nullptr);
-    }
-  }
-  [[nodiscard]] bool isValid() const { return startIndex != 0; }
-};
-
-struct NodeData {
-  NodeID nodeID = 0;
-  std::array<ComponentData, MAX_NODES_PER_COMPONENT> compData;
-};
-
 struct ConnectionData {
   NodeID fromNode;
   uint8_t fromComponent;
@@ -68,6 +38,37 @@ struct ConnectionData {
   NodeID toNode;
   uint8_t toComponent;
   uint8_t toPin;
+};
+
+class ComponentData {
+  uint32_t dataHolder;
+  [[nodiscard]] ComponentID getID() const {
+    // Extract the lower 8 bits
+    return static_cast<ComponentID>(dataHolder & 0xFF);
+  }
+  [[nodiscard]] IndexType getStartByte() const {
+    // Shift right by 8 bits and then mask to get the original 24 bits
+    return static_cast<IndexType>((dataHolder >> 8) & 0xFFFFFF);
+  }
+
+ public:
+  ComponentData(IndexType startByte, ComponentID id) {
+    // Mask and shift `startByte` into the upper 24 bits, and `id` into the lower 8 bits
+    dataHolder = (static_cast<uint32_t>(startByte) & 0xFFFFFF) << 8;
+    dataHolder |= static_cast<uint32_t>(id) & 0xFF;
+  }
+
+  // Returns the data of the index-th save call made inside the component - 0 based
+  // io_save(file, first), io_save(file, second), io_save(file, third);
+  // IMPORTANT: strings will be returned as allocated "char*"
+  template <DataType dt>
+  auto getData(char* fileData, int index) const;
+};
+
+struct NodeData {
+  NodeID nodeID = 0;
+  uint32_t typeHash = 0;
+  std::array<ComponentData, COMPONENTS_PER_NODE> compData;
 };
 
 class RnImport {
@@ -84,7 +85,7 @@ class RnImport {
 
  public:
   RnImport(char* fileData, IndexType size) : size(size), fileData(fileData) {
-    int nodeSizeEstimate = size * 0.75;
+    int nodeSizeEstimate = size * 0.75F;
     nodes.reserve(nodeSizeEstimate / 100);
     connections.reserve((size - nodeSizeEstimate) / 50);
     buildInternals();
@@ -95,12 +96,13 @@ class RnImport {
   RnImport& operator=(RnImport&& other) noexcept = delete;
   ~RnImport() { free(fileData); }
 
-  // Returns the data of the specified component based on the datatype
-  // Its up to the user to know the correct datatype
-  // IMPORTANT: String returns an alloated terminated char*
+  // Returns the data of the index-th save call made inside the specified component - 0 based
+  // io_save(file, first), io_save(file, second), io_save(file, third);
+  // Most components will probably only have have 1
+  // IMPORTANT: strings will be returned as allocated "char*"
   template <DataType dt>
-  [[nodiscard]] auto getComponentData(NodeID nodeID, int componentIndex) const {
-    return getNodeData(nodeID).compData[componentIndex].getData<dt>(fileData);
+  [[nodiscard]] auto getComponentData(NodeID nodeID, int component, int index = 0) const {
+    return getNodeData(nodeID).compData[component].getData<dt>(fileData, index);
   }
 
   // Returns the ID of the first found node thats connected to this component
@@ -131,64 +133,112 @@ class RnImport {
     return ids;
   }
 
+
+
+  //TODO make cx_save vector 3
+  //TODO build save indicies to read - components names and datatypes
+  //TODO make
+
   IndexType size = 0;        // Size of fileData
   char* fileData = nullptr;  // Allocated string containing the whole file data
 };
 
 // Returns a built import of a ".rn" file as generated from raynodes
 inline RnImport parseRN(const char* path) {
-  int fd;
-  errno_t err;
-  // Open the file securely
-  err = _sopen_s(&fd, path, _O_RDONLY | _O_BINARY, _SH_DENYNO, _S_IREAD);
-  if (err != 0 || fd == -1) {
+  FILE* file;
+  fopen_s(&file, path, "rb");  // Open in binary mode to avoid text translation
+  if (!file) {
     perror("Failed to open file securely");
-    exit(EXIT_FAILURE);
   }
 
-  // Get the size of the file
-  off_t size = _lseek(fd, 0, SEEK_END);
-  if (size == -1) {
-    _close(fd);
-    perror("Failed to determine file size");
-    exit(EXIT_FAILURE);
+  // Seek to the end to find the size of the file
+  if (fseek(file, 0, SEEK_END) != 0) {
+    perror("Failed to seek in file");
+    fclose(file);
   }
+
+  long fileSize = ftell(file);
+  if (fileSize == -1) {
+    perror("Failed to determine file size");
+    fclose(file);
+  }
+
+  auto size = static_cast<size_t>(fileSize);
 
   // Return to the beginning of the file
-  if (_lseek(fd, 0, SEEK_SET) == -1) {
-    _close(fd);
+  if (fseek(file, 0, SEEK_SET) != 0) {
     perror("Failed to seek to file start");
-    exit(EXIT_FAILURE);
+    fclose(file);
   }
 
   // Allocate memory for the file content
   auto* buffer = static_cast<char*>(malloc(size + 1));  // +1 for null terminator
   if (buffer == nullptr) {
-    _close(fd);
     perror("Failed to allocate memory");
-    exit(EXIT_FAILURE);
+    fclose(file);
   }
 
   // Read the file into the buffer
-  auto read_size = _read(fd, buffer, size);
-
-  if (read_size != size) {
-    free(buffer);
-    _close(fd);
+  if (fread(buffer, 1, size, file) != size) {
     perror("Failed to read the file completely");
-    exit(EXIT_FAILURE);
+    free(buffer);
+    fclose(file);
   }
-  buffer[size] = '\0';  // Null-terminate the string
+
+  if (buffer) buffer[size] = '\0';  // Null-terminate the buffer
 
   // Close the file
-  _close(fd);
+  fclose(file);
 
   // Return the result
   return {buffer, static_cast<IndexType>(size)};
 }
 }  // namespace raynodes
 
-// Internal Implementation
+//--------------IMPLEMENTATION---------------//
+
+namespace {
+void SkipSeparator(char*& ptr, char separator, int count) noexcept {
+  while (*ptr != '\0' && count > 0) {
+    if (*ptr == separator) {
+      --count;
+    }
+    ++ptr;
+  }
+}
+constexpr uint32_t fnv1a_32(char const* s, const size_t count) noexcept {
+  uint32_t hash = 2166136261u;
+  for (size_t i = 0; i < count; ++i) {
+    hash ^= (uint32_t)s[i];
+    hash *= 16777619u;
+  }
+  return hash;
+}
+}  // namespace
 inline void raynodes::RnImport::buildInternals() {}
+
+template <raynodes::DataType dt>
+auto raynodes::ComponentData::getData(char* fileData, int index) const {
+  uint32_t startByte = getStartByte();
+  SkipSeparator(fileData, USED_LINE_SEPARATOR, index);
+  if constexpr (dt == DataType::BOOLEAN) {
+    return std::strtol(fileData + startByte, nullptr, 10) == 1;
+  } else if (dt == DataType::STRING) {
+    char* start = fileData + startByte;
+    int count = 0;
+    while (*(start + count) != USED_LINE_SEPARATOR && *(start + count) != '\0') {
+      count++;
+    }
+    const char temp = *(start + count);
+    *(start + count) = '\0';
+    char* allocatedString = _strdup(start);
+    *(start + count) = temp;
+    return allocatedString;
+  } else if (dt == DataType::INTEGER) {
+    return std::strtoll(fileData + startByte, nullptr, 10);
+  } else if (dt == DataType::FLOAT) {
+    return std::strtof(fileData + startByte, nullptr);
+  }
+}
 
 #endif  //IMPORTER_H

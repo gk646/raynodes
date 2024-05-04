@@ -33,12 +33,16 @@ struct Core {
   std::vector<Connection*> connections;
   int drawTickTime = 0;
   int currentActionIndex = -1;
-  NodeID UID = static_cast<NodeID>(1);
+  NodeID UID = static_cast<NodeID>(0);
   bool hasUnsavedChanges = false;
   bool closeApplication = false;
   bool requestedClose = false;
 
   bool loadCore(EditorContext& ec);
+  // Set to the initial state for loading new projects
+  void resetEditor(EditorContext& ec);
+
+  //-------------Nodes--------------//
   auto getNextID() -> NodeID {
     UID = static_cast<NodeID>(UID + 1);
     return UID;
@@ -51,6 +55,8 @@ struct Core {
     std::erase(nodes, node);
     nodes.push_back(node);
   }  //Unused
+
+  //-------------Connections--------------//
   void removeConnection(Connection* conn) {
     conn->close();
     std::erase(connections, conn);
