@@ -36,6 +36,7 @@ struct Core {
   NodeID UID = static_cast<NodeID>(1);
   bool hasUnsavedChanges = false;
   bool closeApplication = false;
+  bool requestedClose = false;
 
   bool loadCore(EditorContext& ec);
   auto getNextID() -> NodeID {

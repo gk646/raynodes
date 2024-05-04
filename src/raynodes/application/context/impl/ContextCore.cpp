@@ -22,7 +22,9 @@
 #include "application/elements/Action.h"
 
 bool Core::loadCore(EditorContext& ec) {
+  hasUnsavedChanges = true;                    // Set flag to avoid unnecessary SetTitle
   addEditorAction(ec, new NewCanvasAction());  // Add first dummy action
+  hasUnsavedChanges = false;                   // Reset flag after dummy
 
   // Reserve healthy amount
   selectedNodes.reserve(200);
@@ -74,9 +76,9 @@ void Core::addEditorAction(EditorContext& ec, Action* action) {
   // Correctly handle unsaved changes
   // We never unset it even if the user undoes the action - cause its straightforward
   if (!hasUnsavedChanges) {
-    ec.string.updateWindowTitle(ec);
+    hasUnsavedChanges = true;
+    String::updateWindowTitle(ec);
   }
-  hasUnsavedChanges = true;
 
   // If we're not at the end, remove all forward actions
   while (currentActionIndex < static_cast<int>(actionQueue.size()) - 1) {
@@ -85,7 +87,7 @@ void Core::addEditorAction(EditorContext& ec, Action* action) {
   }
 
   actionQueue.push_back(action);
-  currentActionIndex = actionQueue.size() - 1;  // Move to the new action
+  currentActionIndex = static_cast<int>(actionQueue.size()) - 1;  // Move to the new action
 
   // Limit the queue size
   if (actionQueue.size() > 50) {

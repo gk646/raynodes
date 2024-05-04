@@ -27,7 +27,7 @@ struct Persist {
   bool isNewFile = false;
   bool loadWorkingDirectory(EditorContext& ec);
   bool loadFromFile(EditorContext& ec);
-  bool saveToFile(EditorContext& ec) const;
+  bool saveToFile(EditorContext& ec);
 };
 
 #endif  //RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTPERSIST_H_

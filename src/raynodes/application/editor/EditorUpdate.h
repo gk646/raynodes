@@ -42,6 +42,12 @@ void StartUpdateTick(EditorContext& ec) {
   ec.logic.isAnyNodeHovered = false;  // Reset each tick
   ec.logic.isAnyNodeDragged = false;  // Reset each tick
   ec.input.reset();                   //Reset input for tick
+
+  // raygui text size - 16 per default
+  const auto scaleY = ec.display.screenSize.y / 1080.0F;
+  if (scaleY > 1) {
+    GuiSetStyle(DEFAULT, TEXT_SIZE, static_cast<int>(std::round(16.0F * scaleY)));
+  }
 }
 void FormatSelectRectangle(EditorContext& ec) {
   {

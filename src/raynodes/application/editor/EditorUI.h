@@ -200,24 +200,25 @@ inline void DrawTopBar(EditorContext& ec) {
   };
 
   const auto height = ec.ui.topBarHeight;
-  const auto width = 120.0F;
+  const auto width = 140.0F;
   int res = -1;
   res = dropDown(ec, {20, 5, width, height}, ec.ui.fileMenuText, ec.ui.fileMenuState);
   ec.ui.invokeFileMenu(ec, res);
 
-  res = dropDown(ec, {140, 5, width, height}, ec.ui.editMenuText, ec.ui.editMenuState);
+  res = dropDown(ec, {160, 5, width, height}, ec.ui.editMenuText, ec.ui.editMenuState);
   ec.ui.invokeEditMenu(ec, res);
 
-  res = dropDown(ec, {260, 5, width, height}, ec.ui.viewMenuText, ec.ui.viewMenuState);
+  res = dropDown(ec, {300, 5, width, height}, ec.ui.viewMenuText, ec.ui.viewMenuState);
   ec.ui.invokeViewMenu(ec, res);
 }
 inline void DrawStatusBar(EditorContext& ec) {
   float x = 0;
-  constexpr float height = 18.0F;
+  constexpr float height = 20.0F;
   constexpr float y = 1080 - height;
 
-  constexpr auto statusBar = [](EditorContext& ec, float& x, float y, float w, float h, const char* text) {
-    GuiStatusBar(ec.display.getFullyScaled({x, y, w, h}), text);
+  // Status bar draw func
+  constexpr auto statusBar = [](EditorContext& ec, float& x, float y, float w, float h, const char* txt) {
+    GuiStatusBar(ec.display.getFullyScaled({x, y, w, h}), txt);
     x += w;
   };
 
@@ -232,10 +233,7 @@ inline void DrawStatusBar(EditorContext& ec) {
 
   // Draw the Zoom slider
   const auto bounds = ec.display.getFullyScaled({x - lastWidth + 25, y, lastWidth - 50, height});
-  GuiSliderBar(bounds, nullptr, nullptr, &ec.display.camera.zoom, 0.1F, 3.0F);
-
-  // Workaround - raygui sadly doesnt properly handle return value here
-  if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(ec.logic.mouse, bounds)) {
+  if (GuiSliderBar(bounds, nullptr, nullptr, &ec.display.camera.zoom, 0.1F, 3.0F)) {
     ec.input.consumeMouse();
   }
 
@@ -280,14 +278,15 @@ inline void DrawUnsavedChanges(EditorContext& ec) {
     windowRect.height = 50;
 
     if (button(ec, windowRect, "#002#Save")) {
-      //TODO dialogue if no filename given
       ec.persist.saveToFile(ec);
+      ec.ui.showUnsavedChanges = false;
+      //TODO respect user intent and execute next action
     }
 
     if (button(ec, windowRect, "#159#Don't Save")) {
       ec.ui.showUnsavedChanges = false;
       ec.core.hasUnsavedChanges = false;
-      ec.core.closeApplication = true;
+      if (ec.core.requestedClose) ec.core.closeApplication = true;
     }
 
     if (button(ec, windowRect, "#072#Cancel")) {
