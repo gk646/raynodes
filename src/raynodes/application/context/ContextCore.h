@@ -43,18 +43,27 @@ struct Core {
   void resetEditor(EditorContext& ec);
 
   //-------------Nodes--------------//
-  auto getNextID() -> NodeID {
+  Node* getNode(const NodeID id) { return nodeMap[id]; }
+  NodeID getNextID() {
     UID = static_cast<NodeID>(UID + 1);
     return UID;
   }
   auto createNode(EditorContext& ec, const char* name, Vector2 worldPos, uint16_t hint = 0) -> Node*;
-  auto getNode(const NodeID id) -> Node* { return nodeMap[id]; }
   void insertNode(EditorContext& ec, NodeID id, Node* node);
   void removeNode(EditorContext& ec, NodeID id);
   void moveToFront(Node* node) {
     std::erase(nodes, node);
     nodes.push_back(node);
   }  //Unused
+
+  //-----------Shortcuts-----------//
+  void paste(EditorContext& ec);
+  void copy(EditorContext& ec);
+  void cut(EditorContext& ec);
+  void erase(EditorContext& ec);
+  void open(EditorContext& ec);
+  void selectAll(EditorContext& ec);
+  void newFile(EditorContext& ec);
 
   //-------------Connections--------------//
   void removeConnection(Connection* conn) {

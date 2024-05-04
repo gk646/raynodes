@@ -18,6 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <ranges>
+#include <tinyfiledialogs.h>
+
 #include "application/EditorContext.h"
 #include "application/elements/Action.h"
 
@@ -75,7 +78,7 @@ Node* Core::createNode(EditorContext& ec, const char* name, const Vector2 worldP
 void Core::insertNode(EditorContext& ec, NodeID id, Node* node) {
   nodes.push_back(node);
   nodeMap.insert({id, node});
-  for (auto c : node->components) {
+  for (auto* c : node->components) {
     c->onAddedToScreen(ec, *node);
   }
 }
@@ -85,6 +88,69 @@ void Core::removeNode(EditorContext& ec, NodeID id) {
   std::erase(nodes, node);
   for (const auto c : node->components) {
     c->onRemovedFromScreen(ec, *node);
+  }
+}
+
+void Core::paste(EditorContext& ec) {
+
+  if (copiedNodes.empty()) return;
+  const Vector2 delta = {ec.logic.worldMouse.x - copiedNodes[0]->position.x,
+                         ec.logic.worldMouse.y - copiedNodes[0]->position.y};
+
+  const auto action = new NodeCreateAction(static_cast<int>(copiedNodes.size()) + 1);
+  for (const auto n : copiedNodes) {
+    const auto newNode = n->clone(ec.core.getNextID());
+    newNode->position.x += delta.x;
+    newNode->position.y += delta.y;
+    action->createdNodes.push_back(newNode);
+    ec.core.insertNode(ec, newNode->id, newNode);
+  }
+  ec.core.addEditorAction(ec, action);
+}
+void Core::cut(EditorContext& ec) {
+  if (selectedNodes.empty()) return;
+  copiedNodes.clear();
+  for (const auto n : selectedNodes | std::views::values) {
+    copiedNodes.push_back(n);
+  }
+  const auto action = new NodeDeleteAction(ec, selectedNodes);
+  ec.core.addEditorAction(ec, action);
+  selectedNodes.clear();
+}
+void Core::erase(EditorContext& ec) {
+  if (selectedNodes.empty()) return;
+  const auto action = new NodeDeleteAction(ec, selectedNodes);
+  ec.core.addEditorAction(ec, action);
+  selectedNodes.clear();
+}
+void Core::open(EditorContext& ec) {
+  if (ec.core.hasUnsavedChanges) ec.ui.showUnsavedChanges = true;
+  else {
+    auto* res = tinyfd_openFileDialog("Open File", nullptr, 1, Info::fileFilter, Info::fileDescription, 0);
+    if (res != nullptr) {
+      ec.persist.openedFilePath = res;
+      ec.persist.loadFromFile(ec);
+      ec.input.consumeKeyboard();
+    }
+  }
+}
+void Core::selectAll(EditorContext& ec) {
+  for (auto* n : nodes) {
+    selectedNodes.insert({n->id, n});
+  }
+}
+void Core::newFile(EditorContext& ec) {
+  if (ec.core.hasUnsavedChanges) ec.ui.showUnsavedChanges = true;
+  else {
+    ec.core.resetEditor(ec);
+    ec.persist.openedFilePath.clear();
+    ec.string.updateWindowTitle(ec);
+  }
+}
+void Core::copy(EditorContext& ec) {
+  copiedNodes.clear();
+  for (const auto& node : selectedNodes | std::views::values) {
+    copiedNodes.push_back(node);
   }
 }
 
@@ -115,14 +181,16 @@ void Core::addEditorAction(EditorContext& ec, Action* action) {
   }
 }
 void Core::undo(EditorContext& ec) {
-  if (currentActionIndex >= 1) {  // Check there's an action to undo
+  if (currentActionIndex >= 1) {
+    // Check there's an action to undo
     actionQueue[currentActionIndex]->undo(ec);
     --currentActionIndex;  // Move back in the action queue
   }
 }
 void Core::redo(EditorContext& ec) {
-  if (currentActionIndex < static_cast<int>(actionQueue.size()) - 1) {  // Check there's an action to redo
-    ++currentActionIndex;                                               // Move forward in the action queue
+  if (currentActionIndex < static_cast<int>(actionQueue.size()) - 1) {
+    // Check there's an action to redo
+    ++currentActionIndex;  // Move forward in the action queue
     actionQueue[currentActionIndex]->redo(ec);
   }
 }

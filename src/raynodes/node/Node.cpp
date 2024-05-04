@@ -318,13 +318,10 @@ void Node::update(EditorContext& ec) {
     HandleDrag(*this, ec, selectedNodes, worldMouse);
   }
 }
+
 void Node::saveState(FILE* file) {
   cxstructs::io_save(file, name);
   cxstructs::io_save(file, id);
-  cxstructs::io_save(file, color.r);
-  cxstructs::io_save(file, color.g);
-  cxstructs::io_save(file, color.b);
-  cxstructs::io_save(file, color.a);
   cxstructs::io_save(file, static_cast<int>(position.x));
   cxstructs::io_save(file, static_cast<int>(position.y));
   cxstructs::io_save(file, static_cast<int>(size.x));
@@ -332,19 +329,12 @@ void Node::saveState(FILE* file) {
 
   for (const auto c : components) {
     c->save(file);
+    fprintf(file, "$");  // Save where the component ends
   }
 }
 void Node::loadState(FILE* file) {
   //Node name (type) was already parsed
   //Node id was already parsed
-  int r, g, b, a;
-  cxstructs::io_load(file, r);
-  cxstructs::io_load(file, g);
-  cxstructs::io_load(file, b);
-  cxstructs::io_load(file, a);
-  color = {static_cast<unsigned char>(r), static_cast<unsigned char>(g), static_cast<unsigned char>(b),
-           static_cast<unsigned char>(a)};
-
   cxstructs::io_load(file, position.x);
   cxstructs::io_load(file, position.y);
   cxstructs::io_load(file, size.x);
@@ -352,6 +342,7 @@ void Node::loadState(FILE* file) {
 
   for (const auto c : components) {
     c->load(file);
+    fseek(file, 1, SEEK_CUR);  // Skip the component end marker
   }
 }
 

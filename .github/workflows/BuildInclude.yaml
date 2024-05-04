@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Copy file
         run: |
-          cp src/raynodes/io/Importer.h include/
+          cp src/raynodes/import/Importer.h include/
       - name: Commit file if changed
         run: |
           git config --local user.email "action@github.com"
