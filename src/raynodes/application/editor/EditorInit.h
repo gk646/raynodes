@@ -56,7 +56,7 @@ inline void SetupDisplay(EditorContext& ec) {
   DisableEventWaiting();
 
   // raygui
-  GuiSetStyle(DEFAULT, TEXT_SIZE, 14);
+  GuiSetStyle(DEFAULT, TEXT_SIZE, 15);
   GuiSetStyle(DEFAULT, TEXT_SPACING, 0);
   GuiSetStyle(DROPDOWNBOX, TEXT_PADDING, 2);
   GuiSetStyle(DROPDOWNBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);

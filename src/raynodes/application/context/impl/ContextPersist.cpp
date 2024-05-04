@@ -34,6 +34,7 @@ void SaveEditorData(FILE* file, EditorContext& ec) {
   cxstructs::io_save(file, ec.display.camera.zoom);
   cxstructs::io_save_newline(file);
 }
+
 int SaveNodes(FILE* file, EditorContext& ec) {
   cxstructs::io_save_section(file, "Nodes");
   int count = 0;
@@ -44,6 +45,7 @@ int SaveNodes(FILE* file, EditorContext& ec) {
   }
   return count;
 }
+
 int SaveConnections(FILE* file, EditorContext& ec) {
   cxstructs::io_save_section(file, "Connections");
   int count = 0;
@@ -99,16 +101,17 @@ bool IsValidConnection(int maxNodeID, int fromNode, int from, int out, int toNod
 void CreateNewConnection(EditorContext& ec, int fromNodeID, int fromI, int outI, int toNodeID, int toI,
                          int inI) {
   const auto& nodeMap = ec.core.nodeMap;
-  Node& fromNode = *nodeMap.at(NodeID(fromNodeID));
-  Component& from = *fromNode.components[fromI];
+  Node& fromNode = *nodeMap.at(static_cast<NodeID>(fromNodeID));
+  Component& from = *fromNode.components[static_cast<int8_t>(fromI)];
   OutputPin& out = from.outputs[outI];
 
-  Node& toNode = *nodeMap.at(NodeID(toNodeID));
-  Component& to = *toNode.components[toI];
+  Node& toNode = *nodeMap.at(static_cast<NodeID>(toNodeID));
+  Component& to = *toNode.components[static_cast<int8_t>(toI)];  // We use int8_t as size_type to save space
   InputPin& in = to.inputs[inI];
 
   ec.core.addConnection(new Connection(fromNode, from, out, toNode, to, in));
 }
+
 int LoadConnections(FILE* file, EditorContext& ec) {
   int count = 0;
   const int maxNodeID = ec.core.UID;
@@ -133,11 +136,12 @@ int LoadConnections(FILE* file, EditorContext& ec) {
 }
 }  // namespace
 
-bool Persist::saveToFile(EditorContext& ec) {
+bool Persist::saveToFile(EditorContext& ec, bool saveAsMode) {
   // Strictly enforce this to limit saving -> Actions need to be accurate
-  if (!ec.core.hasUnsavedChanges) return true;
+  if (!ec.core.hasUnsavedChanges && !saveAsMode) return true;
 
-  if (openedFilePath.empty()) {
+  // If in SaveAs we want to save with a new name - regardless of an existing one
+  if (openedFilePath.empty() || saveAsMode) {
     auto* res = tinyfd_saveFileDialog("Save File", nullptr, 1, Info::fileFilter, Info::fileDescription);
     if (res != nullptr) {
       openedFilePath = res;
@@ -184,6 +188,9 @@ bool Persist::loadFromFile(EditorContext& ec) {
     fprintf(stderr, "Unable to open file %s\n", path);
     return false;
   }
+
+  // Reset editor to initial state
+  ec.core.resetEditor(ec);
 
   //Load data
   LoadEditorData(file, ec);

@@ -35,6 +35,24 @@ bool Core::loadCore(EditorContext& ec) {
   return true;
 }
 
+void Core::resetEditor(EditorContext& ec) {
+  hasUnsavedChanges = true;  // Set flag to avoid unnecessary SetTitle insdie addEditorAction()
+
+  // Setup action queue
+  actionQueue.clear();
+  addEditorAction(ec, new NewCanvasAction());
+
+  // Setup data holders
+  selectedNodes.clear();
+  nodeMap.clear();
+  nodes.clear();
+  copiedNodes.clear();
+  connections.clear();
+  UID = static_cast<NodeID>(0);
+
+  hasUnsavedChanges = false;
+}
+
 Node* Core::createNode(EditorContext& ec, const char* name, const Vector2 worldPos, uint16_t hint) {
   //Use the hint when provided
   auto newNode = ec.templates.createNode(name);
