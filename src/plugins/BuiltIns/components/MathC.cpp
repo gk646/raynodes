@@ -25,27 +25,27 @@
 #include <limits>
 #include <cxutil/cxio.h>
 
-void MathC::draw(EditorContext& ec, Node& parent) {
+void MathC::draw(EditorContext& ec, Node& /**/) {
   const auto bounds = getBounds();
   dropDown.draw(ec, bounds.x, bounds.y);
 }
 
-void MathC::update(EditorContext& ec, Node& parent) {
+void MathC::update(EditorContext& ec, Node& /**/) {
   selectedMode = dropDown.update(ec);
-  double a = inputs[0].getData<PinType::FLOAT>();
-  double b = inputs[1].getData<PinType::FLOAT>();
+  double a = inputs[0].getData<FLOAT>();
+  double b = inputs[1].getData<FLOAT>();
 
   const auto res = performOperation(a, b, static_cast<MOperation>(selectedMode));
-  outputs[0].setData<PinType::FLOAT>(res);
+  outputs[0].setData<FLOAT>(res);
 }
 
-void MathC::onCreate(EditorContext& ec, Node& parent) {
+void MathC::onCreate(EditorContext& /**/, Node& /**/) {
   internalLabel = false;  //We don't want to draw our label
 
-  addPinInput(PinType::FLOAT);
-  addPinInput(PinType::FLOAT);
+  addPinInput(FLOAT);
+  addPinInput(FLOAT);
 
-  addPinOutput(PinType::FLOAT);
+  addPinOutput(FLOAT);
 
   dropDown.items.reserve(END + 1);
   for (int i = 0; i < END; i++) {

@@ -45,8 +45,8 @@ void StartUpdateTick(EditorContext& ec) {
 
   // raygui text size - 16 per default
   const auto scaleY = ec.display.screenSize.y / 1080.0F;
-  const auto fontSize = fmaxf(13.0F,static_cast<int>(std::round(13.0F * scaleY)));
-  GuiSetStyle(DEFAULT, TEXT_SIZE, fontSize);
+  const auto fontSize = fmaxf(13.0F,std::round(13.0F * scaleY));
+  GuiSetStyle(DEFAULT, TEXT_SIZE, static_cast<int>(fontSize));
 }
 void FormatSelectRectangle(EditorContext& ec) {
   {
@@ -93,7 +93,7 @@ inline void UpdateTick(EditorContext& ec) {
 
   //Reverse update to correctly reflect input layers
   for (auto it = ec.core.nodes.rbegin(); it != ec.core.nodes.rend(); ++it) {
-    (*it)->update(ec);
+    Node::Update(ec,**it);
   }
 
   if (ec.logic.isSelecting) {

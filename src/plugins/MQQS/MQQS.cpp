@@ -20,9 +20,9 @@
 
 #include "MQQS.h"
 
-#include "plugin/PluginInterface.h"
+void MQQS::registerComponents(ComponentRegister& /**/) {
 
-void MQQS::registerComponents(ComponentRegister& ec) {}
+}
 
 void MQQS::registerNodes(NodeRegister& nr) {
   nr.registerNode("Dialogue Choice", {{"DisplayText", "TextInput"},

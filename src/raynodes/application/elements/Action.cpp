@@ -23,11 +23,11 @@
 #include "application/EditorContext.h"
 #include "node/Node.h"
 
-void TextAction::undo(EditorContext& ec) {
+void TextAction::undo(EditorContext& /**/) {
   targetText = beforeState;
 }
 
-void TextAction::redo(EditorContext& ec) {
+void TextAction::redo(EditorContext& /**/) {
   targetText = afterState;
 }
 
@@ -107,27 +107,26 @@ NodeMovedAction::NodeMovedAction(const int size) : Action(MOVE_NODE) {
 
 void NodeMovedAction::undo(EditorContext& ec) {
   for (const auto [id, delta] : movedNodes) {
-    auto& [x, y] = ec.core.getNode(id)->position;
-    x += delta.x;
-    y += delta.y;
+    const auto node = ec.core.getNode(id);
+    node->x += delta.x;
+    node->y += delta.y;
   }
 }
 
 void NodeMovedAction::redo(EditorContext& ec) {
   for (const auto [id, delta] : movedNodes) {
-    auto& [x, y] = ec.core.getNode(id)->position;
-    x -= delta.x;
-    y -= delta.y;
+    const auto node = ec.core.getNode(id);
+    node->x -= delta.x;
+    node->y -= delta.y;
   }
 }
 
 float NodeMovedAction::calculateDeltas(const EditorContext& ec) {
   auto& selectedNodes = ec.core.selectedNodes;
-  for (auto& [id, node] : movedNodes) {
-    auto& delta = node;
-    const auto [x, y] = selectedNodes.at(id)->position;
-    delta.x -= x;
-    delta.y -= y;
+  for (auto& [id, delta] : movedNodes) {
+    const auto node = selectedNodes.at(id);
+    delta.x -= node->x;
+    delta.y -= node->y;
   }
   // The distance delta is always the same for all nodes (right...)
   // 0 always has to be filled

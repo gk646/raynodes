@@ -20,7 +20,7 @@
 
 #include "Node.h"
 
-#include <ostream>
+#include <raylib.h>
 #include <cxutil/cxio.h>
 #include <cxstructs/Constraint.h>
 
@@ -28,18 +28,17 @@
 #include "application/elements/Action.h"
 #include "shared/rayutils.h"
 
-Node::~Node() {
-  for (const auto c : components) {
-    c->onDestruction(*this);
-    delete c;
-  }
-}
+// Those are only used in this translation unit
+static constexpr float PADDING = 3;
+static constexpr float OFFSET_Y = 20;  // Node name header offset
+static Vector2 DRAG_OFFSET;            // Drag anchor point
 
+// Helper functions
 namespace {
 bool CheckPinCollisions(EditorContext& ec, Node& n, Component* c) {
   const auto worldMouse = ec.logic.worldMouse;
   float radius = Pin::PIN_SIZE / 2.0F;
-  float posX = n.position.x;
+  float posX = n.x;
 
   //Inputs on the left
   for (auto& p : c->inputs) {
@@ -50,7 +49,7 @@ bool CheckPinCollisions(EditorContext& ec, Node& n, Component* c) {
   }
 
   //Outputs on the right
-  posX += n.size.x;
+  posX += n.width;
   for (auto& p : c->outputs) {
     if (CheckCollisionPointCircle(worldMouse, {posX, p.yPos}, radius)) {
       ec.logic.assignDraggedPin(posX, p.yPos, n, *c, p);
@@ -144,14 +143,15 @@ void HandleHover(EditorContext& ec, Node& n, auto& selectedNodes) {
     if (moveAction == nullptr) {                    //Let's not leak too much...
       moveAction = new NodeMovedAction(static_cast<int>(selectedNodes.size()) + 1);
       for (auto pair : selectedNodes) {
-        moveAction->movedNodes.emplace_back(pair.first, pair.second->position);
+        auto node = pair.second;
+        moveAction->movedNodes.push_back({pair.first, {node->x, node->y}});
       }
     }
 
     n.isDragged = true;
     ec.logic.isAnyNodeDragged = true;
     ec.logic.draggedNode = &n;
-    Node::DRAG_OFFSET = ec.logic.worldMouse;
+    DRAG_OFFSET = ec.logic.worldMouse;
   }
 }
 
@@ -161,9 +161,9 @@ void HandleDrag(Node& n, EditorContext& ec, auto& selectedNodes, auto worldMouse
   ec.logic.isAnyNodeDragged = true;
   ec.logic.draggedNode = &n;
   if (ec.input.isMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-    const Vector2 movementDelta = {worldMouse.x - Node::DRAG_OFFSET.x, worldMouse.y - Node::DRAG_OFFSET.y};
-    n.position.x += movementDelta.x;
-    n.position.y += movementDelta.y;
+    const Vector2 movementDelta = {worldMouse.x - DRAG_OFFSET.x, worldMouse.y - DRAG_OFFSET.y};
+    n.x += movementDelta.x;
+    n.y += movementDelta.y;
 
     //Update selected nodes
     if (!selectedNodes.empty()) {
@@ -171,12 +171,12 @@ void HandleDrag(Node& n, EditorContext& ec, auto& selectedNodes, auto worldMouse
         Node* node = pair.second;
         if (node != &n) {  // Avoid moving this node again
           // Apply the same movement to all selected nodes
-          node->position.x += movementDelta.x;
-          node->position.y += movementDelta.y;
+          node->x += movementDelta.x;
+          node->y += movementDelta.y;
         }
       }
     }
-    Node::DRAG_OFFSET = worldMouse;
+    DRAG_OFFSET = worldMouse;
   } else {
     n.isDragged = false;
     ec.logic.isAnyNodeDragged = false;
@@ -194,7 +194,7 @@ void DrawComponentPins(EditorContext& ec, Component& c, float dx, float startIn,
     const auto middlePos = Vector2{dx, currentY + pinRadius};
     DrawCircleV({dx, currentY + pinRadius}, pinRadius, p.getColor());
     if (isAltDown) {
-      const auto txt = PinTypeToString(p.pinType);
+      const auto txt = Pin::TypeToString(p.pinType);
       const auto textPos = Vector2{middlePos.x - textOff, middlePos.y - pinRadius};
       DrawCenteredText(ec.display.editorFont, txt, textPos, Pin::PIN_SIZE + 2, 0, WHITE);
     }
@@ -209,7 +209,7 @@ void DrawComponentPins(EditorContext& ec, Component& c, float dx, float startIn,
     const auto middlePos = Vector2{outputX, currentY + pinRadius};
     DrawCircleV({outputX, currentY + pinRadius}, pinRadius, p.getColor());
     if (isAltDown) {
-      const auto txt = PinTypeToString(p.pinType);
+      const auto txt = Pin::TypeToString(p.pinType);
       const auto textPos = Vector2{middlePos.x + textOff, middlePos.y - pinRadius};
       DrawCenteredText(ec.display.editorFont, txt, textPos, Pin::PIN_SIZE + 2, 0, WHITE);
     }
@@ -234,113 +234,136 @@ void DrawComponent(EditorContext& ec, Node& n, Component& c, float dx, float& dy
 
   DrawComponentPins(ec, c, dx, startYInputs, startYOutputs, width);
 
-  c.x = dx + Node::PADDING * 2;
+  c.x = dx + PADDING * 2;
   c.y = componentStartY;
   // Draw the component itself, centered
   c.draw(ec, n);
 
   // Update dy for the next component
-  dy += maxVerticalSpace + Node::PADDING;
+  dy += maxVerticalSpace + PADDING;
 }
 }  // namespace
 
-void Node::draw(EditorContext& ec) {
+Node::Node(const NodeTemplate& nt)
+    : name(nt.label), x(0), y(0), width(50), height(50), r(0), g(0), b(0), a(255) {}
+Node::Node(const Node& n, const NodeID id) : name(n.name), x(n.x), y(n.y), r(n.r), g(n.g), b(n.b), id(id) {
+  for (const auto c : n.components) {
+    auto clone = c->clone();
+    for (auto& in : clone->inputs) {
+      in.connection = nullptr;  //Dont copy the connection ptr
+      //TODO maybe copy connections but then fully -> create new connection objects
+    }
+    components.push_back(clone);
+  }
+}
+Node::~Node() {
+  for (const auto c : components) {
+    c->onDestruction(*this);
+    delete c;
+  }
+}
+Node* Node::clone(const NodeID nid) { return new Node(*this, nid); }
+
+
+void Node::Draw(EditorContext& ec, Node& n) {
   const auto& display = ec.display;
-  const auto bounds = Rectangle{position.x, position.y, size.x, size.y};
-  const auto headerPos = Vector2{position.x + PADDING, position.y + PADDING};
-  float startY = position.y + PADDING + OFFSET_Y;
+  const auto bounds = Rectangle{n.x, n.y, n.width, n.height};
+  const auto headerPos = Vector2{n.x + PADDING, n.y + PADDING};
+  float startY = n.y + PADDING + OFFSET_Y;
 
   // Draw node body
-  DrawRectangleRec(bounds, color);
+  DrawRectangleRec(bounds, n.getColor());
 
   // Draw hover outline
-  if (isHovered) {
+  if (n.isHovered) {
     DrawRectangleLinesEx(bounds, 1, ColorAlpha(YELLOW, 0.7));
   }
 
   // Draw header text
-  DrawTextEx(display.editorFont, name, headerPos, display.fontSize, 1.0F, WHITE);
+  DrawTextEx(display.editorFont, n.name, headerPos, display.fontSize, 1.0F, WHITE);
 
   // Iterate over components and draw them
   const float initialY = startY;
-  for (const auto& component : components) {
+  for (const auto& component : n.components) {
     if (!component->internalLabel) {
-      Vector2 textPos = {position.x + PADDING, startY};
+      Vector2 textPos = {n.x + PADDING, startY};
       DrawTextEx(display.editorFont, component->label, textPos, display.fontSize, 0.0F, WHITE);
       startY += display.fontSize;
     }
-    DrawComponent(ec, *this, *component, position.x, startY, size.x);
+    DrawComponent(ec, n, *component, n.x, startY, n.width);
   }
 
-  contentHeight = static_cast<uint16_t>(startY - initialY);
-  size.y = startY - position.y + Pin::PIN_SIZE + PADDING;
+  n.contentHeight = static_cast<uint16_t>(startY - initialY);
+  n.height = startY - n.y + Pin::PIN_SIZE + PADDING;
 }
-void Node::update(EditorContext& ec) {
+void Node::Update(EditorContext& ec, Node& n) {
   //Cache
-  const auto bounds = Rectangle{position.x, position.y, size.x, size.y};
+  const auto bounds = Rectangle{n.x, n.y, n.width, n.height};
   const auto worldMouse = ec.logic.worldMouse;
   auto& selectedNodes = ec.core.selectedNodes;
 
   //Always update components to allow for continuous ones (not just when focused)
   float biggestWidth = FLT_MIN;
-  for (auto* c : components) {
-    UpdateComponent(ec, *this, c);
+  for (auto* c : n.components) {
+    UpdateComponent(ec, n, c);
     if (c->getWidth() > biggestWidth) {
       biggestWidth = static_cast<float>(c->width);
     }
   }
-  size.x = biggestWidth + Node::PADDING * 4.0F;  // Components are drawn with 2*PADDING inset
+
+  n.width = biggestWidth + PADDING * 4.0F;  // Components are drawn with 4 * PADDING inset
 
   //User is selecting -> no dragging
   if (ec.logic.isSelecting) {
-    return HandleSelection(*this, ec, bounds, selectedNodes);
+    return HandleSelection(n, ec, bounds, selectedNodes);
   }
 
   //Another node is dragged no point in updating this one
-  if (!isDragged && ec.logic.isAnyNodeDragged) {
+  if (!n.isDragged && ec.logic.isAnyNodeDragged) {
     //Show as hovered when selected
-    isHovered = !selectedNodes.empty() && selectedNodes.contains(id);
+    n.isHovered = !selectedNodes.empty() && selectedNodes.contains(n.id);
     return;
   }
 
   //Check if hovered
-  isHovered = isDragged || CheckCollisionPointRec(worldMouse, bounds);
+  n.isHovered = n.isDragged || CheckCollisionPointRec(worldMouse, bounds);
 
   //Its hovered - what's going to happen?
-  if (isHovered && !ec.logic.isAnyNodeHovered) {
-    HandleHover(ec, *this, selectedNodes);
+  if (n.isHovered && !ec.logic.isAnyNodeHovered) {
+    HandleHover(ec, n, selectedNodes);
   } else {
-    isHovered = !selectedNodes.empty() && selectedNodes.contains(id);
+    n.isHovered = !selectedNodes.empty() && selectedNodes.contains(n.id);
   }
 
   //Node is dragged
-  if (isDragged) {
-    HandleDrag(*this, ec, selectedNodes, worldMouse);
+  if (n.isDragged) {
+    HandleDrag(n, ec, selectedNodes, worldMouse);
   }
 }
+void Node::SaveState(FILE* file, Node& n) {
+  cxstructs::io_save(file, n.name);
+  cxstructs::io_save(file, n.id);
+  cxstructs::io_save(file, static_cast<int>(n.x));
+  cxstructs::io_save(file, static_cast<int>(n.y));
+  cxstructs::io_save(file, static_cast<int>(n.width));
+  cxstructs::io_save(file, static_cast<int>(n.height));
 
-void Node::saveState(FILE* file) {
-  cxstructs::io_save(file, name);
-  cxstructs::io_save(file, id);
-  cxstructs::io_save(file, static_cast<int>(position.x));
-  cxstructs::io_save(file, static_cast<int>(position.y));
-  cxstructs::io_save(file, static_cast<int>(size.x));
-  cxstructs::io_save(file, static_cast<int>(size.y));
-
-  for (const auto c : components) {
+  n.saveState(file);
+  for (const auto c : n.components) {
     c->save(file);
     fprintf(file, "$");  // Save where the component ends
   }
 }
-void Node::loadState(FILE* file) {
+void Node::LoadState(FILE* file, Node& n) {
   //Node name (type) was already parsed
   //Node id was already parsed
-  cxstructs::io_load(file, position.x);
-  cxstructs::io_load(file, position.y);
-  cxstructs::io_load(file, size.x);
-  cxstructs::io_load(file, size.y);
+  cxstructs::io_load(file, n.x);
+  cxstructs::io_load(file, n.y);
+  cxstructs::io_load(file, n.width);
+  cxstructs::io_load(file, n.height);
 
-  for (const auto c : components) {
+  n.loadState(file);
+  for (const auto c : n.components) {
     c->load(file);
     fseek(file, 1, SEEK_CUR);  // Skip the component end marker
   }
@@ -350,14 +373,20 @@ void Node::loadState(FILE* file) {
 void Node::addComponent(Component* comp) {
   components.push_back(comp);
 }
+Rectangle Node::getExtendedBounds(const float ext) const {
+  return {x - ext, y - ext, width + ext * 2, height + ext * 2};
+}
+Rectangle Node::getBounds() const {
+  return {x, y, width, height};
+}
+
+Color Node::getColor() const {
+  return {r, g, b, a};
+}
+
 Component* Node::getComponent(const char* name) {
-  for (const auto c : components) {
-    if (c->getName() == name) return c;
-  }
   for (const auto c : components) {
     if (strcmp(name, c->getName()) == 0) return c;
   }
   return nullptr;
 }
-
-//Export

@@ -27,26 +27,27 @@ bool ComponentRegister::registerComponent(const char* name, const ComponentCreat
   return res;
 }
 
-bool NodeRegister::registerNode(const char* name, const NodeTemplate& nt) {
-  const auto res = ec.templates.registerNode(name, nt, plugin);
-  if (res) {
-    ec.ui.contextMenu.addNode(plugin.name, name);
-  } else {
-    errorCount++;
-  }
-  return res;
+bool NodeRegister::registerNode(const char* name, const std::initializer_list<ComponentTemplate>& components,
+                                Color4 color) {
+  return registerNode(CreateTemplate(name, components, color), GetCreateFunc<Node>());
 }
-
-bool NodeRegister::registerNode(const char* name, const std::initializer_list<ComponentTemplate>& components) {
+NodeTemplate NodeRegister::CreateTemplate(const char* name, const ComponentDefinition& comps, Color4 c) {
   NodeTemplate nt;
+  nt.label = name;
+  nt.color = c;
+
   int i = 0;
-  for (const auto component : components) {
+  for (const auto component : comps) {
     nt.components[i] = component;
     i++;
   }
-  const auto res = ec.templates.registerNode(name, nt, plugin);
+  return nt;
+}
+
+bool NodeRegister::registerNode(const NodeTemplate& nt, NodeCreateFunc nodeCreateFunc) {
+  const auto res = ec.templates.registerNode(nt, nodeCreateFunc, plugin);
   if (res) {
-    ec.ui.contextMenu.addNode(plugin.name, name);
+    ec.ui.contextMenu.addNode(plugin.name, nt.label);
   } else {
     errorCount++;
   }

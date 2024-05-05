@@ -23,6 +23,9 @@
 
 #include "plugin/RegisterInterface.h"
 
+#pragma warning(push)
+#pragma warning(disable : 4100)  // unreferenced formal parameter
+
 //The raynodes plugin interface
 struct RaynodesPluginI {
   const char* name = nullptr;  //Will be set automatically at runtime (to the file name, for clarity)
@@ -35,13 +38,14 @@ struct RaynodesPluginI {
   virtual void registerNodes(NodeRegister& nr) {}
 };
 
+// ====IMPORTANT====:
+/*Include this at the bottom to export the function
+.....................................................................
 
-// ====IMPORTANT====: Include this at the bottom to export the function
-
-//
-//extern "C" EXPORT inline RaynodesPluginI* CreatePlugin() {
-//  return new MyPlugin();
-//}
+extern "C" EXPORT inline RaynodesPluginI* CreatePlugin() {
+  return new MyPlugin();
+}
+.....................................................................*/
 
 //-----------EXAMPLE-----------//
 /*
@@ -55,4 +59,7 @@ extern "C" EXPORT inline RaynodesPluginI* CreatePlugin() {
   return new BuiltIns();
 }
 */
+
+#pragma warning(pop)
+
 #endif  //PLUGINI_H
