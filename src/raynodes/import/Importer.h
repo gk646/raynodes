@@ -42,7 +42,7 @@ class RnImport;
 // "path" can be relative (to the current CWD) or absolute
 RnImport ParseRN(const char* path);
 
-#define COMPONENTS_PER_NODE 6
+#define COMPS_PER_NODE 6
 #define DATAPOINTS_PER_COMPONENT 4
 #define USED_LINE_SEPARATOR '|'  // Set this to the linesep used by cxio (default '|')
 
@@ -99,7 +99,7 @@ class ComponentData {
 struct NodeData {
   NodeID nodeID = 0;
   uint32_t typeHash = 0;
-  std::array<ComponentData, COMPONENTS_PER_NODE> compData;
+  std::array<ComponentData, COMPS_PER_NODE> compData;
 };
 
 class RnImport final {

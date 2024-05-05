@@ -24,19 +24,22 @@
 
 #include "node/Node.h"
 
-Connection::Connection(Node& fromNode, Component& from, OutputPin& out, Node& toNode, Component& to,
+Connection::Connection(Node& fromNode, Component* from, OutputPin& out, Node& toNode, Component* to,
                        InputPin& in)
     : fromNode(fromNode), from(from), out(out), toNode(toNode), to(to), in(in) {}
 
 Vector2 Connection::getFromPos() const {
   return {fromNode.x + fromNode.width, out.yPos};
 }
+
 Vector2 Connection::getToPos() const {
-  return {to.x, in.yPos};
+  return {toNode.x, in.yPos};
 }
+
 void Connection::close() const {
   in.connection = nullptr;
 }
+
 void Connection::open() {
   in.connection = this;
 }

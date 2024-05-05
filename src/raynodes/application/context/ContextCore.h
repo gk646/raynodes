@@ -33,23 +33,23 @@ struct Core {
   std::vector<Connection*> connections;
   int drawTickTime = 0;
   int currentActionIndex = -1;
-  NodeID UID = static_cast<NodeID>(0);
+  NodeID UID = static_cast<NodeID>(0);  // Starts with 0 so UINT16_MAX is the sentinel value
   bool hasUnsavedChanges = false;
   bool closeApplication = false;
   bool requestedClose = false;
 
   bool loadCore(EditorContext& ec);
-  // Set to the initial state for loading new projects
-  void resetEditor(EditorContext& ec);
+  void resetEditor(EditorContext& ec);  // Reset to initial state for loading new projects
 
   //-------------Nodes--------------//
-  Node* getNode(const NodeID id) { return nodeMap[id]; }
-  NodeID getNextID() {
+  NodeID getID() {
+    const auto retval = UID;
     UID = static_cast<NodeID>(UID + 1);
-    return UID;
+    return retval;
   }
-  auto createNode(EditorContext& ec, const char* name, Vector2 worldPos, uint16_t hint = 0) -> Node*;
-  void insertNode(EditorContext& ec, NodeID id, Node* node);
+  Node* getNode(const NodeID id) { return nodeMap[id]; }
+  auto createNode(EditorContext& ec, const char* name, Vector2 worldPos, uint16_t hint = UINT16_MAX) -> Node*;
+  void insertNode(EditorContext& ec, Node& node);
   void removeNode(EditorContext& ec, NodeID id);
   void moveToFront(Node* node) {
     std::erase(nodes, node);
@@ -57,7 +57,7 @@ struct Core {
   }  //Unused
 
   //-----------Shortcuts-----------//
-  void paste(EditorContext& ec);
+  void paste(EditorContext& ec) const;
   void copy(EditorContext& ec);
   void cut(EditorContext& ec);
   void erase(EditorContext& ec);

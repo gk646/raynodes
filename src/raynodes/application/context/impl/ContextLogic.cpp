@@ -21,8 +21,8 @@
 #include "application/EditorContext.h"
 
 namespace {
-void AssignConnection(EditorContext& ec, Node& fromNode, Component& from, OutputPin& out, Node& toNode,
-                      Component& to, InputPin& in) {
+void AssignConnection(EditorContext& ec, Node& fromNode, Component* from, OutputPin& out, Node& toNode,
+                      Component* to, InputPin& in) {
   if (!out.isConnectable(in)) return;
   const auto conn = new Connection(fromNode, from, out, toNode, to, in);
 
@@ -31,11 +31,11 @@ void AssignConnection(EditorContext& ec, Node& fromNode, Component& from, Output
   ec.core.addConnection(conn);  //Internally opens it
 
   //Call the event functions
-  from.onConnectionAdded(ec, *conn);
-  to.onConnectionAdded(ec, *conn);
+  if (from) from->onConnectionAdded(ec, *conn);
+  if (to) to->onConnectionAdded(ec, *conn);
 }
 
-void FindDropPin(EditorContext& ec, Node& fromNode, Component& from, Pin* draggedPin) {
+void FindDropPin(EditorContext& ec, Node& fromNode, Component* from, Pin* draggedPin) {
   const auto worldMouse = ec.logic.worldMouse;
   const auto radius = Pin::PIN_SIZE / 2.0F;
 
@@ -52,10 +52,15 @@ void FindDropPin(EditorContext& ec, Node& fromNode, Component& from, Pin* dragge
         for (auto* to : n->components) {
           for (auto& in : to->inputs) {
             if (CheckCollisionPointCircle(worldMouse, {posX, in.yPos}, radius)) {
-              AssignConnection(ec, fromNode, from, *(OutputPin*)draggedPin, *n, *to, in);
+              AssignConnection(ec, fromNode, from, *(OutputPin*)draggedPin, *n, to, in);
               return;
             }
           }
+        }
+        // Node input
+        if (CheckCollisionPointCircle(worldMouse, {posX, n->nodeIn.yPos}, radius)) {
+          AssignConnection(ec, fromNode, from, *(OutputPin*)draggedPin, *n, nullptr, n->nodeIn);
+          return;
         }
       } else {
         auto posX = n->x + n->width;
@@ -64,9 +69,15 @@ void FindDropPin(EditorContext& ec, Node& fromNode, Component& from, Pin* dragge
             if (CheckCollisionPointCircle(worldMouse, {posX, out.yPos}, radius)) {
               //Confusing assignment - orders are switched - target node is now output
               //Connection interface is still kept the same for clarity
-              AssignConnection(ec, *n, *to, out, fromNode, from, *(InputPin*)draggedPin);
+              AssignConnection(ec, *n, to, out, fromNode, from, *(InputPin*)draggedPin);
               return;
             }
+          }
+        }
+        for (auto& out : n->outputs) {
+          if (CheckCollisionPointCircle(worldMouse, {posX, out.yPos}, radius)) {
+            AssignConnection(ec, *n, nullptr, out, fromNode, from, *(InputPin*)draggedPin);
+            return;
           }
         }
       }
@@ -81,7 +92,7 @@ void Logic::handleDroppedPin(EditorContext& ec) {
 
   //Cache with correct names
   auto& fromNode = *draggedPinNode;
-  auto& from = *draggedPinComponent;
+  auto* from = draggedPinComponent;  // NULL when node-to-node
 
   //Reset regardless if a pin is found
   FindDropPin(ec, fromNode, from, draggedPin);

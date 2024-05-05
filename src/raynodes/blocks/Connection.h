@@ -26,13 +26,13 @@
 struct Connection {
   //Source
   Node& fromNode;
-  Component& from;
+  Component* from;  // NULL when connection from node to node
   OutputPin& out;
   //Destination
-  Node& toNode;
-  Component& to;
+  Node& toNode;  // NULL when connection from node to node
+  Component* to;
   InputPin& in;
-  Connection(Node& fromNode, Component& from, OutputPin& out, Node& toNode, Component& to, InputPin& in);
+  Connection(Node& fromNode, Component* from, OutputPin& out, Node& toNode, Component* to, InputPin& in);
   [[nodiscard]] Vector2 getFromPos() const;
   [[nodiscard]] Vector2 getToPos() const;
   [[nodiscard]] Color getConnectionColor() const;

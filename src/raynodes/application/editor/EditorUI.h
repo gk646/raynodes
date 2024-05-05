@@ -22,7 +22,7 @@
 #define RAYNODES_SRC_APPLICATION_EDITOR_EDITORUI_H_
 
 namespace {
-void CreateNewNode(EditorContext& ec, Vector2 pos, const char* name) {
+void HandleNewNode(EditorContext& ec, Vector2 pos, const char* name) {
   const auto newN = ec.core.createNode(ec, name, GetScreenToWorld2D(pos, ec.display.camera));
   if (!newN) return;
   const auto action = new NodeCreateAction(2);
@@ -113,7 +113,7 @@ inline void DrawContextMenu(EditorContext& ec) {
         if (CheckCollisionPointRec(mouse, nodeTextRect)) {
           DrawRectangleRec(nodeTextRect, hightLightColor);
           if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            CreateNewNode(ec, pos, name);
+            HandleNewNode(ec, pos, name);
             hoveredCategory = nullptr;
             break;
           }

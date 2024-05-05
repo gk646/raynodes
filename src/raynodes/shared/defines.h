@@ -21,9 +21,10 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
-#define COMPONENTS_PER_NODE 6
-#define INPUT_PINS 3   // Max input pins for each component
-#define OUTPUT_PINS 3  // Max output pins for each component
+#define COMPS_PER_NODE 6
+#define INPUT_PINS 3        // Max input pins for each component
+#define OUTPUT_PINS 3       // Max output pins for each component
+#define NODE_OUTPUT_PINS 3  // Max output pins for each node  on the top level
 #define START_FPS 90
 
 // Defines for the plugin exports

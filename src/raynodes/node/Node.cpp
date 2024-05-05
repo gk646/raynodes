@@ -26,6 +26,7 @@
 
 #include "application/EditorContext.h"
 #include "application/elements/Action.h"
+#include "shared/fwd.h"
 #include "shared/rayutils.h"
 
 // Those are only used in this translation unit
@@ -35,26 +36,66 @@ static Vector2 DRAG_OFFSET;            // Drag anchor point
 
 // Helper functions
 namespace {
+
+void UpdateNodePins(EditorContext& ec, Node& n) {
+  if (!ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) return;
+
+  // y position is assigned at draw - we can use it
+  static const auto checkPin = [&](float x, Pin& p) {
+    if (CheckCollisionPointCircle(ec.logic.worldMouse, {x, p.yPos}, Pin::PIN_SIZE / 2.0F)) {
+      ec.input.consumeMouse();
+      ec.logic.assignDraggedPin(x, p.yPos, n, nullptr, p);
+      return true;
+    }
+    return false;
+  };
+
+  if (checkPin(n.x, n.nodeIn)) return;
+  for (auto& p : n.outputs) {
+    if (checkPin(n.x + n.width, p)) return;
+  }
+}
+
+void DrawNodePins(Node& n) {
+  // Draw and assign the pin y position
+  static constexpr auto drawPin = [](Pin& p, float x, float y) {
+    DrawCircleV({x, y}, Pin::PIN_SIZE / 2.0F, p.getColor());
+    p.yPos = y;
+  };
+
+  float posY = n.y + OFFSET_Y / 2.0F;
+
+  drawPin(n.nodeIn, n.x, posY);
+  for (auto& p : n.outputs) {
+    drawPin(p, n.x + n.width, posY);
+    posY += Pin::PIN_SIZE;
+  }
+}
+
 bool CheckPinCollisions(EditorContext& ec, Node& n, Component* c) {
   const auto worldMouse = ec.logic.worldMouse;
   float radius = Pin::PIN_SIZE / 2.0F;
   float posX = n.x;
 
-  //Inputs on the left
-  for (auto& p : c->inputs) {
-    if (CheckCollisionPointCircle(worldMouse, {posX, p.yPos}, radius)) {
-      ec.logic.assignDraggedPin(posX, p.yPos, n, *c, p);
-      return true;
+  static const auto checkAndAssign = [&](auto& pins, float xPosition) {
+    for (auto& p : pins) {
+      if (CheckCollisionPointCircle(worldMouse, {xPosition, p.yPos}, radius)) {
+        ec.logic.assignDraggedPin(xPosition, p.yPos, n, c, p);
+        return true;
+      }
     }
+    return false;
+  };
+
+  // Inputs on the left
+  if (checkAndAssign(c->inputs, posX)) {
+    return true;
   }
 
-  //Outputs on the right
+  // Outputs on the right
   posX += n.width;
-  for (auto& p : c->outputs) {
-    if (CheckCollisionPointCircle(worldMouse, {posX, p.yPos}, radius)) {
-      ec.logic.assignDraggedPin(posX, p.yPos, n, *c, p);
-      return true;
-    }
+  if (checkAndAssign(c->outputs, posX)) {
+    return true;
   }
 
   return false;
@@ -118,7 +159,7 @@ void UpdateComponent(EditorContext& ec, Node& n, Component* c) {
 //selectedNodes is std::unordered_map
 void HandleSelection(Node& n, EditorContext& ec, const Rectangle bounds, auto& selectedNodes) {
   if (CheckCollisionRecs(bounds, ec.logic.selectRect)) {
-    selectedNodes.insert({n.id, &n});
+    selectedNodes.insert({n.uID, &n});
     n.isHovered = true;
     ec.logic.isAnyNodeHovered = true;
     ec.logic.hoveredNode = &n;
@@ -128,16 +169,16 @@ void HandleSelection(Node& n, EditorContext& ec, const Rectangle bounds, auto& s
 }
 
 //selectedNodes is std::unordered_map
-void HandleHover(EditorContext& ec, Node& n, auto& selectedNodes) {
+void HandleHover(EditorContext& ec, Node& n, std::unordered_map<NodeID, Node*>& selectedNodes) {
   ec.logic.isAnyNodeHovered = true;
   ec.logic.hoveredNode = &n;
   if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-    if (!ec.input.isKeyDown(KEY_LEFT_CONTROL) && !selectedNodes.contains(n.id)) {
+    if (!ec.input.isKeyDown(KEY_LEFT_CONTROL) && !selectedNodes.contains(n.uID)) {
       //Clear selection when an unselected node is clicked / unless control is held
       selectedNodes.clear();
     }
 
-    selectedNodes.insert({n.id, &n});  //Node is clicked = selected
+    selectedNodes.insert({n.uID, &n});  //Node is clicked = selected
 
     auto& moveAction = ec.logic.currentMoveAction;  //Start a move action
     if (moveAction == nullptr) {                    //Let's not leak too much...
@@ -186,35 +227,31 @@ void HandleDrag(Node& n, EditorContext& ec, auto& selectedNodes, auto worldMouse
 void DrawComponentPins(EditorContext& ec, Component& c, float dx, float startIn, float startOut, float w) {
   constexpr float pinRadius = Pin::PIN_SIZE / 2.0f;
   constexpr float textOff = Pin::PIN_SIZE * 1.5F;
+  const bool isAltDown = ec.input.isKeyDown(KEY_LEFT_ALT);
+
+  static const auto drawPin = [&](auto& pin, float x, float& y, float textOffset) {
+    const auto middlePos = Vector2{x, y + pinRadius};
+    DrawCircleV(middlePos, pinRadius, pin.getColor());
+    if (isAltDown) {
+      const auto txt = Pin::TypeToString(pin.pinType);
+      const auto textPos = Vector2{middlePos.x + textOffset, middlePos.y - pinRadius};
+      DrawCenteredText(ec.display.editorFont, txt, textPos, Pin::PIN_SIZE + 2, 0, WHITE);
+    }
+    pin.yPos = y + pinRadius;
+    y += Pin::PIN_SIZE;
+  };
 
   // Draw Input Pins
   float currentY = startIn;
-  const bool isAltDown = ec.input.isKeyDown(KEY_LEFT_ALT);
   for (auto& p : c.inputs) {
-    const auto middlePos = Vector2{dx, currentY + pinRadius};
-    DrawCircleV({dx, currentY + pinRadius}, pinRadius, p.getColor());
-    if (isAltDown) {
-      const auto txt = Pin::TypeToString(p.pinType);
-      const auto textPos = Vector2{middlePos.x - textOff, middlePos.y - pinRadius};
-      DrawCenteredText(ec.display.editorFont, txt, textPos, Pin::PIN_SIZE + 2, 0, WHITE);
-    }
-    p.yPos = currentY + pinRadius;
-    currentY += Pin::PIN_SIZE;
+    drawPin(p, dx, currentY, -textOff);
   }
 
   // Draw Output Pins
   currentY = startOut;
   const float outputX = dx + w;  // Pins on the right edge
   for (auto& p : c.outputs) {
-    const auto middlePos = Vector2{outputX, currentY + pinRadius};
-    DrawCircleV({outputX, currentY + pinRadius}, pinRadius, p.getColor());
-    if (isAltDown) {
-      const auto txt = Pin::TypeToString(p.pinType);
-      const auto textPos = Vector2{middlePos.x + textOff, middlePos.y - pinRadius};
-      DrawCenteredText(ec.display.editorFont, txt, textPos, Pin::PIN_SIZE + 2, 0, WHITE);
-    }
-    p.yPos = currentY + pinRadius;
-    currentY += Pin::PIN_SIZE;
+    drawPin(p, outputX, currentY, textOff);
   }
 }
 
@@ -244,9 +281,13 @@ void DrawComponent(EditorContext& ec, Node& n, Component& c, float dx, float& dy
 }
 }  // namespace
 
-Node::Node(const NodeTemplate& nt)
-    : name(nt.label), x(0), y(0), width(50), height(50), r(0), g(0), b(0), a(255) {}
-Node::Node(const Node& n, const NodeID id) : name(n.name), x(n.x), y(n.y), r(n.r), g(n.g), b(n.b), id(id) {
+Node::Node(const NodeTemplate& nt, Vec2 pos, NodeID id)
+    : name(nt.label), x(pos.x), y(pos.y), width(50), height(50), uID(id), r(0), g(0), b(0), a(255) {
+  outputs.push_back(OutputPin{NODE});
+}
+Node::Node(const Node& n, const NodeID id)
+    : name(n.name), x(n.x), y(n.y), width(n.width), height(n.height), uID(id), r(n.r), g(n.g), b(n.b),
+      a(n.a) {
   for (const auto c : n.components) {
     auto clone = c->clone();
     for (auto& in : clone->inputs) {
@@ -256,19 +297,21 @@ Node::Node(const Node& n, const NodeID id) : name(n.name), x(n.x), y(n.y), r(n.r
     components.push_back(clone);
   }
 }
+
 Node::~Node() {
   for (const auto c : components) {
     c->onDestruction(*this);
     delete c;
   }
 }
-Node* Node::clone(const NodeID nid) { return new Node(*this, nid); }
-
+Node* Node::clone(const NodeID nid) {
+  return new Node(*this, nid);
+}
 
 void Node::Draw(EditorContext& ec, Node& n) {
   const auto& display = ec.display;
   const auto bounds = Rectangle{n.x, n.y, n.width, n.height};
-  const auto headerPos = Vector2{n.x + PADDING, n.y + PADDING};
+  const auto headerPos = Vector2{n.x + PADDING * 3.0F, n.y + PADDING};
   float startY = n.y + PADDING + OFFSET_Y;
 
   // Draw node body
@@ -281,6 +324,9 @@ void Node::Draw(EditorContext& ec, Node& n) {
 
   // Draw header text
   DrawTextEx(display.editorFont, n.name, headerPos, display.fontSize, 1.0F, WHITE);
+
+  // Draw Node pins
+  DrawNodePins(n);
 
   // Iterate over components and draw them
   const float initialY = startY;
@@ -295,12 +341,17 @@ void Node::Draw(EditorContext& ec, Node& n) {
 
   n.contentHeight = static_cast<uint16_t>(startY - initialY);
   n.height = startY - n.y + Pin::PIN_SIZE + PADDING;
+
+  n.draw(ec);  // Call event func last
 }
 void Node::Update(EditorContext& ec, Node& n) {
   //Cache
   const auto bounds = Rectangle{n.x, n.y, n.width, n.height};
   const auto worldMouse = ec.logic.worldMouse;
   auto& selectedNodes = ec.core.selectedNodes;
+
+  // Update node-level pins
+  UpdateNodePins(ec, n);
 
   //Always update components to allow for continuous ones (not just when focused)
   float biggestWidth = FLT_MIN;
@@ -311,7 +362,9 @@ void Node::Update(EditorContext& ec, Node& n) {
     }
   }
 
-  n.width = biggestWidth + PADDING * 4.0F;  // Components are drawn with 4 * PADDING inset
+  n.width = biggestWidth + PADDING * 4.0F;  // Components are drawn with 2 * PADDING inset (both sides)
+
+  n.update(ec);  // Call event func after components
 
   //User is selecting -> no dragging
   if (ec.logic.isSelecting) {
@@ -321,7 +374,7 @@ void Node::Update(EditorContext& ec, Node& n) {
   //Another node is dragged no point in updating this one
   if (!n.isDragged && ec.logic.isAnyNodeDragged) {
     //Show as hovered when selected
-    n.isHovered = !selectedNodes.empty() && selectedNodes.contains(n.id);
+    n.isHovered = !selectedNodes.empty() && selectedNodes.contains(n.uID);
     return;
   }
 
@@ -332,7 +385,7 @@ void Node::Update(EditorContext& ec, Node& n) {
   if (n.isHovered && !ec.logic.isAnyNodeHovered) {
     HandleHover(ec, n, selectedNodes);
   } else {
-    n.isHovered = !selectedNodes.empty() && selectedNodes.contains(n.id);
+    n.isHovered = !selectedNodes.empty() && selectedNodes.contains(n.uID);
   }
 
   //Node is dragged
@@ -340,9 +393,9 @@ void Node::Update(EditorContext& ec, Node& n) {
     HandleDrag(n, ec, selectedNodes, worldMouse);
   }
 }
-void Node::SaveState(FILE* file, Node& n) {
+void Node::SaveState(FILE* file, const Node& n) {
   cxstructs::io_save(file, n.name);
-  cxstructs::io_save(file, n.id);
+  cxstructs::io_save(file, n.uID);
   cxstructs::io_save(file, static_cast<int>(n.x));
   cxstructs::io_save(file, static_cast<int>(n.y));
   cxstructs::io_save(file, static_cast<int>(n.width));
@@ -369,24 +422,24 @@ void Node::LoadState(FILE* file, Node& n) {
   }
 }
 
-//Components
+// Components
 void Node::addComponent(Component* comp) {
   components.push_back(comp);
 }
+Component* Node::getComponent(const char* name) {
+  for (const auto c : components) {
+    if (strcmp(name, c->getName()) == 0) return c;
+  }
+  return nullptr;
+}
+
+// Helpers
 Rectangle Node::getExtendedBounds(const float ext) const {
   return {x - ext, y - ext, width + ext * 2, height + ext * 2};
 }
 Rectangle Node::getBounds() const {
   return {x, y, width, height};
 }
-
 Color Node::getColor() const {
   return {r, g, b, a};
-}
-
-Component* Node::getComponent(const char* name) {
-  for (const auto c : components) {
-    if (strcmp(name, c->getName()) == 0) return c;
-  }
-  return nullptr;
 }

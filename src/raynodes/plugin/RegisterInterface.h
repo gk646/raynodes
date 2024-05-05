@@ -72,8 +72,8 @@ struct NodeRegister {
   // Generates the createFunction
   template <class CustomNodeType>
   static NodeCreateFunc GetCreateFunc() {
-    return [](const NodeTemplate& nt) -> Node* {
-      return new CustomNodeType(nt);
+    return [](const NodeTemplate& nt, Vec2 pos,NodeID id) -> Node* {
+      return new CustomNodeType(nt,pos,id);
     };
   }
   // Registers a node with name "name" with the components specified in the template
