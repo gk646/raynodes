@@ -57,7 +57,7 @@ NodeDeleteAction::~NodeDeleteAction() noexcept {
 void NodeDeleteAction::undo(EditorContext& ec) {
   removeNodes = false;
   for (const auto n : deletedNodes) {
-    ec.core.insertNode(ec, n->id, n);
+    ec.core.insertNode(ec, *n);
   }
   for (const auto conn : deletedConnections) {
     ec.core.addConnection(conn);
@@ -67,7 +67,7 @@ void NodeDeleteAction::undo(EditorContext& ec) {
 void NodeDeleteAction::redo(EditorContext& ec) {
   removeNodes = true;
   for (const auto n : deletedNodes) {
-    ec.core.removeNode(ec, n->id);
+    ec.core.removeNode(ec, n->uID);
   }
   for (const auto conn : deletedConnections) {
     ec.core.removeConnection(conn);
@@ -89,14 +89,14 @@ NodeCreateAction::~NodeCreateAction() noexcept {
 void NodeCreateAction::undo(EditorContext& ec) {
   removeNodes = true;
   for (const auto n : createdNodes) {
-    ec.core.removeNode(ec, n->id);
+    ec.core.removeNode(ec, n->uID);
   }
 }
 
 void NodeCreateAction::redo(EditorContext& ec) {
   removeNodes = false;
   for (const auto n : createdNodes) {
-    ec.core.insertNode(ec, n->id, n);
+    ec.core.insertNode(ec,  *n);
   }
 }
 

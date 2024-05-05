@@ -46,13 +46,14 @@ struct Template {
   // Passed template names only have to be valid until this function returns (copied)
   bool registerNode(const NodeTemplate& nt, NodeCreateFunc func, const RaynodesPluginI& plugin);
   // Passed name only has to be valid until this function returns
-  Node* createNode(const char* name) {
+  Node* createNode(const char* name, Vec2 pos, NodeID nodeID) {
     const auto it = nodeTemplates.find(name);
     if (it != nodeTemplates.end()) {
-      auto* node = nodeFactory[name](it->second);  // Has to exist
+      auto* node = nodeFactory[name](it->second, pos, nodeID);  // Has to exist
       for (const auto component : it->second.components) {
         if (component.component == nullptr) continue;  // We dont break for safety
-        node->components.push_back(createComponent(component));
+        auto* comp = createComponent(component);
+        if (comp) node->components.push_back(comp);
       }
       return node;
     }

@@ -57,33 +57,30 @@ void Core::resetEditor(EditorContext& ec) {
 }
 
 Node* Core::createNode(EditorContext& ec, const char* name, const Vector2 worldPos, uint16_t hint) {
-  //Use the hint when provided
-  auto newNode = ec.templates.createNode(name);
 
+  //Use the hint when provided
+  const auto nodeID = hint == UINT16_MAX ? getID() : static_cast<NodeID>(hint);
+
+  Node* newNode = ec.templates.createNode(name, {worldPos.x, worldPos.y}, nodeID);
   if (!newNode) return nullptr;
 
-  newNode->x = worldPos.x;
-  newNode->y = worldPos.y;
-  newNode->id = hint == 0 ? UID : static_cast<NodeID>(hint);
-
-  nodes.push_back(newNode);
-  nodeMap.insert({newNode->id, newNode});
-  UID = getNextID();
-
   // Call event functions
-  newNode->onCreation(ec);
-
   for (const auto c : newNode->components) {
     c->onCreate(ec, *newNode);
   }
 
+  newNode->onCreation(ec);  // Called after all components
+
+  insertNode(ec, *newNode);
+
   return newNode;
 }
-void Core::insertNode(EditorContext& ec, NodeID id, Node* node) {
-  nodes.push_back(node);
-  nodeMap.insert({id, node});
-  for (auto* c : node->components) {
-    c->onAddedToScreen(ec, *node);
+
+void Core::insertNode(EditorContext& ec, Node& node) {
+  nodes.push_back(&node);
+  nodeMap.insert({node.uID, &node});
+  for (auto* c : node.components) {
+    c->onAddedToScreen(ec, node);
   }
 }
 void Core::removeNode(EditorContext& ec, NodeID id) {
@@ -95,19 +92,18 @@ void Core::removeNode(EditorContext& ec, NodeID id) {
   }
 }
 
-void Core::paste(EditorContext& ec) {
-
+void Core::paste(EditorContext& ec) const {
   if (copiedNodes.empty()) return;
   const Vector2 delta = {ec.logic.worldMouse.x - copiedNodes[0]->x,
                          ec.logic.worldMouse.y - copiedNodes[0]->y};
 
   const auto action = new NodeCreateAction(static_cast<int>(copiedNodes.size()) + 1);
   for (const auto n : copiedNodes) {
-    const auto newNode = n->clone(ec.core.getNextID());
+    auto* newNode = n->clone(ec.core.getID());
     newNode->x += delta.x;
     newNode->y += delta.y;
     action->createdNodes.push_back(newNode);
-    ec.core.insertNode(ec, newNode->id, newNode);
+    ec.core.insertNode(ec, *newNode);
   }
   ec.core.addEditorAction(ec, action);
 }
@@ -140,7 +136,7 @@ void Core::open(EditorContext& ec) {
 }
 void Core::selectAll(EditorContext& ec) {
   for (auto* n : nodes) {
-    selectedNodes.insert({n->id, n});
+    selectedNodes.insert({n->uID, n});
   }
 }
 void Core::newFile(EditorContext& ec) {
@@ -148,7 +144,7 @@ void Core::newFile(EditorContext& ec) {
   else {
     ec.core.resetEditor(ec);
     ec.persist.openedFilePath.clear();
-    ec.string.updateWindowTitle(ec);
+    String::updateWindowTitle(ec);
   }
 }
 void Core::copy(EditorContext& ec) {

@@ -46,26 +46,26 @@
 // .....................................................................
 
 struct Node {
-  cxstructs::StackVector<Component*, COMPONENTS_PER_NODE, int8_t> components;  // Fixed size
-  InputPin nodeIn{NODE};       // Allows to signal connections to a node for any reason
-  OutputPin nodeOut{NODE};     // Allows to signal connections to a node for any reason
-  const char* name = nullptr;  //Unique allocated name
-  float x, y;                  // Position
-  float width, height;         // Dimensions
-  uint8_t r, g, b, a;          // Header colour
-  NodeID id;                   // Unqiue node ID
-  uint16_t contentHeight = 0;  //Current height of the content
+  cxstructs::StackVector<Component*, COMPS_PER_NODE, int8_t> components;  // Fixed size
+  InputPin nodeIn{NODE};                                                  // Allow node-to-node connections
+  cxstructs::StackVector<OutputPin, NODE_OUTPUT_PINS, int8_t> outputs;    // Allow node-to-node connections
+  const char* const name = nullptr;                                       //Unique allocated name
+  float x, y;                                                             // Position
+  float width, height;                                                    // Dimensions
+  const NodeID uID;                                                       // Unqiue node ID
+  uint8_t r, g, b, a;                                                     // Header colour
+  uint16_t contentHeight = 0;                                             //Current height of the content
   bool isHovered = false;
   bool isDragged = false;
 
-  explicit Node(const NodeTemplate& nt);
+  explicit Node(const NodeTemplate& nt, Vec2 pos, NodeID id);
   Node(const Node& n, NodeID id);
   virtual ~Node();
 
   // Internal functions
   static void Update(EditorContext& ec, Node& n);
   static void Draw(EditorContext& ec, Node& n);
-  static void SaveState(FILE* file, Node& n);
+  static void SaveState(FILE* file, const Node& n);
   static void LoadState(FILE* file, Node& n);
 
   //-----------CORE-----------//
@@ -75,32 +75,43 @@ struct Node {
   // Called only when the node bounds are (partially) within the screen
   virtual void draw(EditorContext& ec) {}
   // Called at save time - allows you to save arbitrary, unrelated additional state data
-  virtual void saveState(FILE* file) {}
+  virtual void saveState(FILE* file) const {}
   // Called at load time - should be the exact same statements and order as in saveState();
   virtual void loadState(FILE* file) {}
 
   //-----------LIFE CYCLE-----------//
-  // Called once when the node is created
+  // Called once when the node is created and AFTER all components
   virtual void onCreation(EditorContext& ec) {}
 
   //-----------COMPONENTS-----------//
   Component* getComponent(const char* name);
-  [[nodiscard]] int getComponentIndex(Component& c) const {
+  [[nodiscard]] int getComponentIndex(const Component* c) const {
     for (int i = 0; i < components.size(); i++) {
-      if (components[static_cast<int8_t>(i)] == &c) return i;
+      if (components[static_cast<int8_t>(i)] == c) return i;
+    }
+    return -1;
+  }
+  [[nodiscard]] int getPinIndex(const Component* c, const Pin& p) const {
+    if (!c) {
+      if (p.direction == INPUT) return 0;
+      for (int i = 0; i < NODE_OUTPUT_PINS; ++i) {
+        if (&outputs[static_cast<int8_t>(i)] == &p) return i;
+      }
+    } else {
+      return c->getPinIndex(p);
     }
     return -1;
   }
   void addComponent(Component* comp);
 
-  //Helpers
+  // Helpers
   [[nodiscard]] Rectangle getExtendedBounds(float ext) const;
   [[nodiscard]] Rectangle getBounds() const;
-  Color getColor() const;
+  [[nodiscard]] Color getColor() const;
 };
 
-struct MyNode : Node {
-  MyNode(const NodeTemplate& nt) : Node(nt) {}
+struct MyNode final : Node {
+  MyNode(const NodeTemplate& nt, Vec2 pos, NodeID id) : Node(nt, pos, id) {}
 };
 
 #pragma warning(pop)

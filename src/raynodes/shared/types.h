@@ -61,7 +61,7 @@ struct ComponentTemplate {
 struct NodeTemplate {
   const char* label = nullptr;
   Color4 color = {0, 0, 0, 255};                      // BLACK
-  ComponentTemplate components[COMPONENTS_PER_NODE];  // Current limit
+  ComponentTemplate components[COMPS_PER_NODE];  // Current limit
 };
 
 #endif  //TYPES_H

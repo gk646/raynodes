@@ -41,7 +41,7 @@ bool Template::registerNode(const NodeTemplate& nt, NodeCreateFunc func, const R
   NodeTemplate newTemplate;
   newTemplate.color = nt.color;
   newTemplate.label = cxstructs::str_dup(nt.label);
-  for (int i = 0; i < COMPONENTS_PER_NODE; ++i) {
+  for (int i = 0; i < COMPS_PER_NODE; ++i) {
     if (nt.components[i].component == nullptr) continue;  // We dont break for safety
     newTemplate.components[i].component = cxstructs::str_dup(nt.components[i].component);
     newTemplate.components[i].label = cxstructs::str_dup(nt.components[i].label);
