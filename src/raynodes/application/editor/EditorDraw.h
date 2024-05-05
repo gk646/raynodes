@@ -31,7 +31,7 @@ inline void DrawNodes(EditorContext& ec) {
 
   for (const auto n : nodes) {
     if (CheckCollisionRecs(cameraBounds, n->getBounds())) {
-      n->draw(ec);
+      Node::Draw(ec, *n);
     }
   }
 }
@@ -53,7 +53,7 @@ inline void DrawConnections(EditorContext& ec, bool isCTRLDown) {
       ec.core.removeConnection(conn);
     }
   }
-  if (delNodes) ec.core.addEditorAction(ec,action);
+  if (delNodes) ec.core.addEditorAction(ec, action);
 }
 }  // namespace Editor
 #endif  //RAYNODES_SRC_EDITOR_ELEMENTS_EDITORDISPLAY_H_

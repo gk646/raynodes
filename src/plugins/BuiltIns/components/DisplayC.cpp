@@ -23,43 +23,43 @@
 #include "application/EditorContext.h"
 #include "DisplayC.h"
 
-void DisplayC::draw(EditorContext& ec, Node& parent) {
+void DisplayC::draw(EditorContext& ec, Node& /**/) {
   const auto bounds = getBounds();
   DrawRectangleRec(bounds, GRAY);
 
   const char* txt;
   if (inputs[0].isConnected()) {
-    txt = inputs[0].getData<PinType::STRING>();
+    txt = inputs[0].getData<STRING>();
     DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
   } else if (inputs[1].isConnected()) {
-    txt = String::FormatText("%f", inputs[1].getData<PinType::FLOAT>());
+    txt = String::FormatText("%f", inputs[1].getData<FLOAT>());
     DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
   } else if (inputs[2].isConnected()) {
-    txt = String::FormatText("%lld", inputs[2].getData<PinType::INTEGER>());
+    txt = String::FormatText("%lld", inputs[2].getData<INTEGER>());
     DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
   }
 }
 
-void DisplayC::update(EditorContext& ec, Node& parent) {
-  outputs[0].setData<PinType::STRING>(inputs[0].getData<PinType::STRING>());
-  outputs[1].setData<PinType::FLOAT>(inputs[1].getData<PinType::FLOAT>());
-  outputs[2].setData<PinType::INTEGER>(inputs[2].getData<PinType::INTEGER>());
+void DisplayC::update(EditorContext& ec, Node& /**/) {
+  outputs[0].setData<STRING>(inputs[0].getData<STRING>());
+  outputs[1].setData<FLOAT>(inputs[1].getData<FLOAT>());
+  outputs[2].setData<INTEGER>(inputs[2].getData<INTEGER>());
 }
 
-void DisplayC::onCreate(EditorContext& ec, Node& parent) {
-  addPinInput(PinType::STRING);
-  addPinInput(PinType::FLOAT);
-  addPinInput(PinType::INTEGER);
+void DisplayC::onCreate(EditorContext& ec, Node& /**/) {
+  addPinInput(STRING);
+  addPinInput(FLOAT);
+  addPinInput(INTEGER);
 
-  addPinOutput(PinType::STRING);
-  addPinOutput(PinType::FLOAT);
-  addPinOutput(PinType::INTEGER);
+  addPinOutput(STRING);
+  addPinOutput(FLOAT);
+  addPinOutput(INTEGER);
 }
 
-void DisplayC::save(FILE* file) {
+void DisplayC::save(FILE* /**/) {
   /*No state*/
 }
 
-void DisplayC::load(FILE* file) {
+void DisplayC::load(FILE* /**/) {
   /*No state*/
 }

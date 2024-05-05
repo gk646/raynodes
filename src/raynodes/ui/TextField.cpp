@@ -257,16 +257,16 @@ uint16_t TextInputField::getIndexFromPos(const Vector2 mouse) {
   const float relY = mouse.y - bounds.y;
 
   if (relX < 0) return 0;
-  if (relX > bounds.width) return buffer.size();
+  if (relX > bounds.width) return static_cast<uint16_t>(buffer.size());
 
   int currentLineStartIndex = 0;
   float currentLineTop = 0;
   char* text = buffer.data();
 
-  for (int i = 0; i <= buffer.size(); ++i) {
+  for (uint16_t i = 0; i <= buffer.size(); ++i) {
     if (i == buffer.size() || *(text + i) == '\n') {
       if (relY >= currentLineTop && relY < currentLineTop + fs) {
-        for (int j = currentLineStartIndex; j < i; ++j) {
+        for (uint16_t j = currentLineStartIndex; j < i; ++j) {
           const auto currentWidth =
               MeasureTextUpTo(text + currentLineStartIndex, j - currentLineStartIndex + 1, *font, fs, 0.5F);
           if (currentWidth > relX) {

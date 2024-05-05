@@ -26,6 +26,7 @@
 
 //TODO make save format that combines both saving and loading
 //-> should be easy as its symmetric - function wrapper and boolean for loading-saving
+
 namespace {
 void SaveEditorData(FILE* file, EditorContext& ec) {
   //TODO save more data
@@ -85,7 +86,7 @@ int LoadNodes(FILE* file, EditorContext& ec) {
     int id;
     cxstructs::io_load(file, buff, Plugin::MAX_NAME_LEN);
     cxstructs::io_load(file, id);
-    const auto newNode = ec.core.createNode(ec, buff, {0, 0}, id);
+    const auto newNode = ec.core.createNode(ec, buff, {0, 0}, static_cast<uint16_t>(id));
     if (!newNode) {
       cxstructs::io_load_newline(file, true);
       continue;
@@ -98,7 +99,7 @@ int LoadNodes(FILE* file, EditorContext& ec) {
   return count;
 }
 bool IsValidConnection(int maxNodeID, int fromNode, int from, int out, int toNode, int to, int in) {
-  return fromNode > 0 && fromNode < maxNodeID && from != -1 && out != -1 && toNode > 0 && toNode < maxNodeID
+  return fromNode >= 0 && fromNode < maxNodeID && from != -1 && out != -1 && toNode >= 0 && toNode < maxNodeID
          && to != -1 && in != -1;
 }
 void CreateNewConnection(EditorContext& ec, int fromNodeID, int fromI, int outI, int toNodeID, int toI,
@@ -106,11 +107,11 @@ void CreateNewConnection(EditorContext& ec, int fromNodeID, int fromI, int outI,
   const auto& nodeMap = ec.core.nodeMap;
   Node& fromNode = *nodeMap.at(static_cast<NodeID>(fromNodeID));
   Component& from = *fromNode.components[static_cast<int8_t>(fromI)];
-  OutputPin& out = from.outputs[outI];
+  OutputPin& out = from.outputs[static_cast<int8_t>(outI)];
 
   Node& toNode = *nodeMap.at(static_cast<NodeID>(toNodeID));
   Component& to = *toNode.components[static_cast<int8_t>(toI)];  // We use int8_t as size_type to save space
-  InputPin& in = to.inputs[inI];
+  InputPin& in = to.inputs[static_cast<int8_t>(inI)];
 
   ec.core.addConnection(new Connection(fromNode, from, out, toNode, to, in));
 }
@@ -215,7 +216,7 @@ bool Persist::loadFromFile(EditorContext& ec) {
   return true;
 }
 
-bool Persist::loadWorkingDirectory(EditorContext& ec) {
+bool Persist::loadWorkingDirectory(EditorContext& /**/) {
   cxstructs::Constraint<true> c;
 
   c + ChangeDirectory(GetApplicationDirectory());

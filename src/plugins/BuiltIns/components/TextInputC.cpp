@@ -25,7 +25,7 @@
 #include "application/EditorContext.h"
 #include "application/elements/Action.h"
 
-void TextInputC::draw(EditorContext& ec, Node& parent) {
+void TextInputC::draw(EditorContext& ec, Node& /**/) {
   auto bounds = getBounds();
   textField.bounds.x = bounds.x;
   textField.bounds.y = bounds.y;
@@ -33,14 +33,14 @@ void TextInputC::draw(EditorContext& ec, Node& parent) {
 }
 
 void TextInputC::update(EditorContext& ec, Node& parent) {
-  const auto inText = inputs[0].getData<PinType::STRING>();
+  const auto inText = inputs[0].getData<STRING>();
   if (inText != nullptr) textField.buffer = inText;
   if (textField.constraint == NONE) {
-    outputs[0].setData<PinType::STRING>(textField.buffer.c_str());
+    outputs[0].setData<STRING>(textField.buffer.c_str());
   } else if (textField.constraint == NUMERIC) {
     const auto* text = textField.buffer.c_str();
-    outputs[0].setData<PinType::INTEGER>(cxstructs::str_parse_long(text));
-    outputs[1].setData<PinType::FLOAT>(cxstructs::str_parse_float(text));
+    outputs[0].setData<INTEGER>(cxstructs::str_parse_long(text));
+    outputs[1].setData<FLOAT>(cxstructs::str_parse_float(text));
   }
 
   textField.update(ec.logic.worldMouse);
@@ -73,18 +73,18 @@ void TextInputC::onFocusLoss(EditorContext& ec) {
   }
 }
 
-void TextInputC::onCreate(EditorContext& ec, Node& parent) {
+void TextInputC::onCreate(EditorContext& ec, Node& /**/) {
   internalLabel = false;  //We don't want to draw our label
   textField.font = &ec.display.editorFont;
   textField.fs = ec.display.fontSize;
   if (textField.constraint == NONE) {
-    addPinInput(PinType::STRING);
-    addPinOutput(PinType::STRING);
+    addPinInput(STRING);
+    addPinOutput(STRING);
   } else {
-    addPinInput(PinType::STRING);
+    addPinInput(STRING);
 
-    addPinOutput(PinType::INTEGER);
-    addPinOutput(PinType::FLOAT);
+    addPinOutput(INTEGER);
+    addPinOutput(FLOAT);
   }
 }
 

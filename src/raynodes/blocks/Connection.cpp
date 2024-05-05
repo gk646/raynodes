@@ -29,12 +29,12 @@ Connection::Connection(Node& fromNode, Component& from, OutputPin& out, Node& to
     : fromNode(fromNode), from(from), out(out), toNode(toNode), to(to), in(in) {}
 
 Vector2 Connection::getFromPos() const {
-  return {fromNode.position.x + fromNode.size.x, out.yPos};
+  return {fromNode.x + fromNode.width, out.yPos};
 }
 Vector2 Connection::getToPos() const {
   return {to.x, in.yPos};
 }
-void Connection::close() {
+void Connection::close() const {
   in.connection = nullptr;
 }
 void Connection::open() {

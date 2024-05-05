@@ -52,10 +52,10 @@ inline float EaseCubicIn(float t, float b, float c, float d) {
   return 0.5f * c * (t * t * t + 2.0f) + b;
 }
 inline bool CheckCollisionBezierRect(const Vector2 startPos, const Vector2 endPos, const Rectangle& rect,
-                                     int numPoints = 100) {
+                                     float numPoints = 100) {
   Vector2 current;
-  for (int i = 0; i <= numPoints; ++i) {
-    float t = static_cast<float>(i) / static_cast<float>(numPoints);
+  for (int i = 0; i <= static_cast<int>(numPoints); ++i) {
+    float t = static_cast<float>(i) / numPoints;
     current.x = startPos.x + t * (endPos.x - startPos.x);
     current.y = EaseCubicIn(t * numPoints, startPos.y, endPos.y - startPos.y, numPoints);
 

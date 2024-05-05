@@ -26,15 +26,15 @@
 
 Color Pin::getColor() const {
     switch (pinType) {
-      case PinType::BOOLEAN:
+      case BOOLEAN:
         return BLUE;
-      case PinType::STRING:
+      case STRING:
         return ORANGE;
-      case PinType::INTEGER:
+      case INTEGER:
         return RED;
-      case PinType::FLOAT:
+      case FLOAT:
         return SKYBLUE;
-      case PinType::DATA:
+      case DATA:
         return PURPLE;
     }
     return RED;

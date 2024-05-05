@@ -21,14 +21,17 @@
 #ifndef RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTTEMPLATES_H_
 #define RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTTEMPLATES_H_
 
-using StringComponentMap =
-    std::unordered_map<const char*, ComponentCreateFunc, cxstructs::Fnv1aHash, cxstructs::StrEqual>;
-using StringNodeMap =
-    std::unordered_map<const char*, NodeTemplate, cxstructs::Fnv1aHash, cxstructs::StrEqual>;
+using Comp = cxstructs::StrEqual;
+using Hash = cxstructs::Fnv1aHash;
+
+using ComponentMap = std::unordered_map<const char*, ComponentCreateFunc, Hash, Comp>;
+using NodeTemplateMap = std::unordered_map<const char*, NodeTemplate, Hash, Comp>;
+using NodeCreateMap = std::unordered_map<const char*, NodeCreateFunc, Hash, Comp>;
 
 struct Template {
-  StringComponentMap componentFactory;
-  StringNodeMap nodeFactory;
+  ComponentMap componentFactory;
+  NodeTemplateMap nodeTemplates;
+  NodeCreateMap nodeFactory;
 
   // Passed name only has to be valid until this function returns (copied)
   bool registerComponent(const char* name, ComponentCreateFunc func, const RaynodesPluginI& plugin);
@@ -41,12 +44,12 @@ struct Template {
     return nullptr;
   }
   // Passed template names only have to be valid until this function returns (copied)
-  bool registerNode(const char* name, const NodeTemplate& nt, const RaynodesPluginI& plugin);
+  bool registerNode(const NodeTemplate& nt, NodeCreateFunc func, const RaynodesPluginI& plugin);
   // Passed name only has to be valid until this function returns
   Node* createNode(const char* name) {
-    const auto it = nodeFactory.find(name);
-    if (it != nodeFactory.end()) {
-      auto* node = new Node(it->first);
+    const auto it = nodeTemplates.find(name);
+    if (it != nodeTemplates.end()) {
+      auto* node = nodeFactory[name](it->second);  // Has to exist
       for (const auto component : it->second.components) {
         if (component.component == nullptr) continue;  // We dont break for safety
         node->components.push_back(createComponent(component));

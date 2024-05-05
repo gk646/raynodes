@@ -20,28 +20,28 @@
 
 #include "StringToNumberC.h"
 
-void StringToNumberC::draw(EditorContext& ec, Node& parent) {
+void StringToNumberC::draw(EditorContext&  /**/, Node& /**/) {
 
 }
 
-void StringToNumberC::update(EditorContext& ec, Node& parent) {
-  auto inData = inputs[0].getData<PinType::STRING>();
+void StringToNumberC::update(EditorContext&  /**/, Node& /**/) {
+  const auto inData = inputs[0].getData<STRING>();
 
-  outputs[0].setData<PinType::FLOAT>(inData ? std::atof(inData) : 0.0);
-  outputs[1].setData<PinType::INTEGER>(inData ? std::atoi(inData) : 0L);
+  outputs[0].setData<FLOAT>(inData ? std::atof(inData) : 0.0);
+  outputs[1].setData<INTEGER>(inData ? std::atoi(inData) : 0L);
 }
 
-void StringToNumberC::onCreate(EditorContext& ec, Node& parent) {
-  addPinInput(PinType::STRING);
+void StringToNumberC::onCreate(EditorContext&  /**/, Node& /**/) {
+  addPinInput(STRING);
 
-  addPinOutput(PinType::FLOAT);
-  addPinOutput(PinType::INTEGER);
+  addPinOutput(FLOAT);
+  addPinOutput(INTEGER);
 }
 
-void StringToNumberC::save(FILE* file) {
+void StringToNumberC::save(FILE* /**/) {
   /*Not needed*/
 }
 
-void StringToNumberC::load(FILE* file) {
+void StringToNumberC::load(FILE* /**/) {
   /*Not needed*/
 }

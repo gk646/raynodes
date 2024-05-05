@@ -18,19 +18,50 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef DEFINES_H
-#define DEFINES_H
+#ifndef TYPES_H
+#define TYPES_H
 
-#define COMPONENTS_PER_NODE 6
-#define INPUT_PINS 3   // Max input pins for each component
-#define OUTPUT_PINS 3  // Max output pins for each component
-#define START_FPS 90
+#include <cstdint>
 
-// Defines for the plugin exports
-#ifdef _EXPORTING
-#  define EXPORT __declspec(dllexport)
-#else
-#  define EXPORT __attribute__((visibility("default")))
-#endif
+struct Ints {
+  uint16_t a;
+  uint16_t b;
+};
 
-#endif  //DEFINES_H
+struct Pointer {
+  void* data;
+  uint32_t size;
+};
+
+// Dont wanna include raylib everywhere
+
+struct Vec2 {
+  float x;
+  float y;
+};
+
+struct Vec3 {
+  float x;
+  float y;
+  float z;
+};
+
+struct Color4 {
+  unsigned char r;  // Color red value
+  unsigned char g;  // Color green value
+  unsigned char b;  // Color blue value
+  unsigned char a;  // Color alpha value
+};
+
+struct ComponentTemplate {
+  const char* label = nullptr;
+  const char* component = nullptr;
+};
+
+struct NodeTemplate {
+  const char* label = nullptr;
+  Color4 color = {0, 0, 0, 255};                      // BLACK
+  ComponentTemplate components[COMPONENTS_PER_NODE];  // Current limit
+};
+
+#endif  //TYPES_H

@@ -31,19 +31,23 @@ bool Template::registerComponent(const char* name, ComponentCreateFunc func, con
   return true;
 }
 
-bool Template::registerNode(const char* name, const NodeTemplate& nt, const RaynodesPluginI& plugin) {
-  if (nodeFactory.contains(name)) {
+bool Template::registerNode(const NodeTemplate& nt, NodeCreateFunc func, const RaynodesPluginI& plugin) {
+  if (nodeFactory.contains(nt.label)) {
     auto* format = "Naming collision: %s/%s wont be loaded. Please contact the plugin author.\n";
-    fprintf(stderr, format, plugin.name, name);
+    fprintf(stderr, format, plugin.name, nt.label);
     return false;
   }
-  NodeTemplate newTemplate;  // Allocate and copy the given component names
+  // Deep copy the template
+  NodeTemplate newTemplate;
+  newTemplate.color = nt.color;
+  newTemplate.label = cxstructs::str_dup(nt.label);
   for (int i = 0; i < COMPONENTS_PER_NODE; ++i) {
     if (nt.components[i].component == nullptr) continue;  // We dont break for safety
     newTemplate.components[i].component = cxstructs::str_dup(nt.components[i].component);
     newTemplate.components[i].label = cxstructs::str_dup(nt.components[i].label);
   }
 
-  nodeFactory.insert({cxstructs::str_dup(name), newTemplate});  // Allocate and copy the name
+  nodeTemplates.insert({newTemplate.label, newTemplate});
+  nodeFactory.insert({newTemplate.label, func});
   return true;
 }

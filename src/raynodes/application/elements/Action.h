@@ -69,8 +69,8 @@ struct Action {
 
 struct NewCanvasAction final : Action {
   NewCanvasAction() : Action(NEW_CANVAS_ACTION) {}
-  void undo(EditorContext& ec) override {}
-  void redo(EditorContext& ec) override {}
+  void undo(EditorContext& /**/) override {}
+  void redo(EditorContext& /**/) override {}
 };
 
 struct TextAction final : Action {

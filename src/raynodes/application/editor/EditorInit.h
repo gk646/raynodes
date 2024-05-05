@@ -50,7 +50,8 @@ inline void SetupDisplay(EditorContext& ec) {
   SetWindowMinSize(640, 480);
 
   // Center the window on the screen
-  SetWindowPosition((monitorWidth - screenWidth) / 2, (monitorHeight - screenHeight) / 2);
+  SetWindowPosition((static_cast<int>(monitorWidth) - screenWidth) / 2,
+                    (static_cast<int>(monitorHeight) - screenHeight) / 2);
 
   SetExitKey(0);
   DisableEventWaiting();
