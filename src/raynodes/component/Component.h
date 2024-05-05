@@ -128,15 +128,15 @@ struct Component {
   [[nodiscard]] float getWidth() const { return width; }
   [[nodiscard]] float getHeight() const { return height; }
   [[nodiscard]] Rectangle getBounds() const;
-  [[nodiscard]] int getPinIndex(Pin* p) const {
-    if (p->direction == INPUT) {
+  [[nodiscard]] int getPinIndex(const Pin& p) const {
+    if (p.direction == INPUT) {
       for (int i = 0; i < inputs.size(); i++) {
-        if (&inputs[static_cast<int8_t>(i)] == static_cast<InputPin*>(p)) return i;
+        if (&inputs[static_cast<int8_t>(i)] == &p) return i;
       }
       return -1;
     }
     for (int i = 0; i < outputs.size(); i++) {
-      if (&outputs[static_cast<int8_t>(i)] == static_cast<OutputPin*>(p)) return i;
+      if (&outputs[static_cast<int8_t>(i)] == &p) return i;
     }
     return -1;
   }

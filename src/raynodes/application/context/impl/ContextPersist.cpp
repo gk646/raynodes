@@ -43,7 +43,7 @@ int SaveNodes(FILE* file, EditorContext& ec) {
   cxstructs::io_save_section(file, "Nodes");
   int count = 0;
   for (const auto n : ec.core.nodes) {
-    n->saveState(file);
+    Node::SaveState(file, *n);
     cxstructs::io_save_newline(file);
     count++;
   }
@@ -55,16 +55,16 @@ int SaveConnections(FILE* file, EditorContext& ec) {
   const auto& connections = ec.core.connections;
   for (const auto conn : connections) {
     Node& fromNode = conn->fromNode;  //Output Node
-    Component& from = conn->from;
-    cxstructs::io_save(file, fromNode.id);
+    const Component* from = conn->from;
+    cxstructs::io_save(file, fromNode.uID);
     cxstructs::io_save(file, fromNode.getComponentIndex(from));
-    cxstructs::io_save(file, from.getPinIndex(&conn->out));
+    cxstructs::io_save(file, fromNode.getPinIndex(from, conn->out));
 
     Node& toNode = conn->toNode;  //Input Node
-    Component& to = conn->to;
-    cxstructs::io_save(file, toNode.id);
+    const Component* to = conn->to;
+    cxstructs::io_save(file, toNode.uID);
     cxstructs::io_save(file, toNode.getComponentIndex(to));
-    cxstructs::io_save(file, to.getPinIndex(&conn->in));
+    cxstructs::io_save(file, toNode.getPinIndex(to, conn->in));
     //End with newline
     cxstructs::io_save_newline(file);
     count++;
@@ -77,6 +77,9 @@ void LoadEditorData(FILE* file, EditorContext& ec) {
   cxstructs::io_load(file, ec.display.camera.target.y);
   cxstructs::io_load(file, ec.display.camera.zoom);
   cxstructs::io_load(file, ec.ui.showGrid);
+  cxstructs::io_load_newline(file);  // Node count
+  cxstructs::io_load_newline(file);  // Connection count
+
   cxstructs::io_load_newline(file);
 }
 int LoadNodes(FILE* file, EditorContext& ec) {
@@ -91,29 +94,47 @@ int LoadNodes(FILE* file, EditorContext& ec) {
       cxstructs::io_load_newline(file, true);
       continue;
     }
-    newNode->loadState(file);
-    ec.core.UID = std::max(ec.core.UID, static_cast<NodeID>(newNode->id + 1));
+    Node::LoadState(file, *newNode);
+    ec.core.UID = std::max(ec.core.UID, static_cast<NodeID>(newNode->uID + 1));
     cxstructs::io_load_newline(file);
     count++;
   }
   return count;
 }
+
 bool IsValidConnection(int maxNodeID, int fromNode, int from, int out, int toNode, int to, int in) {
-  return fromNode >= 0 && fromNode < maxNodeID && from != -1 && out != -1 && toNode >= 0 && toNode < maxNodeID
-         && to != -1 && in != -1;
+  const bool correctNode = fromNode >= 0 && fromNode < maxNodeID && toNode >= 0 && toNode < maxNodeID;
+  const bool correctFromComponent = (from >= 0 && from < COMPS_PER_NODE) || from == -1;
+  const bool correctToComponent = (to >= 0 && to < COMPS_PER_NODE) || to == -1;
+  return correctNode && correctFromComponent && correctToComponent && out != -1 && in != -1;
 }
+
 void CreateNewConnection(EditorContext& ec, int fromNodeID, int fromI, int outI, int toNodeID, int toI,
                          int inI) {
   const auto& nodeMap = ec.core.nodeMap;
+  // We use int8_t as size_type to save space
   Node& fromNode = *nodeMap.at(static_cast<NodeID>(fromNodeID));
-  Component& from = *fromNode.components[static_cast<int8_t>(fromI)];
-  OutputPin& out = from.outputs[static_cast<int8_t>(outI)];
+
+  Component* from = nullptr;
+  OutputPin* out;
+  if (fromI != -1) {
+    from = fromNode.components[static_cast<int8_t>(fromI)];
+    out = &from->outputs[static_cast<int8_t>(outI)];
+  } else {
+    out = &fromNode.outputs[static_cast<int8_t>(outI)];
+  }
 
   Node& toNode = *nodeMap.at(static_cast<NodeID>(toNodeID));
-  Component& to = *toNode.components[static_cast<int8_t>(toI)];  // We use int8_t as size_type to save space
-  InputPin& in = to.inputs[static_cast<int8_t>(inI)];
+  Component* to = nullptr;
+  InputPin* in = nullptr;
+  if (toI != -1) {
+    to = toNode.components[static_cast<int8_t>(toI)];
+    in = &to->inputs[static_cast<int8_t>(inI)];
+  } else if (inI == 0) {
+    in = &toNode.nodeIn;
+  }
 
-  ec.core.addConnection(new Connection(fromNode, from, out, toNode, to, in));
+  ec.core.addConnection(new Connection(fromNode, from, *out, toNode, to, *in));
 }
 
 int LoadConnections(FILE* file, EditorContext& ec) {
