@@ -36,7 +36,7 @@ struct Connection {
   [[nodiscard]] Vector2 getFromPos() const;
   [[nodiscard]] Vector2 getToPos() const;
   [[nodiscard]] Color getConnectionColor() const;
-  void close();
+  void close() const;
   void open();
 };
 

@@ -20,7 +20,6 @@
 
 #include "application/EditorContext.h"
 
-
 namespace {
 void AssignConnection(EditorContext& ec, Node& fromNode, Component& from, OutputPin& out, Node& toNode,
                       Component& to, InputPin& in) {
@@ -29,7 +28,7 @@ void AssignConnection(EditorContext& ec, Node& fromNode, Component& from, Output
 
   printf("Connection assigned \n");
 
-  ec.core.addConnection(conn); //Internally opens it
+  ec.core.addConnection(conn);  //Internally opens it
 
   //Call the event functions
   from.onConnectionAdded(ec, *conn);
@@ -49,7 +48,7 @@ void FindDropPin(EditorContext& ec, Node& fromNode, Component& from, Pin* dragge
     if (CheckCollisionPointRec(worldMouse, nodeBounds)) [[unlikely]] {
       //Allow both types to connect to each other
       if (isOutputPin) {
-        auto posX = n->position.x;
+        auto posX = n->x;
         for (auto* to : n->components) {
           for (auto& in : to->inputs) {
             if (CheckCollisionPointCircle(worldMouse, {posX, in.yPos}, radius)) {
@@ -59,7 +58,7 @@ void FindDropPin(EditorContext& ec, Node& fromNode, Component& from, Pin* dragge
           }
         }
       } else {
-        auto posX = n->position.x + n->size.x;
+        auto posX = n->x + n->width;
         for (auto* to : n->components) {
           for (auto& out : to->outputs) {
             if (CheckCollisionPointCircle(worldMouse, {posX, out.yPos}, radius)) {

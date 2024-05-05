@@ -27,18 +27,29 @@
 
 #include "blocks/Pin.h"
 
+#pragma warning(push)
+#pragma warning(disable : 4100)  // unreferenced formal parameter
+
+// ==============================
+// COMPONENT INTERFACE
+// ==============================
+
 //Abstract interface to create dynamic components
-//Rule 1: Stay within bounds and fit them to the component
+// .....................................................................
 //
-//Rule 2: Use the provided input functions over raylib's:
-//  - EditorContext::Input::isMouse___(int key);
-//  - if(ec.input.isMousePressed(MOUSE_BUTTON_LEFT){
+// Rule 1: Stay within bounds and fit them to the component
+// .....................................................................
 //
-//  These functions respect the ui layers, otherwise you will get weird interactions
+// Rule 2: Use the provided input functions over raylib's:
+//   - EditorContext::Input::isMousePressed(int key);
+//   - if(ec.input.isMousePressed(MOUSE_BUTTON_LEFT){
+// These functions respect the UI layers, otherwise you will get weird interactions
+// .....................................................................
+//
 
 struct Component {
-  cxstructs::StackVector<InputPin, INPUT_PINS> inputs{};     //Current limit
-  cxstructs::StackVector<OutputPin, OUTPUT_PINS> outputs{};  //Current limit
+  cxstructs::StackVector<InputPin, INPUT_PINS, int8_t> inputs{};     //Current limit
+  cxstructs::StackVector<OutputPin, OUTPUT_PINS, int8_t> outputs{};  //Current limit
   const char* const id;       //Uniquely identifiyin name id (constant allocated ptr)
   const char* const label;    //Display name (and access name)
   float x = 0;                //Internal state (don't change, only read)
@@ -61,7 +72,6 @@ struct Component {
   // Guaranteed to be called once per tick (on the main thread) (not just when focused)
   virtual void update(EditorContext& ec, Node& parent) = 0;
   // Use the symmetric helpers : io_save(file,myFloat)...
-  // IMPORTANT: Save your data values first then misc component data (cx_save(file,myFloat), then cx_save(file,additionalData))
   virtual void save(FILE* file) = 0;
   //Use the symmetric helpers : io_load(file,myFloat)...
   virtual void load(FILE* file) = 0;
@@ -121,14 +131,17 @@ struct Component {
   [[nodiscard]] int getPinIndex(Pin* p) const {
     if (p->direction == INPUT) {
       for (int i = 0; i < inputs.size(); i++) {
-        if (&inputs[i] == static_cast<InputPin*>(p)) return i;
+        if (&inputs[static_cast<int8_t>(i)] == static_cast<InputPin*>(p)) return i;
       }
       return -1;
     }
     for (int i = 0; i < outputs.size(); i++) {
-      if (&outputs[i] == static_cast<OutputPin*>(p)) return i;
+      if (&outputs[static_cast<int8_t>(i)] == static_cast<OutputPin*>(p)) return i;
     }
     return -1;
   }
 };
+
+#pragma warning(pop)
+
 #endif  //RAYNODES_SRC_NODES_COMPONENT_H_

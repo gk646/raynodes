@@ -62,12 +62,16 @@ Node* Core::createNode(EditorContext& ec, const char* name, const Vector2 worldP
 
   if (!newNode) return nullptr;
 
-  newNode->position = worldPos;
+  newNode->x = worldPos.x;
+  newNode->y = worldPos.y;
   newNode->id = hint == 0 ? UID : static_cast<NodeID>(hint);
 
   nodes.push_back(newNode);
   nodeMap.insert({newNode->id, newNode});
   UID = getNextID();
+
+  // Call event functions
+  newNode->onCreation(ec);
 
   for (const auto c : newNode->components) {
     c->onCreate(ec, *newNode);
@@ -94,14 +98,14 @@ void Core::removeNode(EditorContext& ec, NodeID id) {
 void Core::paste(EditorContext& ec) {
 
   if (copiedNodes.empty()) return;
-  const Vector2 delta = {ec.logic.worldMouse.x - copiedNodes[0]->position.x,
-                         ec.logic.worldMouse.y - copiedNodes[0]->position.y};
+  const Vector2 delta = {ec.logic.worldMouse.x - copiedNodes[0]->x,
+                         ec.logic.worldMouse.y - copiedNodes[0]->y};
 
   const auto action = new NodeCreateAction(static_cast<int>(copiedNodes.size()) + 1);
   for (const auto n : copiedNodes) {
     const auto newNode = n->clone(ec.core.getNextID());
-    newNode->position.x += delta.x;
-    newNode->position.y += delta.y;
+    newNode->x += delta.x;
+    newNode->y += delta.y;
     action->createdNodes.push_back(newNode);
     ec.core.insertNode(ec, newNode->id, newNode);
   }
@@ -181,6 +185,7 @@ void Core::addEditorAction(EditorContext& ec, Action* action) {
   }
 }
 void Core::undo(EditorContext& ec) {
+  hasUnsavedChanges = true;  // Just set the flag for safety
   if (currentActionIndex >= 1) {
     // Check there's an action to undo
     actionQueue[currentActionIndex]->undo(ec);
