@@ -27,7 +27,6 @@
 #include "application/EditorContext.h"
 #include "application/elements/Action.h"
 #include "shared/fwd.h"
-#include "shared/rayutils.h"
 
 // Those are only used in this translation unit
 static constexpr float PADDING = 3;
@@ -40,65 +39,35 @@ namespace {
 void UpdateNodePins(EditorContext& ec, Node& n) {
   if (!ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) return;
 
-  // y position is assigned at draw - we can use it
-  static const auto checkPin = [&](float x, Pin& p) {
-    if (CheckCollisionPointCircle(ec.logic.worldMouse, {x, p.yPos}, Pin::PIN_SIZE / 2.0F)) {
-      ec.input.consumeMouse();
-      ec.logic.assignDraggedPin(x, p.yPos, n, nullptr, p);
-      return true;
-    }
-    return false;
-  };
+  if (Pin::UpdatePin(ec, n, nullptr, n.nodeIn, n.x)) return;
 
-  if (checkPin(n.x, n.nodeIn)) return;
   for (auto& p : n.outputs) {
-    if (checkPin(n.x + n.width, p)) return;
+    if (Pin::UpdatePin(ec, n, nullptr, p, n.x + n.width)) return;
   }
 }
 
-void DrawNodePins(Node& n) {
-  // Draw and assign the pin y position
-  static constexpr auto drawPin = [](Pin& p, float x, float y) {
-    DrawCircleV({x, y}, Pin::PIN_SIZE / 2.0F, p.getColor());
-    p.yPos = y;
-  };
-
+void DrawNodePins(EditorContext& ec, Node& n) {
   float posY = n.y + OFFSET_Y / 2.0F;
+  const auto& font = ec.display.editorFont;
+  const bool showText = ec.input.isKeyDown(KEY_LEFT_ALT);
 
-  drawPin(n.nodeIn, n.x, posY);
+  Pin::DrawPin(n.nodeIn, font, n.x, posY, showText);
   for (auto& p : n.outputs) {
-    drawPin(p, n.x + n.width, posY);
+    Pin::DrawPin(p, font, n.x + n.width, posY, showText);
     posY += Pin::PIN_SIZE;
   }
 }
 
-bool CheckPinCollisions(EditorContext& ec, Node& n, Component* c) {
-  const auto worldMouse = ec.logic.worldMouse;
-  float radius = Pin::PIN_SIZE / 2.0F;
-  float posX = n.x;
-
-  static const auto checkAndAssign = [&](auto& pins, float xPosition) {
-    for (auto& p : pins) {
-      if (CheckCollisionPointCircle(worldMouse, {xPosition, p.yPos}, radius)) {
-        ec.logic.assignDraggedPin(xPosition, p.yPos, n, c, p);
-        return true;
-      }
-    }
-    return false;
-  };
-
+void CheckPinCollisions(EditorContext& ec, Node& n, Component* c) {
   // Inputs on the left
-  if (checkAndAssign(c->inputs, posX)) {
-    return true;
+  for (auto& p : c->inputs) {
+    if (Pin::UpdatePin(ec, n, c, p, n.x)) return;
   }
 
   // Outputs on the right
-  posX += n.width;
-  if (checkAndAssign(c->outputs, posX)) {
-    return true;
+  for (auto& p : c->outputs) {
+    if (Pin::UpdatePin(ec, n, c, p, n.x + n.width)) return;
   }
-
-  return false;
 }
 
 void UpdateComponent(EditorContext& ec, Node& n, Component* c) {
@@ -108,13 +77,9 @@ void UpdateComponent(EditorContext& ec, Node& n, Component* c) {
   //Pins are partly outside so need to check them regardless of hover state
   if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
     //First check if the mouse is close to the rect and mouse is pressed
-    //TODO this is done for all components / only needs to be done once
+    //TODO this check is done for all components / only needs to be done once
     if (CheckCollisionPointRec(worldMouse, n.getExtendedBounds(Pin::PIN_SIZE))) {
-      if (CheckPinCollisions(ec, n, c)) {
-        //Consume input already
-        ec.input.consumeKeyboard();
-        ec.input.consumeMouse();
-      }
+      CheckPinCollisions(ec, n, c);
     }
   }
 
@@ -225,37 +190,32 @@ void HandleDrag(Node& n, EditorContext& ec, auto& selectedNodes, auto worldMouse
 }
 
 void DrawComponentPins(EditorContext& ec, Component& c, float dx, float startIn, float startOut, float w) {
-  constexpr float pinRadius = Pin::PIN_SIZE / 2.0f;
-  constexpr float textOff = Pin::PIN_SIZE * 1.5F;
-  const bool isAltDown = ec.input.isKeyDown(KEY_LEFT_ALT);
-
-  static const auto drawPin = [&](auto& pin, float x, float& y, float textOffset) {
-    const auto middlePos = Vector2{x, y + pinRadius};
-    DrawCircleV(middlePos, pinRadius, pin.getColor());
-    if (isAltDown) {
-      const auto txt = Pin::TypeToString(pin.pinType);
-      const auto textPos = Vector2{middlePos.x + textOffset, middlePos.y - pinRadius};
-      DrawCenteredText(ec.display.editorFont, txt, textPos, Pin::PIN_SIZE + 2, 0, WHITE);
-    }
-    pin.yPos = y + pinRadius;
-    y += Pin::PIN_SIZE;
-  };
-
+  const bool showText = ec.input.isKeyDown(KEY_LEFT_ALT);
+  const auto& font = ec.display.editorFont;
   // Draw Input Pins
   float currentY = startIn;
   for (auto& p : c.inputs) {
-    drawPin(p, dx, currentY, -textOff);
+    Pin::DrawPin(p, font, dx, currentY, showText);
+    currentY += Pin::PIN_SIZE;
   }
 
   // Draw Output Pins
   currentY = startOut;
   const float outputX = dx + w;  // Pins on the right edge
   for (auto& p : c.outputs) {
-    drawPin(p, outputX, currentY, textOff);
+    Pin::DrawPin(p, font, outputX, currentY, showText);
+    currentY += Pin::PIN_SIZE;
   }
 }
 
 void DrawComponent(EditorContext& ec, Node& n, Component& c, float dx, float& dy, float width) {
+  if (!c.internalLabel) {
+    const auto fs = ec.display.fontSize;
+    Vector2 textPos = {n.x + PADDING, dy};
+    DrawTextEx(ec.display.editorFont, c.label, textPos, fs, 0.0F, UI::COLORS[UI_LIGHT]);
+    dy += fs;
+  }
+
   int maxPins = std::max(c.inputs.size(), c.outputs.size());
   float componentHeight = c.getHeight();
 
@@ -313,27 +273,22 @@ void Node::Draw(EditorContext& ec, Node& n) {
   float startY = n.y + PADDING + OFFSET_Y;
 
   // Draw node body
-  DrawRectangleRec(bounds, n.getColor());
+  DrawRectangleRec(bounds, UI::COLORS[N_BACK_GROUND]);
 
   // Draw hover outline
   if (n.isHovered) {
-    DrawRectangleLinesEx(bounds, 1, ColorAlpha(YELLOW, 0.7));
+    DrawRectangleLinesEx(bounds, 1, ColorAlpha(UI::COLORS[UI_LIGHT], 0.7));
   }
 
   // Draw header text
-  DrawTextEx(display.editorFont, n.name, headerPos, display.fontSize, 1.0F, WHITE);
+  DrawTextEx(display.editorFont, n.name, headerPos, display.fontSize, 1.0F, UI::COLORS[UI_LIGHT]);
 
   // Draw Node pins
-  DrawNodePins(n);
+  DrawNodePins(ec, n);
 
   // Iterate over components and draw them
   const float initialY = startY;
   for (const auto& component : n.components) {
-    if (!component->internalLabel) {
-      Vector2 textPos = {n.x + PADDING, startY};
-      DrawTextEx(display.editorFont, component->label, textPos, display.fontSize, 0.0F, WHITE);
-      startY += display.fontSize;
-    }
     DrawComponent(ec, n, *component, n.x, startY, n.width);
   }
 

@@ -34,7 +34,6 @@ void HandleNewNode(EditorContext& ec, Vector2 pos, const char* name) {
 namespace Editor {
 inline void DrawGrid(const EditorContext& ec) {
   if (!ec.ui.showGrid) return;
-  constexpr Color color{58, 68, 102, 255};
   const float baseGridSpacing = ec.display.gridSpacing;
   const auto& camera = ec.display.camera;
   // Calculate the visible world area
@@ -54,7 +53,7 @@ inline void DrawGrid(const EditorContext& ec) {
     // Convert world coordinates to screen coordinates for drawing
     Vector2 start = GetWorldToScreen2D({x, topLeft.y}, camera);
     Vector2 end = GetWorldToScreen2D({x, bottomRight.y}, camera);
-    DrawLineV(start, end, color);
+    DrawLineV(start, end, UI::COLORS[E_GRID]);
   }
 
   // Draw horizontal grid lines
@@ -62,7 +61,7 @@ inline void DrawGrid(const EditorContext& ec) {
     // Convert world coordinates to screen coordinates for drawing
     Vector2 start = GetWorldToScreen2D({topLeft.x, y}, camera);
     Vector2 end = GetWorldToScreen2D({bottomRight.x, y}, camera);
-    DrawLineV(start, end, color);
+    DrawLineV(start, end, UI::COLORS[E_GRID]);
   }
 }
 inline void DrawContextMenu(EditorContext& ec) {
@@ -80,7 +79,7 @@ inline void DrawContextMenu(EditorContext& ec) {
   Vector2 drawPos{pos.x, pos.y};
 
   // Draw main menu background
-  DrawRectanglePro(menuRect, {0, 0}, 0, ColorAlpha(BLACK, 0.5));
+  DrawRectangleRounded(menuRect, 0.1F, 10, ColorAlpha(UI::COLORS[UI_DARK], 0.7));
 
   const ContextMenuCategory* hoveredCategory = nullptr;
   bool closeToMenu = false;
@@ -93,7 +92,7 @@ inline void DrawContextMenu(EditorContext& ec) {
     // Detect if mouse is over this category
     if (CheckCollisionPointRec(mouse, textRect)
         || (CheckCollisionPointRec(mouse, categoryRect) && category.isOpen)) {
-      if(hoveredCategory != nullptr) {
+      if (hoveredCategory != nullptr) {
         for (auto& category2 : categories) {
           category2.isOpen = false;
         }
@@ -113,26 +112,27 @@ inline void DrawContextMenu(EditorContext& ec) {
 
     // Highlight the category if it's open
     if (category.isOpen) {
-      DrawRectangleRec(textRect, hightLightColor);
+      DrawRectangleRounded(textRect, 0.1F, 10, hightLightColor);
     }
 
-    DrawTextEx(font, category.name, {drawPos.x + padding, drawPos.y + padding}, fs, 1.0F, WHITE);
+    DrawTextEx(font, category.name, {drawPos.x + padding, drawPos.y + padding}, fs, 0.5F,
+               UI::COLORS[UI_LIGHT]);
 
     // Draw the category's nodes if it's open
     if (category.isOpen && !category.nodes.empty()) {
       Vector2 drawPosC = {drawPos.x + menuWidth, drawPos.y};
-      DrawRectangleRec(categoryRect, ColorAlpha(BLACK, 0.6));
+      DrawRectangleRounded(categoryRect, 0.1F, 10, ColorAlpha(UI::COLORS[UI_DARK], 0.7));
       for (const auto& name : category.nodes) {
         const Rectangle nodeTextRect = {drawPosC.x, drawPosC.y, menuWidth, fs + padding};
         if (CheckCollisionPointRec(mouse, nodeTextRect)) {
-          DrawRectangleRec(nodeTextRect, hightLightColor);
+          DrawRectangleRounded(nodeTextRect, 0.1F, 10, hightLightColor);
           if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             HandleNewNode(ec, pos, name);
             hoveredCategory = nullptr;
             break;
           }
         }
-        DrawTextEx(font, name, {drawPosC.x + padding, drawPosC.y + padding}, fs, 1.0F, WHITE);
+        DrawTextEx(font, name, {drawPosC.x + padding, drawPosC.y + padding}, fs, 0.5F, UI::COLORS[UI_LIGHT]);
         drawPosC.y += fs + padding;
       }
     }
@@ -162,8 +162,8 @@ inline void DrawActions(EditorContext& ec) {
 
   auto rect = Rectangle{x, y, width, height};
 
-  DrawRectangleRec(rect, ColorAlpha(DARKGRAY, 0.7F));
-  DrawRectangleLinesEx(rect, padding / 4.0F, ColorAlpha(GRAY, 0.7F));
+  DrawRectangleRec(rect, ColorAlpha(UI::COLORS[UI_DARK], 0.7F));
+  DrawRectangleLinesEx(rect, padding / 4.0F, ColorAlpha(UI::COLORS[UI_MEDIUM], 0.7F));
 
   // Adjust the start index to ensure the current action is always on screen
   const int totalActions = static_cast<int>(ec.core.actionQueue.size());
@@ -181,10 +181,10 @@ inline void DrawActions(EditorContext& ec) {
     const bool isCurrentOrAbove = i <= currActionIdx;
 
     // All text is white expect past actions
-    const Color textColor = isCurrentOrAbove ? RAYWHITE : BLACK;
+    const Color textColor = isCurrentOrAbove ? UI::COLORS[UI_LIGHT] : UI::COLORS[E_GRID];
 
     // Only current events is blue, past ones gray
-    const Color highLightColor = isCurrentAction ? BLUE : GRAY;
+    const Color highLightColor = isCurrentAction ? UI::COLORS[UI_LIGHT] : UI::COLORS[UI_MEDIUM];
 
     // Draw background highlight for the current action
     if (isCurrentOrBelow) {
@@ -233,37 +233,50 @@ inline void DrawTopBar(EditorContext& ec) {
   UI::invokeViewMenu(ec, res);
 }
 inline void DrawStatusBar(EditorContext& ec) {
-  float x = 0;
   constexpr float height = 20.0F;
   constexpr float y = 1080 - height;
-
+  const char* text;
   // Status bar draw func
   constexpr auto statusBar = [](EditorContext& ec, float& x, float y, float w, float h, const char* txt) {
     GuiStatusBar(ec.display.getFullyScaled({x, y, w, h}), txt);
     x += w;
   };
 
-  statusBar(ec, x, y, 1200.0F, height, nullptr);
+  // Draw base bar
+  GuiStatusBar(ec.display.getFullyScaled({0, y, 1920.0F, height}), "");
 
-  // Show mouse position
-  auto* text = String::FormatText("#021# %d/%d", (int)ec.logic.worldMouse.x, (int)ec.logic.worldMouse.y);
-  statusBar(ec, x, y, 150.0F, height, text);
-
-  const auto lastWidth = 1920.0F - x;
-  statusBar(ec, x, y, lastWidth, height, nullptr);
-
-  // Draw the Zoom slider
-  const auto bounds = ec.display.getFullyScaled({x - lastWidth + 25, y, lastWidth - 50, height});
-  if (GuiSliderBar(bounds, nullptr, nullptr, &ec.display.camera.zoom, 0.1F, 3.0F)) {
-    ec.input.consumeMouse();
+  // Left panels
+  {
+    float leftPanels = 0.0F;
+    text = String::FormatText("#098# Nodes: %d", (int)ec.core.nodes.size());
+    statusBar(ec, leftPanels, y, 150.0F, height, text);
+    text = String::FormatText("#070# Connections: %d", (int)ec.core.connections.size());
+    statusBar(ec, leftPanels, y, 150.0F, height, text);
   }
 
-  // Draw zoom labels
-  if (GuiButton(ec.display.getFullyScaled({x - lastWidth, y, 25, height}), "#221#")) {
-    ec.display.zoomOut();
-  }
-  if (GuiButton(ec.display.getFullyScaled({x - 25, y, 25, height}), "#220#")) {
-    ec.display.zoomIn();
+  // Right panels
+  {
+    // Show mouse position
+    float rightPanels = 1200.0F;
+    text = String::FormatText("#021# %d/%d", (int)ec.logic.worldMouse.x, (int)ec.logic.worldMouse.y);
+    statusBar(ec, rightPanels, y, 150.0F, height, text);
+
+    const auto lastWidth = 1920.0F - rightPanels;
+    statusBar(ec, rightPanels, y, lastWidth, height, nullptr);
+
+    // Draw the Zoom slider
+    const auto bounds = ec.display.getFullyScaled({rightPanels - lastWidth + 25, y, lastWidth - 50, height});
+    if (GuiSliderBar(bounds, nullptr, nullptr, &ec.display.camera.zoom, 0.1F, 3.0F)) {
+      ec.input.consumeMouse();
+    }
+
+    // Draw zoom labels
+    if (GuiButton(ec.display.getFullyScaled({rightPanels - lastWidth, y, 25, height}), "#221#")) {
+      ec.display.zoomOut();
+    }
+    if (GuiButton(ec.display.getFullyScaled({rightPanels - 25, y, 25, height}), "#220#")) {
+      ec.display.zoomIn();
+    }
   }
 }
 inline void DrawUnsavedChanges(EditorContext& ec) {

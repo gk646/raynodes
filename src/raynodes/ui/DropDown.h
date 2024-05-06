@@ -26,6 +26,8 @@
 #include <string>
 #include <vector>
 
+// This class is need as raygui controls dont work in worldspace -> raygui functions still use screen space mouse
+
 struct DropDown {
   std::vector<std::string> items;
   float x, y, w, h;  // no <raylib> compatibility

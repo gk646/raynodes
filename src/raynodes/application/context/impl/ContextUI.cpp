@@ -20,6 +20,7 @@
 
 #include "application/EditorContext.h"
 
+
 void UI::invokeFileMenu(EditorContext& ec, int i) {
   if (i == -1 || i == 0) return;
   if (i == 1) ec.core.newFile(ec);

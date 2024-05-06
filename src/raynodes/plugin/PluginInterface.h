@@ -26,9 +26,26 @@
 #pragma warning(push)
 #pragma warning(disable : 4100)  // unreferenced formal parameter
 
-//The raynodes plugin interface
+// ==============================
+// PLUGIN INTERFACE
+// ==============================
+
+// The raynodes plugin interface to dynamically add functionality to exposed system of the editor
+
+//.....................................................................
+// Rule 1: Include this at the bottom to export the plugin function
+/*
+extern "C" EXPORT inline RaynodesPluginI* CreatePlugin() {
+  return new MyPlugin();
+}
+*/
+//.....................................................................
+//
+// Rule 2: Any names must NOT exceed 16 characters (Labels or identifiers).
+// .....................................................................
+
 struct RaynodesPluginI {
-  const char* name = nullptr;  //Will be set automatically at runtime (to the file name, for clarity)
+  const char* name = nullptr;  // Set to the filename at runtime
   virtual ~RaynodesPluginI() = default;
   // Called once after its been loaded
   virtual void onLoad(EditorContext& ec) {}
@@ -37,15 +54,6 @@ struct RaynodesPluginI {
   // Called once at the correct time to register its nodes
   virtual void registerNodes(NodeRegister& nr) {}
 };
-
-// ====IMPORTANT====:
-/*Include this at the bottom to export the function
-.....................................................................
-
-extern "C" EXPORT inline RaynodesPluginI* CreatePlugin() {
-  return new MyPlugin();
-}
-.....................................................................*/
 
 //-----------EXAMPLE-----------//
 /*

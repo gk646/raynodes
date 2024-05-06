@@ -27,19 +27,18 @@
 
 // Special interfaces to capsulate the registration
 struct ComponentRegister {
-  EditorContext& ec;
-  RaynodesPluginI& plugin;
-  int errorCount = 0;
-
   // Register a component with just a name and the its type
   // IMPORTANT: Name has to be unique! - errors will be shown when plugin is loaded
   template <class ComponentType>
-  bool registerComponent(const char* name) {
-    return registerComponent(name, GetCreateFunc<ComponentType>());
+  bool registerComponent(const char* id) {
+    return registerComponent(id, GetCreateFunc<ComponentType>());
   }
 
+  ComponentRegister(EditorContext& ec, RaynodesPluginI& plugin) : ec(ec), plugin(plugin), errorCount(0) {}
+  [[nodiscard]] int getErrors() const { return errorCount; }
+
  private:
-  bool registerComponent(const char* name, ComponentCreateFunc func);
+  bool registerComponent(const char* id, ComponentCreateFunc func);
 
   // Generates the createFunction
   template <class ComponentType>
@@ -48,23 +47,26 @@ struct ComponentRegister {
       return new ComponentType(ct);
     };
   }
+
+  EditorContext& ec;
+  RaynodesPluginI& plugin;
+  int errorCount;
 };
 
 struct NodeRegister {
-  EditorContext& ec;
-  RaynodesPluginI& plugin;
-  int errorCount = 0;
-
   // Register a node with a "name" and the components specified directly - optional header color
-  bool registerNode(const char* name, const std::initializer_list<ComponentTemplate>& components,
+  bool registerNode(const char* id, const std::initializer_list<ComponentTemplate>& components,
                     Color4 color = {0, 0, 0, 255});
 
   // Register a custom node by specifying its type
   template <class CustomNodeType>
-  bool registerCustomNode(const char* name, const std::initializer_list<ComponentTemplate>& components,
+  bool registerCustomNode(const char* id, const std::initializer_list<ComponentTemplate>& components,
                           Color4 color = {0, 0, 0, 255}) {
-    return registerNode(CreateTemplate(name, components, color), GetCreateFunc<CustomNodeType>());
+    return registerNode(CreateTemplate(id, components, color), GetCreateFunc<CustomNodeType>());
   }
+
+  NodeRegister(EditorContext& ec, RaynodesPluginI& plugin) : ec(ec), plugin(plugin), errorCount(0) {}
+  [[nodiscard]] int getErrors() const { return errorCount; }
 
  private:
   using ComponentDefinition = std::initializer_list<ComponentTemplate>;
@@ -72,12 +74,16 @@ struct NodeRegister {
   // Generates the createFunction
   template <class CustomNodeType>
   static NodeCreateFunc GetCreateFunc() {
-    return [](const NodeTemplate& nt, Vec2 pos,NodeID id) -> Node* {
-      return new CustomNodeType(nt,pos,id);
+    return [](const NodeTemplate& nt, Vec2 pos, NodeID id) -> Node* {
+      return new CustomNodeType(nt, pos, id);
     };
   }
   // Registers a node with name "name" with the components specified in the template
   bool registerNode(const NodeTemplate& nt, NodeCreateFunc nodeCreateFunc);
+
+  EditorContext& ec;
+  RaynodesPluginI& plugin;
+  int errorCount;
 };
 
 #endif  //REGISTERINTERFACE_H

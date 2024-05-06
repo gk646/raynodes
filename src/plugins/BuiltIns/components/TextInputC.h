@@ -18,19 +18,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef RAYNODES_SRC_NODES_ELEMENTS_TEXTINPUTFIELD_H_
-#define RAYNODES_SRC_NODES_ELEMENTS_TEXTINPUTFIELD_H_
+#ifndef TEXTINPUTC_H
+#define TEXTINPUTC_H
 
 #include "component/Component.h"
 #include "ui/TextField.h"
-#include "application/elements/Action.h"
 
 class TextInputC final : public Component {
   TextInputField textField;
   TextAction* currentAction = nullptr;
 
  public:
-  TextInputC(const ComponentTemplate ct) : Component(ct, 250, 20), textField(250, 19, NONE) {}
+  explicit TextInputC(const ComponentTemplate ct) : Component(ct, 200, 20), textField(200, 20, NONE) {}
   Component* clone() override { return new TextInputC(*this); }
   void draw(EditorContext& ec, Node& parent) override;
   void update(EditorContext&, Node& parent) override;
@@ -42,4 +41,4 @@ class TextInputC final : public Component {
   const char* getString() override { return textField.buffer.c_str(); }
 };
 
-#endif  //RAYNODES_SRC_NODES_ELEMENTS_TEXTINPUTFIELD_H_
+#endif  //TEXTINPUTC_H

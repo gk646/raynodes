@@ -1,4 +1,6 @@
-add_library(MQQS SHARED MQQS.cpp)
+file(GLOB_RECURSE PLUGIN_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+
+add_library(MQQS SHARED ${PLUGIN_FILES})
 
 set_target_properties(MQQS PROPERTIES
         PREFIX ""

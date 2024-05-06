@@ -22,7 +22,6 @@
 
 #include <raylib.h>
 #include <cmath>
-#include <limits>
 #include <cxutil/cxio.h>
 
 void MathC::draw(EditorContext& ec, Node& /**/) {

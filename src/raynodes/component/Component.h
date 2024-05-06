@@ -46,11 +46,14 @@
 // These functions respect the UI layers, otherwise you will get weird interactions
 // .....................................................................
 //
+// Rule 3: You must use the provided io_save / io_load functions from cxutil/cxio.h
+//    Otherwise correct persistence can not be guaranteed
+// .....................................................................
 
 struct Component {
   cxstructs::StackVector<InputPin, INPUT_PINS, int8_t> inputs{};     //Current limit
   cxstructs::StackVector<OutputPin, OUTPUT_PINS, int8_t> outputs{};  //Current limit
-  const char* const id;       //Uniquely identifiyin name id (constant allocated ptr)
+  const char* const id;       //Uniquely identifying name id (constant allocated ptr)
   const char* const label;    //Display name (and access name)
   float x = 0;                //Internal state (don't change, only read)
   float y = 0;                //Internal state (don't change, only read)
@@ -72,9 +75,9 @@ struct Component {
   // Guaranteed to be called once per tick (on the main thread) (not just when focused)
   virtual void update(EditorContext& ec, Node& parent) = 0;
   // Use the symmetric helpers : io_save(file,myFloat)...
-  virtual void save(FILE* file) = 0;
+  virtual void save(FILE* file) {}
   //Use the symmetric helpers : io_load(file,myFloat)...
-  virtual void load(FILE* file) = 0;
+  virtual void load(FILE* file) {}
 
   //-----------EVENTS-----------//
   // All called once, guaranteed before update() is called
