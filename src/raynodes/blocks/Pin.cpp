@@ -22,24 +22,28 @@
 
 #include <raylib.h>
 
-#include "blocks/Connection.h"
-
 Color Pin::getColor() const {
-    switch (pinType) {
-      case BOOLEAN:
-        return BLUE;
-      case STRING:
-        return ORANGE;
-      case INTEGER:
-        return RED;
-      case FLOAT:
-        return SKYBLUE;
-      case DATA:
-        return PURPLE;
-    }
-    return RED;
+  switch (pinType) {
+    case BOOLEAN:
+      return BLUE;
+    case STRING:
+      return ORANGE;
+    case INTEGER:
+      return RED;
+    case FLOAT:
+      return SKYBLUE;
+    case DATA:
+      return PURPLE;
+    case VECTOR_3:
+      break;
+    case VECTOR_2:
+      break;
+    case NODE:
+      return VIOLET;
+  }
+  return RED;
 }
 
 auto OutputPin::isConnectable(InputPin& other) const -> bool {
-    return other.pinType == pinType && other.connection == nullptr;
+  return other.pinType == pinType && other.connection == nullptr;
 }

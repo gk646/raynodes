@@ -124,7 +124,7 @@ struct Component {
   virtual bool getBool() { return false; }
 
   // Getters
-  [[nodiscard]] const char* getName() const { return label; }
+  [[nodiscard]] const char* getLabel() const { return label; }
   [[nodiscard]] float getWidth() const { return width; }
   [[nodiscard]] float getHeight() const { return height; }
   [[nodiscard]] Rectangle getBounds() const;

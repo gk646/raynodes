@@ -22,9 +22,7 @@
 
 #include <raygui.h>
 #include <cxstructs/Constraint.h>
-#include <tinyfiledialogs.h>
 
-#include "node/Node.h"
 #include "shared/rayutils.h"
 
 #include "application/elements/Action.h"
@@ -59,6 +57,8 @@ bool NodeEditor::start() {
 
 namespace {
 void DrawBackGround(EditorContext& ec) {
+  Editor::UpdateTick(ec);    // Updates all nodes
+  Editor::PollControls(ec);  // Poll controls after all nodes to respect layers
   Editor::DrawGrid(ec);
 }
 
@@ -79,19 +79,10 @@ void DrawContent(EditorContext& ec) {
 
 void DrawForeGround(EditorContext& ec) {
   Editor::DrawUnsavedChanges(ec);
-
-  Editor::UpdateTick(ec);  //Updates all nodes
-
   Editor::DrawContextMenu(ec);
   Editor::DrawActions(ec);
   Editor::DrawTopBar(ec);
   Editor::DrawStatusBar(ec);
-
-  char buff[8];
-  snprintf(buff, 8, "%d", GetFPS());
-  DrawTextEx(ec.display.editorFont, buff, {25, 25}, 16, 1.0F, GREEN);
-
-  Editor::PollControls(ec);  // Poll input last as its the lowest priority
 }
 }  // namespace
 
