@@ -18,17 +18,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef RAYNODES_SRC_COMPONENT_COMPONENTS_STRINGTONUMBERC_H_
-#define RAYNODES_SRC_COMPONENT_COMPONENTS_STRINGTONUMBERC_H_
+#ifndef RAYNODES_SRC_NODES_ELEMENTS_TEXTINPUTFIELD_H_
+#define RAYNODES_SRC_NODES_ELEMENTS_TEXTINPUTFIELD_H_
 
 #include "component/Component.h"
+#include "ui/TextField.h"
 
-struct StringToNumberC final : Component {
-  explicit StringToNumberC(const ComponentTemplate ct) : Component(ct, 50, 20) {}
-  Component* clone() override { return new StringToNumberC(*this); };
-  void draw(EditorContext& ec, Node& parent) override{}
-  void update(EditorContext& ec, Node& parent) override;
-  void onCreate(EditorContext &ec, Node &parent) override;
+class TextOutputC final : public Component {
+  TextInputField textField;
+  TextAction* currentAction = nullptr;
+
+ public:
+  explicit TextOutputC(const ComponentTemplate ct) : Component(ct, 200, 20), textField(200, 20, NONE) {}
+  Component* clone() override { return new TextOutputC(*this); }
+  void draw(EditorContext& ec, Node& parent) override;
+  void update(EditorContext&, Node& parent) override;
+  void load(FILE* file) override;
+  void save(FILE* file) override;
+  void onFocusGain(EditorContext&) override;
+  void onFocusLoss(EditorContext&) override;
+  void onCreate(EditorContext& ec, Node& parent) override;
+  const char* getString() override { return textField.buffer.c_str(); }
 };
 
-#endif  //RAYNODES_SRC_COMPONENT_COMPONENTS_STRINGTONUMBERC_H_
+#endif  //RAYNODES_SRC_NODES_ELEMENTS_TEXTINPUTFIELD_H_

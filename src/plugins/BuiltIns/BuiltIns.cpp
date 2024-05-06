@@ -22,21 +22,30 @@
 
 #include "components/MathC.h"
 #include "components/DisplayC.h"
+#include "components/NumberOutputC.h"
+#include "components/SeparateXYZC.h"
 #include "components/StringToNumberC.h"
 #include "components/TextInputC.h"
+#include "components/TextOutC.h"
+#include "components/Vec3OutC.h"
 
 void BuiltIns::registerComponents(ComponentRegister& cr) {
-  cr.registerComponent<MathC>("MathOp");
-  cr.registerComponent<DisplayC>("Display");
-  cr.registerComponent<StringToNumberC>("StrToNum");
-  cr.registerComponent<TextInputC>("TextInput");
-  cr.registerComponent<TextInputC>("NumberInput");
+  cr.registerComponent<MathC>("BI_MathOp");
+  cr.registerComponent<DisplayC>("BI_Display");
+  cr.registerComponent<StringToNumberC>("BI_StrToNum");
+  cr.registerComponent<TextOutputC>("BI_TextOut");
+  cr.registerComponent<TextInputC>("BI_TextIn");
+  cr.registerComponent<NumberOutputC>("BI_NumberOut");
+  cr.registerComponent<SeparateXYZC>("BI_SeparateXYZ");
+  cr.registerComponent<Vec3OutC>("BI_Vec3Out");
 }
 
 void BuiltIns::registerNodes(NodeRegister& nr) {
-  nr.registerNode("MathOp", {{"Operation", "MathOp"}});
-  nr.registerNode("TextField", {{"TextField", "TextInput"}});
-  nr.registerNode("StringToNum", {{"Converter", "StrToNum"}});
-  nr.registerNode("Display", {{"Display", "Display"}});
-  nr.registerNode("NumberField", {{"Number", "NumberInput"}});
+  nr.registerNode("MathOp", {{"Operation", "BI_MathOp"}});
+  nr.registerNode("TextField", {{"TextField", "BI_TextOut"}});
+  nr.registerNode("StringToNum", {{"Converter", "BI_StrToNum"}});
+  nr.registerNode("Display", {{"Display", "BI_Display"}});
+  nr.registerNode("NumberField", {{"Number", "BI_NumberOut"}});
+  nr.registerNode("SeparateXYZ", {{"Vector", "BI_SeparateXYZ"}});
+  nr.registerNode("Vector 3", {{"Vector3", "BI_Vec3Out"}});
 }

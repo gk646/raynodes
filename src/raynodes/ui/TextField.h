@@ -26,7 +26,7 @@
 #include <raylib.h>
 #include <string>
 
-enum InputConstraint {
+enum InputConstraint : uint8_t {
   NONE,
   NUMERIC,
 };
@@ -41,22 +41,24 @@ struct TextInputField final {
   uint16_t cursorPos = 0;
   uint16_t selectionStart = 0;
   uint16_t selectionEnd = 0;
+  uint16_t minWidth = 0;
   bool isDragging = false;
   bool showCursor = false;
   bool isFocused = false;
   bool growAutomatic = true;
   uint8_t blinkCounter = 0;
-  const InputConstraint constraint;
+  const InputConstraint constraint = NONE;
 
-  explicit TextInputField(float w, float h, InputConstraint constraint)
-      : bounds(0, 0, w, h), font(font), constraint(constraint) {}
+  TextInputField() = default;
+  explicit TextInputField(float w, float h, InputConstraint constraint = NONE)
+      : bounds(0, 0, w, h), minWidth(static_cast<uint16_t>(w)), constraint(constraint) {}
   void draw();
   void update(Vector2 mouse);
   void onFocusGain(Vector2 mouse);
   void onFocusLoss();
+  void updateDimensions();
 
  private:
-  void updateDimensions(Rectangle& bounds);
   [[nodiscard]] Ints getSelection() const;
   [[nodiscard]] uint16_t getIndexFromPos(Vector2 mouse);
 };

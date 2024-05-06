@@ -35,20 +35,20 @@ void RegisterPlugin(EditorContext& ec, RaynodesPluginI* plugin) {
 
   // Nodes
   int nodesRegistered = static_cast<int>(ec.templates.nodeFactory.size());
-  NodeRegister nr{ec, *plugin, 0};
+  NodeRegister nr(ec, *plugin);
   plugin->registerNodes(nr);
   nodesRegistered = static_cast<int>(ec.templates.nodeFactory.size()) - nodesRegistered;
   printf("Nodes: %s / ", String::GetPaddedNum(nodesRegistered));
 
   // Components
   int componentsRegistered = static_cast<int>(ec.templates.componentFactory.size());
-  ComponentRegister cr{ec, *plugin, 0};
+  ComponentRegister cr(ec, *plugin);
   plugin->registerComponents(cr);
   componentsRegistered = static_cast<int>(ec.templates.componentFactory.size()) - componentsRegistered;
   printf("Components: %s / ", String::GetPaddedNum(componentsRegistered));
 
   // Errors
-  printf("Errors: %s", String::GetPaddedNum(nr.errorCount + cr.errorCount));
+  printf("Errors: %s", String::GetPaddedNum(nr.getErrors() + cr.getErrors()));
   printf("\n");
   fflush(stdout);
   fflush(stderr);

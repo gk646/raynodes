@@ -18,17 +18,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef RAYNODES_SRC_COMPONENT_COMPONENTS_STRINGTONUMBERC_H_
-#define RAYNODES_SRC_COMPONENT_COMPONENTS_STRINGTONUMBERC_H_
+#include "SeparateXYZC.h"
 
-#include "component/Component.h"
+void SeparateXYZC::update(EditorContext& ec, Node& parent) {
+  Vec3 outVec = inputs[0].getData<VECTOR_3>();
 
-struct StringToNumberC final : Component {
-  explicit StringToNumberC(const ComponentTemplate ct) : Component(ct, 50, 20) {}
-  Component* clone() override { return new StringToNumberC(*this); };
-  void draw(EditorContext& ec, Node& parent) override{}
-  void update(EditorContext& ec, Node& parent) override;
-  void onCreate(EditorContext &ec, Node &parent) override;
-};
+  outputs[0].setData<FLOAT>(outVec.x);
+  outputs[1].setData<FLOAT>(outVec.y);
+  outputs[2].setData<FLOAT>(outVec.z);
+}
 
-#endif  //RAYNODES_SRC_COMPONENT_COMPONENTS_STRINGTONUMBERC_H_
+void SeparateXYZC::onCreate(EditorContext& ec, Node& parent) {
+  addPinInput(VECTOR_3);
+
+  addPinOutput(FLOAT);
+  addPinOutput(FLOAT);
+  addPinOutput(FLOAT);
+}

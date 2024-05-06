@@ -123,8 +123,7 @@ struct Display final {
     return ret;
   }
 
-  bool loadFont(EditorContext& ec);
-  bool loadIcons(EditorContext& ec);
+  bool loadResources(EditorContext& ec);
 };
 
 #endif  //RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTDISPLAY_H_

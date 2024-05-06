@@ -18,23 +18,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "TextInputC.h"
+#include "TextOutC.h"
 
 #include <cxutil/cxio.h>
 
 #include "application/EditorContext.h"
 #include "application/elements/Action.h"
 
-void TextInputC::draw(EditorContext& ec, Node& /**/) {
+void TextOutputC::draw(EditorContext& ec, Node& /**/) {
   auto bounds = getBounds();
   textField.bounds.x = bounds.x;
   textField.bounds.y = bounds.y;
   textField.draw();
 }
 
-void TextInputC::update(EditorContext& ec, Node& parent) {
-  auto* input = inputs[0].getData<STRING>();
-  if (input) textField.buffer = input;
+void TextOutputC::update(EditorContext& ec, Node& parent) {
+  outputs[0].setData<STRING>(textField.buffer.c_str());
 
   textField.update(ec.logic.worldMouse);
 
@@ -42,14 +41,14 @@ void TextInputC::update(EditorContext& ec, Node& parent) {
   width = static_cast<uint16_t>(textField.bounds.width);
 }
 
-void TextInputC::onFocusGain(EditorContext& ec) {
+void TextOutputC::onFocusGain(EditorContext& ec) {
   textField.onFocusGain(ec.logic.worldMouse);
 
   delete currentAction;
   currentAction = new TextAction(textField.buffer, textField.buffer);
 }
 
-void TextInputC::onFocusLoss(EditorContext& ec) {
+void TextOutputC::onFocusLoss(EditorContext& ec) {
   textField.onFocusLoss();
 
   if (currentAction) {
@@ -66,19 +65,19 @@ void TextInputC::onFocusLoss(EditorContext& ec) {
   }
 }
 
-void TextInputC::onCreate(EditorContext& ec, Node& /**/) {
-  internalLabel = false;  //We don't want to draw our label
+void TextOutputC::onCreate(EditorContext& ec, Node& /**/) {
+  internalLabel = true;
   textField.font = &ec.display.editorFont;
   textField.fs = ec.display.fontSize;
 
-  addPinInput(STRING);
+  addPinOutput(STRING);
 }
 
-void TextInputC::save(FILE* file) {
+void TextOutputC::save(FILE* file) {
   cxstructs::io_save(file, textField.buffer.c_str());
 }
 
-void TextInputC::load(FILE* file) {
+void TextOutputC::load(FILE* file) {
   cxstructs::io_load(file, textField.buffer);
   textField.updateDimensions();
 }
