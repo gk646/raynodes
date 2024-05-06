@@ -20,7 +20,8 @@
 
 #include "blocks/Pin.h"
 
-#include <raylib.h>
+#include "application/EditorContext.h"
+#include "shared/rayutils.h"
 
 Color Pin::getColor() const {
   switch (pinType) {
@@ -42,6 +43,37 @@ Color Pin::getColor() const {
       return VIOLET;
   }
   return RED;
+}
+
+void Pin::DrawPin(Pin& p, const Font& f, float x, float y, bool showText) {
+  constexpr float pinRadius = PIN_SIZE / 2.0F;
+  constexpr float textOff = PIN_SIZE * 1.5F;
+  const auto middlePos = Vector2{x, y + pinRadius};
+
+  if (p.direction == INPUT && static_cast<InputPin*>(&p)->connection == nullptr) {
+    DrawCircleSector(middlePos,pinRadius,0,360,50,UI::COLORS[N_BACK_GROUND]);
+    DrawCircleLinesV(middlePos, pinRadius, p.getColor());
+  } else {
+    DrawCircleV(middlePos, pinRadius, p.getColor());
+  }
+  if (showText) {
+    const auto txt = TypeToString(p.pinType);
+    const Vector2 textPos = {middlePos.x + (p.direction == INPUT ? -textOff : textOff),
+                             middlePos.y - pinRadius};
+    DrawCenteredText(f, txt, textPos, Pin::PIN_SIZE + 2, 0, UI::COLORS[UI_LIGHT]);
+  }
+  p.yPos = y + pinRadius;
+}
+
+bool Pin::UpdatePin(EditorContext& ec, Node& n, Component* c, Pin& p, float x) {
+  constexpr float pinRadius = PIN_SIZE / 2.0F;
+  if (CheckCollisionPointCircle(ec.logic.worldMouse, {x, p.yPos}, pinRadius)) {
+    ec.logic.assignDraggedPin(x, p.yPos, n, c, p);
+    ec.input.consumeKeyboard();
+    ec.input.consumeMouse();
+    return true;
+  }
+  return false;
 }
 
 auto OutputPin::isConnectable(InputPin& other) const -> bool {

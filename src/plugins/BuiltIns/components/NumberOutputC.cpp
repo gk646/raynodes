@@ -18,23 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "TextInputC.h"
+#include "NumberOutputC.h"
 
 #include <cxutil/cxio.h>
 
 #include "application/EditorContext.h"
 #include "application/elements/Action.h"
 
-void TextInputC::draw(EditorContext& ec, Node& /**/) {
+void NumberOutputC::draw(EditorContext& ec, Node& /**/) {
   auto bounds = getBounds();
   textField.bounds.x = bounds.x;
   textField.bounds.y = bounds.y;
   textField.draw();
 }
 
-void TextInputC::update(EditorContext& ec, Node& parent) {
-  auto* input = inputs[0].getData<STRING>();
-  if (input) textField.buffer = input;
+void NumberOutputC::update(EditorContext& ec, Node& parent) {
+  const auto* text = textField.buffer.c_str();
+  outputs[0].setData<INTEGER>(cxstructs::str_parse_long(text));
+  outputs[1].setData<FLOAT>(cxstructs::str_parse_float(text));
 
   textField.update(ec.logic.worldMouse);
 
@@ -42,14 +43,14 @@ void TextInputC::update(EditorContext& ec, Node& parent) {
   width = static_cast<uint16_t>(textField.bounds.width);
 }
 
-void TextInputC::onFocusGain(EditorContext& ec) {
+void NumberOutputC::onFocusGain(EditorContext& ec) {
   textField.onFocusGain(ec.logic.worldMouse);
 
   delete currentAction;
   currentAction = new TextAction(textField.buffer, textField.buffer);
 }
 
-void TextInputC::onFocusLoss(EditorContext& ec) {
+void NumberOutputC::onFocusLoss(EditorContext& ec) {
   textField.onFocusLoss();
 
   if (currentAction) {
@@ -66,19 +67,27 @@ void TextInputC::onFocusLoss(EditorContext& ec) {
   }
 }
 
-void TextInputC::onCreate(EditorContext& ec, Node& /**/) {
+void NumberOutputC::onCreate(EditorContext& ec, Node& /**/) {
   internalLabel = false;  //We don't want to draw our label
   textField.font = &ec.display.editorFont;
   textField.fs = ec.display.fontSize;
 
-  addPinInput(STRING);
+  addPinOutput(INTEGER);
+  addPinOutput(FLOAT);
+}
+double NumberOutputC::getFloat() {
+  return cxstructs::str_parse_float(textField.buffer.c_str());
 }
 
-void TextInputC::save(FILE* file) {
+int64_t NumberOutputC::getInt() {
+  return cxstructs::str_parse_long(textField.buffer.c_str());
+}
+
+void NumberOutputC::save(FILE* file) {
   cxstructs::io_save(file, textField.buffer.c_str());
 }
 
-void TextInputC::load(FILE* file) {
+void NumberOutputC::load(FILE* file) {
   cxstructs::io_load(file, textField.buffer);
   textField.updateDimensions();
 }

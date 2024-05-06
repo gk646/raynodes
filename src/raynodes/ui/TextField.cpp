@@ -23,7 +23,6 @@
 #include <cxutil/cxmath.h>
 
 #include "application/EditorContext.h"
-#include "application/elements/Action.h"
 #include "shared/rayutils.h"
 
 namespace {
@@ -40,7 +39,7 @@ void DrawTextSelection(const Font& f, char* buffer, int bufferLength, int select
     if (i == bufferLength || buffer[i] == '\n') {
       if (selectionStart <= i && selectionEnd > lineStartIndex) {
         float lineStartX =
-            (selectionStart > lineStartIndex)
+            selectionStart > lineStartIndex
                 ? MeasureTextUpTo(buffer + lineStartIndex, selectionStart - lineStartIndex, f, fs, 0.5F)
                 : 0;
         float lineEndX =
@@ -74,10 +73,10 @@ bool IsInputAllowed(const int key, InputConstraint constraint) {
   if (constraint == NUMERIC) {
     return (key >= 48 && key <= 57) || key == 46 /* dot*/;
   }
+
   if (constraint == NONE) {
     return key >= 32 && key <= 125;
   }
-
   return false;
 }
 }  // namespace
@@ -87,9 +86,9 @@ void TextInputField::draw() {
   cursorPos = cxstructs::clamp(static_cast<int>(cursorPos), 0, static_cast<int>(buffer.size()));
 
   //Main field
-  DrawRectangleRec(bounds, isFocused ? DARKGRAY : GRAY);
+  DrawRectangleRec(bounds, isFocused ? UI::COLORS[UI_DARK] : UI::COLORS[UI_MEDIUM]);
   //Draw the text
-  DrawTextEx(*font, buffer.c_str(), {bounds.x + 3, bounds.y}, fs, 0.5F, WHITE);
+  DrawTextEx(*font, buffer.c_str(), {bounds.x + 3, bounds.y}, fs, 0.5F, UI::COLORS[UI_LIGHT]);
   //Draw cursor
   if (showCursor) {
     DrawCursor(*font, buffer.data(), static_cast<int>(buffer.size()), cursorPos, bounds.x, bounds.y, fs);
@@ -128,9 +127,9 @@ void TextInputField::update(Vector2 mouse) {
       buffer.erase(start, end - start);
       cursorPos = start;
     }
-    int prev = buffer.size();
+    const int prev = static_cast<int>(buffer.size());
     buffer.insert(cursorPos, GetClipboardText());
-    updateDimensions(bounds);
+    updateDimensions();
     cursorPos = prev + (buffer.size() - prev);
   }
 
@@ -149,7 +148,7 @@ void TextInputField::update(Vector2 mouse) {
     if (IsInputAllowed(key, constraint) && buffer.length() < 1024) {
       buffer.insert(buffer.begin() + cursorPos, static_cast<char>(key));
       cursorPos++;
-      updateDimensions(bounds);
+      updateDimensions();
     }
     key = GetCharPressed();  // Check next character in the queue
   }
@@ -164,7 +163,7 @@ void TextInputField::update(Vector2 mouse) {
   if (IsKeyPressed(KEY_ENTER) && buffer.length() < 1024) {
     buffer.insert(buffer.begin() + cursorPos, '\n');
     cursorPos++;
-    updateDimensions(bounds);
+    updateDimensions();
   }
 
   if (cursorPos > 0 && (IsKeyPressed(KEY_BACKSPACE) || IsKeyPressedRepeat(KEY_BACKSPACE))) {
@@ -177,7 +176,7 @@ void TextInputField::update(Vector2 mouse) {
     }
     selectionStart = selectionEnd;
     cursorPos--;
-    updateDimensions(bounds);
+    updateDimensions();
   }
 
   if (cursorPos < buffer.size() && (IsKeyPressed(KEY_DELETE) || IsKeyPressedRepeat(KEY_DELETE))) {
@@ -189,7 +188,7 @@ void TextInputField::update(Vector2 mouse) {
       buffer.erase(buffer.begin() + cursorPos);
     }
     selectionStart = selectionEnd;
-    updateDimensions(bounds);
+    updateDimensions();
   }
 
   if (cursorPos < buffer.length() && (IsKeyPressed(KEY_RIGHT) || IsKeyPressedRepeat(KEY_RIGHT))) {
@@ -210,6 +209,7 @@ void TextInputField::update(Vector2 mouse) {
 
 void TextInputField::onFocusGain(const Vector2 mouse) {
   //Position the cursor correct inside the text
+  if (!CheckCollisionPointRec(mouse, bounds)) return;
   cursorPos = getIndexFromPos(mouse);
   selectionEnd = selectionStart;
   blinkCounter = 0;
@@ -223,11 +223,11 @@ void TextInputField::onFocusLoss() {
   selectionEnd = selectionStart;
 }
 
-void TextInputField::updateDimensions(Rectangle& bounds) {
+void TextInputField::updateDimensions() {
   if (!growAutomatic) return;  // Dont grow if specified
   int lineCount = 0;
   int lineStart = 0;
-  float longestLine = 250;
+  float longestLine = minWidth;
   auto* text = buffer.data();
   const int size = static_cast<int>(buffer.size());
 

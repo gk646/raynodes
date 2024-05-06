@@ -130,6 +130,8 @@ struct Pin {
         return "Unknown Type";
     }
   }
+  static void DrawPin(Pin& p, const Font& f, float x, float y, bool showText);
+  static bool UpdatePin(EditorContext& ec, Node& n, Component* c, Pin& p, float x);
 };
 
 struct OutputPin final : Pin {
@@ -163,6 +165,10 @@ struct InputPin final : Pin {
       return 0.0;
     } else if constexpr (pt == DATA) {
       return Pointer{nullptr, 0};
+    } else if constexpr (pt == VECTOR_3) {
+      return Vec3{0.0F, 0.0F, 0.0F};
+    }else if constexpr (pt == VECTOR_2) {
+      return Vec2{0.0F, 0.0F};
     } else {
       static_assert(pt == STRING, "Unsupported PinType");
     }

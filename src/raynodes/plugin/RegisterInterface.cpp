@@ -27,9 +27,9 @@ bool ComponentRegister::registerComponent(const char* name, const ComponentCreat
   return res;
 }
 
-bool NodeRegister::registerNode(const char* name, const std::initializer_list<ComponentTemplate>& components,
+bool NodeRegister::registerNode(const char* id, const std::initializer_list<ComponentTemplate>& components,
                                 Color4 color) {
-  return registerNode(CreateTemplate(name, components, color), GetCreateFunc<Node>());
+  return registerNode(CreateTemplate(id, components, color), GetCreateFunc<Node>());
 }
 NodeTemplate NodeRegister::CreateTemplate(const char* name, const ComponentDefinition& comps, Color4 c) {
   NodeTemplate nt;

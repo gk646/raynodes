@@ -20,9 +20,7 @@
 
 #include "StringToNumberC.h"
 
-void StringToNumberC::draw(EditorContext&  /**/, Node& /**/) {
 
-}
 
 void StringToNumberC::update(EditorContext&  /**/, Node& /**/) {
   const auto inData = inputs[0].getData<STRING>();
@@ -36,12 +34,4 @@ void StringToNumberC::onCreate(EditorContext&  /**/, Node& /**/) {
 
   addPinOutput(FLOAT);
   addPinOutput(INTEGER);
-}
-
-void StringToNumberC::save(FILE* /**/) {
-  /*Not needed*/
-}
-
-void StringToNumberC::load(FILE* /**/) {
-  /*Not needed*/
 }

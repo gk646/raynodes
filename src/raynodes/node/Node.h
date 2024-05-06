@@ -47,8 +47,8 @@
 
 struct Node {
   cxstructs::StackVector<Component*, COMPS_PER_NODE, int8_t> components;  // Fixed size
-  InputPin nodeIn{NODE};                                                  // Allow node-to-node connections
   cxstructs::StackVector<OutputPin, NODE_OUTPUT_PINS, int8_t> outputs;    // Allow node-to-node connections
+  InputPin nodeIn{NODE};                                                  // Allow node-to-node connections
   const char* const name = nullptr;                                       //Unique allocated name
   float x, y;                                                             // Position
   float width, height;                                                    // Dimensions

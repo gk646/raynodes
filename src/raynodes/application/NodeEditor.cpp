@@ -41,10 +41,9 @@ NodeEditor::NodeEditor(const int argc, char* argv[]) : context(argc, argv) {
 bool NodeEditor::start() {
   cxstructs::Constraint<true> c;
 
-  c + context.core.loadCore(context);
   c + context.persist.loadWorkingDirectory(context);
-  c + context.display.loadFont(context);
-  c + context.display.loadIcons(context);
+  c + context.core.loadCore(context);
+  c + context.display.loadResources(context);
   c + context.plugin.loadPlugins(context);
 
   // Only load file if path is given - automatically opens picker
@@ -94,7 +93,7 @@ int NodeEditor::run() {
   while (!context.core.closeApplication) {
     while (!context.core.closeApplication && !WindowShouldClose()) {
       BeginDrawing();
-      ClearBackground({90, 105, 136});
+      ClearBackground(UI::COLORS[E_BACK_GROUND]);
       {
         DrawBackGround(context);
         {

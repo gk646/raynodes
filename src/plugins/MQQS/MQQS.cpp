@@ -20,18 +20,21 @@
 
 #include "MQQS.h"
 
-void MQQS::registerComponents(ComponentRegister& /**/) {
+#include "components/DialogChoiceC.h"
 
+void MQQS::registerComponents(ComponentRegister& cr) {
+  cr.registerComponent<DialogChoiceC>("QST_DialogChoice");
 }
 
 void MQQS::registerNodes(NodeRegister& nr) {
-  nr.registerNode("Dialogue Choice", {{"DisplayText", "TextInput"},
-                                      {"Choice1", "TextInput"},
-                                      {"Choice2", "TextInput"},
-                                      {"Choice3", "TextInput"},
-                                      {"Choice4", "TextInput"}});
-  nr.registerNode("Dialogue", {{"DisplayText", "TextInput"}});
+  nr.registerNode("Dialog Choice", {{"DisplayText", "BI_TextIn"},
+                                    {"Choice1", "QST_DialogChoice"},
+                                    {"Choice2", "QST_DialogChoice"},
+                                    {"Choice3", "QST_DialogChoice"},
+                                    {"Choice4", "QST_DialogChoice"}});
+
+  nr.registerNode("Dialog", {{"DisplayText", "BI_TextOut"}});
 
   nr.registerNode("QuestHeader",
-                  {{"Name", "TextInput"}, {"Description", "TextInput"}, {"Zone", "TextInput"}, {"Level"}});
+                  {{"Name", "BI_TextIn"}, {"Description", "BI_TextIn"}, {"Zone", "BI_TextIn"}, {"Level", "BI_NumberOut"}});
 }

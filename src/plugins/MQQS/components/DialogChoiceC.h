@@ -17,3 +17,29 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+
+#ifndef DIALOGUECHOICEC_H
+#define DIALOGUECHOICEC_H
+
+#include "component/Component.h"
+#include "ui/TextField.h"
+#include "application/elements/Action.h"
+
+class DialogChoiceC final : public Component {
+  TextInputField textField;
+  TextAction* currentAction = nullptr;
+
+ public:
+  explicit DialogChoiceC(const ComponentTemplate ct) : Component(ct, 200, 20), textField(200, 20, NONE) {}
+  Component* clone() override { return new DialogChoiceC(*this); }
+  void draw(EditorContext& ec, Node& parent) override;
+  void update(EditorContext&, Node& parent) override;
+  void load(FILE* file) override;
+  void save(FILE* file) override;
+  void onFocusGain(EditorContext&) override;
+  void onFocusLoss(EditorContext&) override;
+  void onCreate(EditorContext& ec, Node& parent) override;
+  const char* getString() override { return textField.buffer.c_str(); }
+};
+
+#endif  //DIALOGUECHOICEC_H

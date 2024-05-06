@@ -18,17 +18,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef RAYNODES_SRC_COMPONENT_COMPONENTS_STRINGTONUMBERC_H_
-#define RAYNODES_SRC_COMPONENT_COMPONENTS_STRINGTONUMBERC_H_
+#ifndef SEPARATEXYZ_H
+#define SEPARATEXYZ_H
 
 #include "component/Component.h"
 
-struct StringToNumberC final : Component {
-  explicit StringToNumberC(const ComponentTemplate ct) : Component(ct, 50, 20) {}
-  Component* clone() override { return new StringToNumberC(*this); };
-  void draw(EditorContext& ec, Node& parent) override{}
+struct SeparateXYZC final : Component {
+  explicit SeparateXYZC(const ComponentTemplate ct) : Component(ct, 100, 20) {}
+  Component* clone() override { return new SeparateXYZC(*this); }
+
+  void draw(EditorContext& /**/, Node& /**/) override{}
   void update(EditorContext& ec, Node& parent) override;
-  void onCreate(EditorContext &ec, Node &parent) override;
+  void onCreate(EditorContext& ec, Node& parent) override;
 };
 
-#endif  //RAYNODES_SRC_COMPONENT_COMPONENTS_STRINGTONUMBERC_H_
+#endif  //SEPARATEXYZ_H

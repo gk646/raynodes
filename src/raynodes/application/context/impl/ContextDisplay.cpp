@@ -22,14 +22,11 @@
 
 #include <raygui.h>
 
-bool Display::loadFont(EditorContext& /**/) {
+bool Display::loadResources(EditorContext& /**/) {
   editorFont = LoadFont("res/monogram.ttf");
   GuiSetFont(editorFont);
   SetTextureFilter(editorFont.texture, TEXTURE_FILTER_BILINEAR);  // Looks the nicest out of all
-  return editorFont.texture.id != 0 || GetFontDefault().texture.id != 0;
-}
-
-bool Display::loadIcons(EditorContext& /**/) {
   GuiLoadIcons("res/iconset.rgi", false);
-  return true;
+  SetWindowIcon(LoadImage("res/icon.png"));
+  return editorFont.texture.id != 0 || GetFontDefault().texture.id != 0;
 }

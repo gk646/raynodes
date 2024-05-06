@@ -18,14 +18,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef VECTOR3C_H
-#define VECTOR3C_H
+#ifndef VECTOR3OUTPUTC_H
+#define VECTOR3OUTPUTC_H
 
-#include "TextInputField.h"
+#include "component/Component.h"
+#include "ui/TextField.h"
 
-struct Vector3C final : Component {
-  explicit Vector3C(const ComponentTemplate ct) : Component(ct, 250, 20) {}
-  Component* clone() override { return new Vector3C(*this); }
+class Vec3OutC final : public Component {
+  TextInputField textFields[3]{};
+
+ public:
+  explicit Vec3OutC(const ComponentTemplate ct) : Component(ct, 200, 20) {}
+  Component* clone() override { return new Vec3OutC(*this); }
   void draw(EditorContext& ec, Node& parent) override;
   void update(EditorContext&, Node& parent) override;
   void load(FILE* file) override;
@@ -35,4 +39,4 @@ struct Vector3C final : Component {
   void onCreate(EditorContext& ec, Node& parent) override;
 };
 
-#endif  //VECTOR3C_H
+#endif  //VECTOR3OUTPUTC_H
