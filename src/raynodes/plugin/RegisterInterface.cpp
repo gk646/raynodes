@@ -22,7 +22,7 @@
 #include "plugin/PluginInterface.h"
 
 bool ComponentRegister::registerComponent(const char* name, const ComponentCreateFunc func) {
-  const auto res = ec.templates.registerComponent(name, func, plugin);
+  const auto res = ec.templates.registerComponent(name, func, pc);
   if (!res) errorCount++;
   return res;
 }
@@ -45,9 +45,9 @@ NodeTemplate NodeRegister::CreateTemplate(const char* name, const ComponentDefin
 }
 
 bool NodeRegister::registerNode(const NodeTemplate& nt, NodeCreateFunc nodeCreateFunc) {
-  const auto res = ec.templates.registerNode(nt, nodeCreateFunc, plugin);
+  const auto res = ec.templates.registerNode(nt, nodeCreateFunc, pc);
   if (res) {
-    ec.ui.contextMenu.addNode(plugin.name, nt.label);
+    ec.ui.contextMenu.addNode(pc.name, nt.label);
   } else {
     errorCount++;
   }

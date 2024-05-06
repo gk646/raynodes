@@ -64,4 +64,5 @@ struct NodeTemplate {
   ComponentTemplate components[COMPS_PER_NODE];  // Current limit
 };
 
+
 #endif  //TYPES_H

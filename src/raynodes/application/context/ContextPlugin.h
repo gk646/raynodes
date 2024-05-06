@@ -21,11 +21,12 @@
 #ifndef CONTEXTPLUGIN_H
 #define CONTEXTPLUGIN_H
 
+
 struct Plugin {
   static constexpr int MAX_NAME_LEN = 17;  //16 with terminator ('\0')
   static constexpr auto* PLUGIN_PATH = "plugins/";
 
-  std::vector<RaynodesPluginI*> plugins;
+  std::vector<PluginContainer> plugins;
 
   bool loadPlugins(EditorContext& ec);
   void sortPlugins();

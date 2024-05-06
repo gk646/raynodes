@@ -23,8 +23,9 @@
 
 #include "shared/fwd.h"
 
+struct PluginDeleter;
 struct PluginLoader {
-  static RaynodesPluginI* GetPluginInstance(const char* absolutePath, const char* funcName);
+  static PluginContainer GetPluginInstance( const char* path, const char* funcName);
 };
 
 #endif  //PLUGIN_H

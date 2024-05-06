@@ -27,6 +27,7 @@
 
 #include <cstdio>
 #include "plugin/PluginLoader.h"
+#include "plugin/PluginInterface.h"
 
 //Hide all the ugly #ifdefs
 
@@ -43,18 +44,27 @@ const char* getLastError(char* buffer, int size) {
 }
 }  // namespace
 
-RaynodesPluginI* PluginLoader::GetPluginInstance(const char* absolutePath, const char* funcName) {
-  char buff[64]{0};
+void PluginContainer::free() {
+  if (handle == nullptr) return;  // Guard against multiple frees
+#if defined(_WIN32)
+  FreeLibrary(static_cast<HMODULE>(handle));
+#else
+  dlclose(handle);
+#endif
+  handle = nullptr;  // Prevent double-free
+}
+PluginContainer PluginLoader::GetPluginInstance( const char* path, const char* funcName) {
+  char buff[64]{};
   void* handle;
 #if defined(_WIN32)
-  handle = LoadLibraryA(absolutePath);
+  handle = LoadLibraryA(path);
 #else
   handle = dlopen(relativePath, RTLD_LAZY);
 #endif
 
   if (!handle) {
-    fprintf(stderr, "Filed to load plugin %s", getLastError(buff,64));
-    return nullptr;
+    fprintf(stderr, "Filed to load plugin %s", getLastError(buff, 64));
+    return {nullptr, nullptr};
   }
 
   void* symbol;
@@ -65,13 +75,13 @@ RaynodesPluginI* PluginLoader::GetPluginInstance(const char* absolutePath, const
 #endif
 
   if (!symbol) {
-    fprintf(stderr, "Filed to load symbol %s", getLastError(buff,64));
+    fprintf(stderr, "Filed to load symbol %s", getLastError(buff, 64));
 #if defined(_WIN32)
     FreeLibrary(static_cast<HMODULE>(handle));
 #else
     dlclose(handle);
 #endif
-    return nullptr;
+    return {nullptr, nullptr};
   }
-  return reinterpret_cast<RaynodesPluginI* (*)()>(symbol)();
+  return {handle, nullptr, reinterpret_cast<RaynodesPluginI* (*)()>(symbol)()};
 }
