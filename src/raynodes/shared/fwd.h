@@ -43,6 +43,7 @@ struct NodeTemplate;        // Template to create a node (list of component name
 struct ComponentRegister;   // Interface that encaspulate registering components
 struct NodeRegister;        // Interface that encaspulate registering nodes
 struct EditorContext;       // Central backend data holder
+struct PluginContainer;
 
 using ComponentCreateFunc = Component* (*)(ComponentTemplate);  // Takes a name and returns a new Component
 using NodeCreateFunc = Node* (*)(const NodeTemplate&, Vec2, NodeID);  // Creates a new node
@@ -52,5 +53,12 @@ struct Color;
 struct Rectangle;
 struct Font;
 struct Vector2;
+
+struct PluginContainer {
+  void* handle;
+  const char* name;
+  RaynodesPluginI* plugin;
+  void free() ;
+};
 
 #endif  //RAYNODES_SRC_SHARED_FWD_H_

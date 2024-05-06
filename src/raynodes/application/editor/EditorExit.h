@@ -22,11 +22,21 @@
 #define RAYNODES_SRC_APPLICATION_EDITOR_EDITOREXIT_H_
 
 namespace Editor {
+inline bool ExitEditor(EditorContext& ec) {
+
+  ec.core.resetEditor(ec);
+
+  for (auto& dll : ec.plugin.plugins) {
+    dll.free();
+  }
+
+  return true;
+}
 
 inline bool CheckForExit(EditorContext& ec) {
   ec.core.requestedClose = true;
 
-  if (!ec.core.hasUnsavedChanges) return true;
+  if (!ec.core.hasUnsavedChanges) return ExitEditor(ec);
 
   ec.ui.showUnsavedChanges = true;  // Show confirmation window
 
@@ -35,5 +45,6 @@ inline bool CheckForExit(EditorContext& ec) {
 
   return false;
 }
+
 }  // namespace Editor
 #endif  //RAYNODES_SRC_APPLICATION_EDITOR_EDITOREXIT_H_

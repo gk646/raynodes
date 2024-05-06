@@ -19,22 +19,21 @@
 // SOFTWARE.
 
 #include "application/EditorContext.h"
-#include "plugin/PluginInterface.h"
 
-bool Template::registerComponent(const char* name, ComponentCreateFunc func, const RaynodesPluginI& plugin) {
+bool Template::registerComponent(const char* name, ComponentCreateFunc func, const PluginContainer& pc) {
   if (componentFactory.contains(name)) {
     auto* format = "Naming collision: %s/%s wont be loaded. Please contact the plugin author.\n";
-    fprintf(stderr, format, plugin.name, name);
+    fprintf(stderr, format, pc.name, name);
     return false;
   }
   componentFactory.insert({cxstructs::str_dup(name), func});
   return true;
 }
 
-bool Template::registerNode(const NodeTemplate& nt, NodeCreateFunc func, const RaynodesPluginI& plugin) {
+bool Template::registerNode(const NodeTemplate& nt, NodeCreateFunc func,const PluginContainer& pc) {
   if (nodeFactory.contains(nt.label)) {
     auto* format = "Naming collision: %s/%s wont be loaded. Please contact the plugin author.\n";
-    fprintf(stderr, format, plugin.name, nt.label);
+    fprintf(stderr, format, pc.name, nt.label);
     return false;
   }
   // Deep copy the template

@@ -34,7 +34,7 @@ struct ComponentRegister {
     return registerComponent(id, GetCreateFunc<ComponentType>());
   }
 
-  ComponentRegister(EditorContext& ec, RaynodesPluginI& plugin) : ec(ec), plugin(plugin), errorCount(0) {}
+  ComponentRegister(EditorContext& ec, PluginContainer& pc) : ec(ec), pc(pc), errorCount(0) {}
   [[nodiscard]] int getErrors() const { return errorCount; }
 
  private:
@@ -49,7 +49,7 @@ struct ComponentRegister {
   }
 
   EditorContext& ec;
-  RaynodesPluginI& plugin;
+  PluginContainer& pc;
   int errorCount;
 };
 
@@ -65,7 +65,7 @@ struct NodeRegister {
     return registerNode(CreateTemplate(id, components, color), GetCreateFunc<CustomNodeType>());
   }
 
-  NodeRegister(EditorContext& ec, RaynodesPluginI& plugin) : ec(ec), plugin(plugin), errorCount(0) {}
+  NodeRegister(EditorContext& ec, PluginContainer& pc) : ec(ec), pc(pc), errorCount(0) {}
   [[nodiscard]] int getErrors() const { return errorCount; }
 
  private:
@@ -82,7 +82,7 @@ struct NodeRegister {
   bool registerNode(const NodeTemplate& nt, NodeCreateFunc nodeCreateFunc);
 
   EditorContext& ec;
-  RaynodesPluginI& plugin;
+  PluginContainer& pc;
   int errorCount;
 };
 

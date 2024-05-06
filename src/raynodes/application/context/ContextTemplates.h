@@ -34,7 +34,7 @@ struct Template {
   NodeCreateMap nodeFactory;
 
   // Passed name only has to be valid until this function returns (copied)
-  bool registerComponent(const char* name, ComponentCreateFunc func, const RaynodesPluginI& plugin);
+  bool registerComponent(const char* name, ComponentCreateFunc func, const PluginContainer& plugin);
   // "ComponentTemplate" MUST BE allocated and unchanged for the lifetime of the component
   Component* createComponent(const ComponentTemplate component) {
     const auto it = componentFactory.find(component.component);
@@ -44,7 +44,7 @@ struct Template {
     return nullptr;
   }
   // Passed template names only have to be valid until this function returns (copied)
-  bool registerNode(const NodeTemplate& nt, NodeCreateFunc func, const RaynodesPluginI& plugin);
+  bool registerNode(const NodeTemplate& nt, NodeCreateFunc func, const PluginContainer& plugin);
   // Passed name only has to be valid until this function returns
   Node* createNode(const char* name, Vec2 pos, NodeID nodeID) {
     const auto it = nodeTemplates.find(name);

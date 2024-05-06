@@ -26,24 +26,24 @@
 
 namespace {
 // Registers a plugin in one go
-void RegisterPlugin(EditorContext& ec, RaynodesPluginI* plugin) {
+void RegisterPlugin(EditorContext& ec, PluginContainer& pc) {
   char nameBuff[Plugin::MAX_NAME_LEN];
 
   // Start
-  cxstructs::str_pad(nameBuff, Plugin::MAX_NAME_LEN, plugin->name, '.', nullptr, ":");
+  cxstructs::str_pad(nameBuff, Plugin::MAX_NAME_LEN, pc.name, '.', nullptr, ":");
   printf("    > %s ", nameBuff);  // Print the initial loading message
 
   // Nodes
   int nodesRegistered = static_cast<int>(ec.templates.nodeFactory.size());
-  NodeRegister nr(ec, *plugin);
-  plugin->registerNodes(nr);
+  NodeRegister nr(ec, pc);
+  pc.plugin->registerNodes(nr);
   nodesRegistered = static_cast<int>(ec.templates.nodeFactory.size()) - nodesRegistered;
   printf("Nodes: %s / ", String::GetPaddedNum(nodesRegistered));
 
   // Components
   int componentsRegistered = static_cast<int>(ec.templates.componentFactory.size());
-  ComponentRegister cr(ec, *plugin);
-  plugin->registerComponents(cr);
+  ComponentRegister cr(ec, pc);
+  pc.plugin->registerComponents(cr);
   componentsRegistered = static_cast<int>(ec.templates.componentFactory.size()) - componentsRegistered;
   printf("Components: %s / ", String::GetPaddedNum(componentsRegistered));
 
@@ -71,21 +71,21 @@ bool Plugin::loadPlugins(EditorContext& ec) {
     if (entry.path().extension() == filter) {
       std::string fileName = entry.path().stem().string();  // Get the filename without extension
       TextCopy(nameBuff, fileName.c_str());
-      auto* plugin = PluginLoader::GetPluginInstance(entry.path().string().c_str(), "CreatePlugin");
-      if (!plugin) {
+      auto dll = PluginLoader::GetPluginInstance(entry.path().string().c_str(), "CreatePlugin");
+      if (!dll.plugin) {
         fprintf(stderr, "Failed to load plugin: %s\n", nameBuff);
         continue;
       }
-      plugin->name = cxstructs::str_dup(nameBuff);
-      plugin->onLoad(ec);
-      plugins.push_back(plugin);
+      dll.name = cxstructs::str_dup(nameBuff);
+      dll.plugin->onLoad(ec);
+      plugins.push_back(dll);
     }
   }
 
   ec.plugin.sortPlugins();  // BuiltIns has to be first
 
-  for (auto* plugin : plugins) {
-    RegisterPlugin(ec, plugin);
+  for (auto& dll : plugins) {
+    RegisterPlugin(ec, dll);
   }
 
   cxstructs::str_pad(nameBuff, 4, String::FormatText("%d", static_cast<int>(plugins.size())), '.');
@@ -96,9 +96,9 @@ bool Plugin::loadPlugins(EditorContext& ec) {
 }
 
 void Plugin::sortPlugins() {
-  for (auto* plugin : plugins) {
-    if (TextIsEqual(plugin->name, "BuiltIns")) {
-      std::swap(plugins[0], plugin);
+  for (auto& dll : plugins) {
+    if (TextIsEqual(dll.name, "BuiltIns")) {
+      std::swap(plugins[0], dll);
     }
   }
 }

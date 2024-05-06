@@ -42,14 +42,28 @@ void Core::resetEditor(EditorContext& ec) {
   hasUnsavedChanges = true;  // Set flag to avoid unnecessary SetTitle insdie addEditorAction()
 
   // Setup action queue
+  for (auto a : actionQueue) {
+    //delete a;  Cant really do that ? - they could be tripled inside the events
+  }
+
   actionQueue.clear();
+
   addEditorAction(ec, new NewCanvasAction());
 
   // Setup data holders
   selectedNodes.clear();
   nodeMap.clear();
+  for (auto& n : nodes) {
+    if (n != nullptr) delete n;
+    n = nullptr;
+  }
   nodes.clear();
+
   copiedNodes.clear();
+
+  for (auto conn : connections) {
+    delete conn;
+  }
   connections.clear();
   UID = static_cast<NodeID>(0);
 

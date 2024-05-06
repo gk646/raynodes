@@ -46,11 +46,13 @@ NodeDeleteAction::NodeDeleteAction(EditorContext& ec, const std::unordered_map<N
 
 NodeDeleteAction::~NodeDeleteAction() noexcept {
   if (!removeNodes) return;
-  for (const auto n : deletedNodes) {
+  for (auto& n : deletedNodes) {
     delete n;
+    n = nullptr;
   }
-  for (const auto conn : deletedConnections) {
+  for (auto& conn : deletedConnections) {
     delete conn;
+    conn = nullptr;
   }
 }
 
@@ -81,8 +83,9 @@ NodeCreateAction::NodeCreateAction(const int size) : Action(CREATE_NODE) {
 
 NodeCreateAction::~NodeCreateAction() noexcept {
   if (!removeNodes) return;
-  for (const auto n : createdNodes) {
+  for (auto& n : createdNodes) {
     delete n;
+    n = nullptr;
   }
 }
 
@@ -96,7 +99,7 @@ void NodeCreateAction::undo(EditorContext& ec) {
 void NodeCreateAction::redo(EditorContext& ec) {
   removeNodes = false;
   for (const auto n : createdNodes) {
-    ec.core.insertNode(ec,  *n);
+    ec.core.insertNode(ec, *n);
   }
 }
 
@@ -140,8 +143,9 @@ ConnectionDeleteAction::ConnectionDeleteAction(const int size) : Action(CONNECTI
 
 ConnectionDeleteAction::~ConnectionDeleteAction() noexcept {
   if (!removeNodes) return;
-  for (const auto n : deletedConnections) {
+  for (auto& n : deletedConnections) {
     delete n;
+    n = nullptr;
   }
 }
 
