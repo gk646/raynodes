@@ -45,43 +45,41 @@ void StartUpdateTick(EditorContext& ec) {
 
   // raygui text size - 16 per default
   const auto scaleY = ec.display.screenSize.y / 1080.0F;
-  const auto fontSize = fmaxf(13.0F,std::round(13.0F * scaleY));
+  const auto fontSize = fmaxf(13.0F, std::round(13.0F * scaleY));
   GuiSetStyle(DEFAULT, TEXT_SIZE, static_cast<int>(fontSize));
 }
 void FormatSelectRectangle(EditorContext& ec) {
-  {
-    auto& [x, y, width, height] = ec.logic.selectRect;
-    auto& selectPoint = ec.logic.selectPoint;
-    const auto worldMouse = ec.logic.worldMouse;
+  auto& [x, y, width, height] = ec.logic.selectRect;
+  auto& selectPoint = ec.logic.selectPoint;
+  const auto worldMouse = ec.logic.worldMouse;
 
-    if (worldMouse.x < selectPoint.x) {
-      if (worldMouse.y > selectPoint.y) {
-        // Mouse is left bottom
-        x = worldMouse.x;
-        y = worldMouse.y - (worldMouse.y - selectPoint.y);
-        width = selectPoint.x - worldMouse.x;
-        height = worldMouse.y - selectPoint.y;
-      } else {
-        // Mouse is left top
-        x = worldMouse.x;
-        y = worldMouse.y;
-        width = selectPoint.x - worldMouse.x;
-        height = selectPoint.y - worldMouse.y;
-      }
+  if (worldMouse.x < selectPoint.x) {
+    if (worldMouse.y > selectPoint.y) {
+      // Mouse is left bottom
+      x = worldMouse.x;
+      y = worldMouse.y - (worldMouse.y - selectPoint.y);
+      width = selectPoint.x - worldMouse.x;
+      height = worldMouse.y - selectPoint.y;
     } else {
-      if (worldMouse.y > selectPoint.y) {
-        // Mouse is right bottom
-        x = selectPoint.x;
-        y = selectPoint.y;
-        width = worldMouse.x - selectPoint.x;
-        height = worldMouse.y - selectPoint.y;
-      } else {
-        // Mouse is right top
-        x = selectPoint.x;
-        y = selectPoint.y - (selectPoint.y - worldMouse.y);
-        width = worldMouse.x - selectPoint.x;
-        height = selectPoint.y - worldMouse.y;
-      }
+      // Mouse is left top
+      x = worldMouse.x;
+      y = worldMouse.y;
+      width = selectPoint.x - worldMouse.x;
+      height = selectPoint.y - worldMouse.y;
+    }
+  } else {
+    if (worldMouse.y > selectPoint.y) {
+      // Mouse is right bottom
+      x = selectPoint.x;
+      y = selectPoint.y;
+      width = worldMouse.x - selectPoint.x;
+      height = worldMouse.y - selectPoint.y;
+    } else {
+      // Mouse is right top
+      x = selectPoint.x;
+      y = selectPoint.y - (selectPoint.y - worldMouse.y);
+      width = worldMouse.x - selectPoint.x;
+      height = selectPoint.y - worldMouse.y;
     }
   }
 }
@@ -93,7 +91,7 @@ inline void UpdateTick(EditorContext& ec) {
 
   //Reverse update to correctly reflect input layers
   for (auto it = ec.core.nodes.rbegin(); it != ec.core.nodes.rend(); ++it) {
-    Node::Update(ec,**it);
+    Node::Update(ec, **it);
   }
 
   if (ec.logic.isSelecting) {

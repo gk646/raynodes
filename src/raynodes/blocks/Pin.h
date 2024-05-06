@@ -107,7 +107,7 @@ struct Pin {
   const PinType pinType;
   const Direction direction;
   float yPos = 0;  //Y position - outputs are deterministically drawn on the right
-  [[nodiscard]] auto getColor() const -> Color;
+  [[nodiscard]] Color getColor() const;
   static const char* TypeToString(PinType pt) {
     switch (pt) {
       case BOOLEAN:
@@ -124,6 +124,8 @@ struct Pin {
         return "Vec2";
       case VECTOR_3:
         return "Vec3";
+      case NODE:
+        return "Node";
       default:
         return "Unknown Type";
     }

@@ -23,7 +23,7 @@
 
 namespace Editor {
 
-inline int CheckForExit(EditorContext& ec) {
+inline bool CheckForExit(EditorContext& ec) {
   ec.core.requestedClose = true;
 
   if (!ec.core.hasUnsavedChanges) return true;

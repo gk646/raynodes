@@ -51,7 +51,7 @@ struct EditorContext {
   Display display{};
   Logic logic{};
   Template templates{};
-  UserInterface ui{};
+  UI ui{};
   Plugin plugin{};
   Persist persist{};
   Input input{};

@@ -256,12 +256,11 @@ void DrawComponentPins(EditorContext& ec, Component& c, float dx, float startIn,
 }
 
 void DrawComponent(EditorContext& ec, Node& n, Component& c, float dx, float& dy, float width) {
-  constexpr float pinRadius = Pin::PIN_SIZE / 2.0f;
   int maxPins = std::max(c.inputs.size(), c.outputs.size());
   float componentHeight = c.getHeight();
 
   // Calculate the total height needed for pins on the side with the maximum number
-  float totalPinHeight = maxPins * Pin::PIN_SIZE;
+  float totalPinHeight = static_cast<float>(maxPins) * Pin::PIN_SIZE;
   float maxVerticalSpace = std::max(totalPinHeight, componentHeight);
 
   // Calculate starting positions for pins and component to be vertically centered
@@ -297,7 +296,6 @@ Node::Node(const Node& n, const NodeID id)
     components.push_back(clone);
   }
 }
-
 Node::~Node() {
   for (const auto c : components) {
     c->onDestruction(*this);
@@ -426,9 +424,9 @@ void Node::LoadState(FILE* file, Node& n) {
 void Node::addComponent(Component* comp) {
   components.push_back(comp);
 }
-Component* Node::getComponent(const char* name) {
+Component* Node::getComponent(const char* label) {
   for (const auto c : components) {
-    if (strcmp(name, c->getName()) == 0) return c;
+    if (strcmp(label, c->getLabel()) == 0) return c;
   }
   return nullptr;
 }

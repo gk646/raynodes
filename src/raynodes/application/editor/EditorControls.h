@@ -23,6 +23,20 @@
 
 namespace Editor {
 //TODO split up
+namespace {
+void HandleMoveAction(EditorContext& ec) {
+  auto& moveAction = ec.logic.currentMoveAction;
+  if (moveAction != nullptr) {
+    const auto avgDist = moveAction->calculateDeltas(ec);
+    if (avgDist < Logic::MIN_DIST_THRESHOLD) {  // Only create events if enough change
+      delete moveAction;
+    } else {
+      ec.core.addEditorAction(ec, moveAction);
+    }
+    moveAction = nullptr;
+  }
+}
+}  // namespace
 
 inline void PollControls(EditorContext& ec) {
   const auto mouse = ec.logic.mouse;
@@ -60,18 +74,10 @@ inline void PollControls(EditorContext& ec) {
 
   if (ec.input.isMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
     ec.logic.handleDroppedPin(ec);
-    auto& moveAction = ec.logic.currentMoveAction;
-    if (moveAction != nullptr) {
-      const auto avgDist = moveAction->calculateDeltas(ec);
-      if (avgDist < Logic::MIN_DIST_THRESHOLD) {
-        delete moveAction;
-      } else {
-        ec.core.addEditorAction(ec, moveAction);
-      }
-      moveAction = nullptr;
-    }
     isDragging = false;
+    HandleMoveAction(ec);
   }
+
   if (isDragging) {
     camera.target.x -= worldMouse.x - dragStart.x;
     camera.target.y -= worldMouse.y - dragStart.y;
@@ -93,7 +99,7 @@ inline void PollControls(EditorContext& ec) {
   }
 
   //Delete
-  if (ec.input.isKeyPressed(KEY_DELETE)) {
+  if (ec.input.isKeyPressed(KEY_DELETE) || ec.input.isKeyPressed(KEY_BACKSPACE)) {
     ec.core.erase(ec);
   }
 
@@ -132,12 +138,6 @@ inline void PollControls(EditorContext& ec) {
     } else if (ec.input.isKeyPressed(KEY_A)) {
       ec.core.selectAll(ec);
     }
-  }
-
-  if (ec.input.isKeyDown(KEY_B)) {
-    ec.core.createNode(ec, "Display",
-                       {(float)GetRandomValue(0, 1000), (float)GetRandomValue(0, 1000)});
-    printf("%d\n", static_cast<int>(ec.core.nodes.size()));
   }
 }
 

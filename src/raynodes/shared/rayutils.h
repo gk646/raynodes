@@ -39,11 +39,6 @@ inline void DrawCenteredText(const Font& f, const char* txt, const Vector2 pos, 
   const auto width = MeasureTextEx(f, txt, fs, spc).x;
   DrawTextEx(f, txt, {pos.x - width / 2.0F, pos.y}, fs, spc, c);
 }
-
-inline bool CheckPointInsideRectangle(const Vector2 point, const Rectangle& rect) {
-  return point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y
-         && point.y <= rect.y + rect.height;
-}
 inline float EaseCubicIn(float t, float b, float c, float d) {
   if ((t /= 0.5f * d) < 1) return 0.5f * c * t * t * t + b;
 
@@ -51,6 +46,7 @@ inline float EaseCubicIn(float t, float b, float c, float d) {
 
   return 0.5f * c * (t * t * t + 2.0f) + b;
 }
+// Simple reverse tracking
 inline bool CheckCollisionBezierRect(const Vector2 startPos, const Vector2 endPos, const Rectangle& rect,
                                      float numPoints = 100) {
   Vector2 current;
@@ -59,10 +55,13 @@ inline bool CheckCollisionBezierRect(const Vector2 startPos, const Vector2 endPo
     current.x = startPos.x + t * (endPos.x - startPos.x);
     current.y = EaseCubicIn(t * numPoints, startPos.y, endPos.y - startPos.y, numPoints);
 
-    if (CheckPointInsideRectangle(current, rect)) {
+    if (CheckCollisionPointRec(current, rect)) {
       return true;
     }
   }
   return false;
+}
+inline bool CheckExtendedRec(const Vector2 p, const Rectangle& r, float ext) {
+  return CheckCollisionPointRec(p, {r.x - ext, r.y - ext, r.width + ext * 2, r.height + ext * 2});
 }
 #endif  //RAYNODES_SRC_SHARED_RAYUTILS_H_
