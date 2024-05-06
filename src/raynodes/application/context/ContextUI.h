@@ -42,14 +42,15 @@ struct ContextMenu {
   }
 };
 
-struct UserInterface {
+struct UI {
   ContextMenu contextMenu;
-  const char* fileMenuText =
-      "#001#File;#008#New (Ctrl+N);#005#Open (Ctrl+O);#002#Save (Ctrl+S);#006#Save As (Ctrl+Shift+S);#159#Exit";
+  const char* fileMenuText = "#001#File;#008#New (Ctrl+N);#005#Open (Ctrl+O);#002#Save (Ctrl+S);#006#Save As "
+                             "(Ctrl+Shift+S);#159#Exit";
   const char* editMenuText = "#022#Edit;#072#Undo (Ctrl+Z);#073#Redo (Ctrl+Y);#017#Cut (Ctrl+X);#016#Copy "
                              "(Ctrl+C);#018#Paste (Ctrl+V);#143#Erase (Del);#099#Select All (Ctrl+A)";
   const char* viewMenuText =
       "#044#View;#220#Zoom In (Ctrl++);#221#Zoom Out (Ctrl+-);#107#Zoom to Fit;#097#Grid";
+  static constexpr float CONTEXT_MENU_THRESHOLD = 12.0F;
   float topBarHeight = 20;
   bool showTopBarOnlyOnHover = true;
   bool showGrid = true;

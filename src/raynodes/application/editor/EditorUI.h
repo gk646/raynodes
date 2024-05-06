@@ -83,6 +83,7 @@ inline void DrawContextMenu(EditorContext& ec) {
   DrawRectanglePro(menuRect, {0, 0}, 0, ColorAlpha(BLACK, 0.5));
 
   const ContextMenuCategory* hoveredCategory = nullptr;
+  bool closeToMenu = false;
 
   for (auto& category : categories) {
     const Rectangle textRect = {drawPos.x, drawPos.y, menuWidth, fs + padding};
@@ -92,7 +93,20 @@ inline void DrawContextMenu(EditorContext& ec) {
     // Detect if mouse is over this category
     if (CheckCollisionPointRec(mouse, textRect)
         || (CheckCollisionPointRec(mouse, categoryRect) && category.isOpen)) {
+      if(hoveredCategory != nullptr) {
+        for (auto& category2 : categories) {
+          category2.isOpen = false;
+        }
+      }
       hoveredCategory = &category;  // Update the currently hovered category
+
+    } else {
+      if (CheckExtendedRec(mouse, textRect, UI::CONTEXT_MENU_THRESHOLD)) {
+        closeToMenu = true;  // If menu closes too fast its annoying
+      } else if (CheckExtendedRec(mouse, categoryRect, UI::CONTEXT_MENU_THRESHOLD) && category.isOpen) {
+        closeToMenu = true;  // If menu closes too fast its annoying
+        hoveredCategory = &category;
+      }
     }
 
     category.isOpen = hoveredCategory == &category;
@@ -127,7 +141,7 @@ inline void DrawContextMenu(EditorContext& ec) {
   }
 
   // If no category is hovered, close all and hide the context menu
-  if (!hoveredCategory) {
+  if (!hoveredCategory && !closeToMenu) {
     for (auto& category : categories) {
       category.isOpen = false;
     }
@@ -210,13 +224,13 @@ inline void DrawTopBar(EditorContext& ec) {
 
   int res = -1;
   res = dropDown(ec, bounds, ec.ui.fileMenuText, ec.ui.fileMenuState);
-  UserInterface::invokeFileMenu(ec, res);
+  UI::invokeFileMenu(ec, res);
 
   res = dropDown(ec, bounds, ec.ui.editMenuText, ec.ui.editMenuState);
-  UserInterface::invokeEditMenu(ec, res);
+  UI::invokeEditMenu(ec, res);
 
   res = dropDown(ec, bounds, ec.ui.viewMenuText, ec.ui.viewMenuState);
-  UserInterface::invokeViewMenu(ec, res);
+  UI::invokeViewMenu(ec, res);
 }
 inline void DrawStatusBar(EditorContext& ec) {
   float x = 0;
