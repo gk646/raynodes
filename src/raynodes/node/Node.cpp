@@ -20,6 +20,7 @@
 
 #include "Node.h"
 
+#include <cfloat>
 #include <raylib.h>
 #include <cxutil/cxio.h>
 #include <cxstructs/Constraint.h>

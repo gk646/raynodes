@@ -41,12 +41,12 @@ inline void DrawGrid(const EditorContext& ec) {
   Vector2 bottomRight = GetScreenToWorld2D({ec.display.screenSize.x, ec.display.screenSize.y}, camera);
 
   // Calculate the starting points for drawing grid lines, adjusted for zoom
-  float startX = floor(topLeft.x / baseGridSpacing) * baseGridSpacing;
-  float startY = floor(topLeft.y / baseGridSpacing) * baseGridSpacing;
+  float startX = std::floor(topLeft.x / baseGridSpacing) * baseGridSpacing;
+  float startY = std::floor(topLeft.y / baseGridSpacing) * baseGridSpacing;
 
   // Calculate the end points for drawing grid lines, adjusted for zoom
-  float endX = ceil(bottomRight.x / baseGridSpacing) * baseGridSpacing;
-  float endY = ceil(bottomRight.y / baseGridSpacing) * baseGridSpacing;
+  float endX = std::ceil(bottomRight.x / baseGridSpacing) * baseGridSpacing;
+  float endY = std::ceil(bottomRight.y / baseGridSpacing) * baseGridSpacing;
 
   // Draw vertical grid lines
   for (float x = startX; x <= endX; x += baseGridSpacing) {
@@ -79,7 +79,7 @@ inline void DrawContextMenu(EditorContext& ec) {
   Vector2 drawPos{pos.x, pos.y};
 
   // Draw main menu background
-  DrawRectangleRounded(menuRect, 0.1F, 10, ColorAlpha(UI::COLORS[UI_DARK], 0.7));
+  DrawRectangleRounded(menuRect, 0.1F, 10, ColorAlpha(UI::COLORS[UI_DARK], 0.8));
 
   const ContextMenuCategory* hoveredCategory = nullptr;
   bool closeToMenu = false;
@@ -115,13 +115,13 @@ inline void DrawContextMenu(EditorContext& ec) {
       DrawRectangleRounded(textRect, 0.1F, 10, hightLightColor);
     }
 
-    DrawTextEx(font, category.name, {drawPos.x + padding, drawPos.y + padding}, fs, 0.5F,
+    DrawTextEx(font, category.name, {drawPos.x + padding, drawPos.y + padding}, fs, 0.6F,
                UI::COLORS[UI_LIGHT]);
 
     // Draw the category's nodes if it's open
     if (category.isOpen && !category.nodes.empty()) {
       Vector2 drawPosC = {drawPos.x + menuWidth, drawPos.y};
-      DrawRectangleRounded(categoryRect, 0.1F, 10, ColorAlpha(UI::COLORS[UI_DARK], 0.7));
+      DrawRectangleRounded(categoryRect, 0.1F, 10, ColorAlpha(UI::COLORS[UI_DARK], 0.8));
       for (const auto& name : category.nodes) {
         const Rectangle nodeTextRect = {drawPosC.x, drawPosC.y, menuWidth, fs + padding};
         if (CheckCollisionPointRec(mouse, nodeTextRect)) {
@@ -132,7 +132,7 @@ inline void DrawContextMenu(EditorContext& ec) {
             break;
           }
         }
-        DrawTextEx(font, name, {drawPosC.x + padding, drawPosC.y + padding}, fs, 0.5F, UI::COLORS[UI_LIGHT]);
+        DrawTextEx(font, name, {drawPosC.x + padding, drawPosC.y + padding}, fs, 0.7F, UI::COLORS[UI_LIGHT]);
         drawPosC.y += fs + padding;
       }
     }
@@ -162,7 +162,7 @@ inline void DrawActions(EditorContext& ec) {
 
   auto rect = Rectangle{x, y, width, height};
 
-  DrawRectangleRec(rect, ColorAlpha(UI::COLORS[UI_DARK], 0.7F));
+  DrawRectangleRec(rect, ColorAlpha(UI::COLORS[UI_DARK], 0.85F));
   DrawRectangleLinesEx(rect, padding / 4.0F, ColorAlpha(UI::COLORS[UI_MEDIUM], 0.7F));
 
   // Adjust the start index to ensure the current action is always on screen
@@ -251,7 +251,7 @@ inline void DrawStatusBar(EditorContext& ec) {
     text = String::FormatText("#098# Nodes: %d", (int)ec.core.nodes.size());
     statusBar(ec, leftPanels, y, 150.0F, height, text);
     text = String::FormatText("#070# Connections: %d", (int)ec.core.connections.size());
-    statusBar(ec, leftPanels, y, 150.0F, height, text);
+    statusBar(ec, leftPanels, y, 180.0F, height, text);
   }
 
   // Right panels
@@ -267,6 +267,9 @@ inline void DrawStatusBar(EditorContext& ec) {
     // Draw the Zoom slider
     const auto bounds = ec.display.getFullyScaled({rightPanels - lastWidth + 25, y, lastWidth - 50, height});
     if (GuiSliderBar(bounds, nullptr, nullptr, &ec.display.camera.zoom, 0.1F, 3.0F)) {
+      ec.input.consumeMouse();
+    } else if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)
+               && CheckCollisionPointRec(ec.logic.mouse, bounds)) {
       ec.input.consumeMouse();
     }
 

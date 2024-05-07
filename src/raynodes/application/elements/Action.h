@@ -105,7 +105,7 @@ struct NodeCreateAction final : Action {
   void redo(EditorContext& ec) override;
 
  private:
-  bool removeNodes = true;
+  bool removeNodes = false;
 };
 
 //Saves the move delta
@@ -114,7 +114,7 @@ struct NodeMovedAction final : Action {
   explicit NodeMovedAction(int size);
   void undo(EditorContext& ec) override;
   void redo(EditorContext& ec) override;
-  float calculateDeltas(const EditorContext& ec);
+  float calculateDeltas( EditorContext& ec);
 };
 
 struct ConnectionDeleteAction final : Action {

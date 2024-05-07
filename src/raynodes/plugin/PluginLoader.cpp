@@ -59,7 +59,7 @@ PluginContainer PluginLoader::GetPluginInstance( const char* path, const char* f
 #if defined(_WIN32)
   handle = LoadLibraryA(path);
 #else
-  handle = dlopen(relativePath, RTLD_LAZY);
+  handle = dlopen(path, RTLD_LAZY);
 #endif
 
   if (!handle) {

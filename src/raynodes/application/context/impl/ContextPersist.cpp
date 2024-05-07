@@ -86,7 +86,7 @@ int LoadNodes(FILE* file, EditorContext& ec) {
   int count = 0;
   char buff[Plugin::MAX_NAME_LEN];
   while (cxstructs::io_load_inside_section(file, "Nodes")) {
-    int id;
+    int id= 0;
     cxstructs::io_load(file, buff, Plugin::MAX_NAME_LEN);
     cxstructs::io_load(file, id);
     const auto newNode = ec.core.createNode(ec, buff, {0, 0}, static_cast<uint16_t>(id));
@@ -210,9 +210,9 @@ bool Persist::loadFromFile(EditorContext& ec) {
 
   const auto* path = openedFilePath.c_str();
 
-  if (fopen_s(&file, path, "rb") != 0) return false;
+  fopen_s(&file,path, "rb");
 
-  if (!file) {
+  if (file == nullptr) {
     fprintf(stderr, "Unable to open file %s\n", path);
     return false;
   }

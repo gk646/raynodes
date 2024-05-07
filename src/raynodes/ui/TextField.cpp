@@ -249,7 +249,7 @@ void TextInputField::updateDimensions() {
   }
 
   bounds.height = std::max(20, static_cast<uint16_t>(fs) * lineCount);
-  bounds.width = longestLine;
+  bounds.width = longestLine + 3;
 }
 
 uint16_t TextInputField::getIndexFromPos(const Vector2 mouse) {

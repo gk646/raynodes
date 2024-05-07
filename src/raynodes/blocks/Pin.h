@@ -158,7 +158,7 @@ struct InputPin final : Pin {
     if constexpr (pt == STRING) {
       return static_cast<const char*>(nullptr);
     } else if constexpr (pt == INTEGER) {
-      return 0LL;
+      return static_cast<int64_t>(0);
     } else if constexpr (pt == BOOLEAN) {
       return false;
     } else if constexpr (pt == FLOAT) {

@@ -24,6 +24,7 @@
 #include "shared/fwd.h"
 
 #include <cstdio>
+#include <cmath>
 #include <string>
 #include <deque>
 #include <unordered_map>

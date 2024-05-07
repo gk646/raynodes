@@ -35,7 +35,7 @@
 //.....................................................................
 // Rule 1: Include this at the bottom to export the plugin function
 /*
-extern "C" EXPORT inline RaynodesPluginI* CreatePlugin() {
+extern "C" EXPORT RaynodesPluginI* CreatePlugin() {
   return new MyPlugin();
 }
 */
@@ -45,7 +45,6 @@ extern "C" EXPORT inline RaynodesPluginI* CreatePlugin() {
 // .....................................................................
 
 struct RaynodesPluginI {
-  const char* name = nullptr;  // Set to the filename at runtime
   virtual ~RaynodesPluginI() = default;
   // Called once after its been loaded
   virtual void onLoad(EditorContext& ec) {}
@@ -63,7 +62,7 @@ struct BuiltIns final : RaynodesPluginI{
   void registerComponents(ComponentRegister& cr) override;
 };
 
-extern "C" EXPORT inline RaynodesPluginI* CreatePlugin() {
+extern "C" EXPORT RaynodesPluginI* CreatePlugin() {
   return new BuiltIns();
 }
 */

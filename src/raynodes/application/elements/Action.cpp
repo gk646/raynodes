@@ -46,13 +46,11 @@ NodeDeleteAction::NodeDeleteAction(EditorContext& ec, const std::unordered_map<N
 
 NodeDeleteAction::~NodeDeleteAction() noexcept {
   if (!removeNodes) return;
-  for (auto& n : deletedNodes) {
+  for (const auto n : deletedNodes) {
     delete n;
-    n = nullptr;
   }
-  for (auto& conn : deletedConnections) {
+  for (const auto conn : deletedConnections) {
     delete conn;
-    conn = nullptr;
   }
 }
 
@@ -83,9 +81,8 @@ NodeCreateAction::NodeCreateAction(const int size) : Action(CREATE_NODE) {
 
 NodeCreateAction::~NodeCreateAction() noexcept {
   if (!removeNodes) return;
-  for (auto& n : createdNodes) {
+  for (const auto n : createdNodes) {
     delete n;
-    n = nullptr;
   }
 }
 
@@ -124,10 +121,12 @@ void NodeMovedAction::redo(EditorContext& ec) {
   }
 }
 
-float NodeMovedAction::calculateDeltas(const EditorContext& ec) {
+float NodeMovedAction::calculateDeltas(EditorContext& ec) {
   auto& selectedNodes = ec.core.selectedNodes;
   for (auto& [id, delta] : movedNodes) {
-    const auto node = selectedNodes.at(id);
+    // Can happen when trying to delta deleted nodes (not selected ones...)
+    if (!selectedNodes.contains(id)) continue;
+    const auto node = selectedNodes[id];
     delta.x -= node->x;
     delta.y -= node->y;
   }
@@ -143,9 +142,8 @@ ConnectionDeleteAction::ConnectionDeleteAction(const int size) : Action(CONNECTI
 
 ConnectionDeleteAction::~ConnectionDeleteAction() noexcept {
   if (!removeNodes) return;
-  for (auto& n : deletedConnections) {
+  for (const auto n : deletedConnections) {
     delete n;
-    n = nullptr;
   }
 }
 

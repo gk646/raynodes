@@ -34,7 +34,7 @@ bool Core::loadCore(EditorContext& ec) {
   nodeMap.reserve(200);
   nodes.reserve(200);
   copiedNodes.reserve(200);
-  connections.reserve(50);
+  connections.reserve(MAX_ACTIONS + 1);
   return true;
 }
 
@@ -43,7 +43,7 @@ void Core::resetEditor(EditorContext& ec) {
 
   // Setup action queue
   for (auto a : actionQueue) {
-    //delete a;  Cant really do that ? - they could be tripled inside the events
+    delete a;
   }
 
   actionQueue.clear();
@@ -53,9 +53,8 @@ void Core::resetEditor(EditorContext& ec) {
   // Setup data holders
   selectedNodes.clear();
   nodeMap.clear();
-  for (auto& n : nodes) {
-    if (n != nullptr) delete n;
-    n = nullptr;
+  for (auto n : nodes) {
+    delete n;
   }
   nodes.clear();
 
@@ -97,6 +96,7 @@ void Core::insertNode(EditorContext& ec, Node& node) {
     c->onAddedToScreen(ec, node);
   }
 }
+
 void Core::removeNode(EditorContext& ec, NodeID id) {
   const auto node = nodeMap[id];
   nodeMap.erase(id);
@@ -112,7 +112,9 @@ void Core::paste(EditorContext& ec) const {
                          ec.logic.worldMouse.y - copiedNodes[0]->y};
 
   const auto action = new NodeCreateAction(static_cast<int>(copiedNodes.size()) + 1);
+  // It can happen here that we try to copy deleted nodes
   for (const auto n : copiedNodes) {
+    if (n == nullptr) continue;
     auto* newNode = n->clone(ec.core.getID());
     newNode->x += delta.x;
     newNode->y += delta.y;
@@ -121,6 +123,7 @@ void Core::paste(EditorContext& ec) const {
   }
   ec.core.addEditorAction(ec, action);
 }
+
 void Core::cut(EditorContext& ec) {
   if (selectedNodes.empty()) return;
   copiedNodes.clear();
@@ -131,12 +134,14 @@ void Core::cut(EditorContext& ec) {
   ec.core.addEditorAction(ec, action);
   selectedNodes.clear();
 }
+
 void Core::erase(EditorContext& ec) {
   if (selectedNodes.empty()) return;
   const auto action = new NodeDeleteAction(ec, selectedNodes);
   ec.core.addEditorAction(ec, action);
   selectedNodes.clear();
 }
+
 void Core::open(EditorContext& ec) {
   if (ec.core.hasUnsavedChanges) ec.ui.showUnsavedChanges = true;
   else {
@@ -188,7 +193,7 @@ void Core::addEditorAction(EditorContext& ec, Action* action) {
   currentActionIndex = static_cast<int>(actionQueue.size()) - 1;  // Move to the new action
 
   // Limit the queue size
-  if (actionQueue.size() > 50) {
+  if (actionQueue.size() > MAX_ACTIONS) {
     delete actionQueue.front();  //Delete ptr
     actionQueue.pop_front();
     --currentActionIndex;

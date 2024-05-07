@@ -20,6 +20,7 @@
 
 #include "TextOutC.h"
 
+
 #include <cxutil/cxio.h>
 
 #include "application/EditorContext.h"

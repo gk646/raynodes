@@ -49,6 +49,8 @@ inline void SetupDisplay(EditorContext& ec) {
   SetWindowSize(screenWidth, screenHeight);
   SetWindowMinSize(640, 480);
 
+  ec.display.uiTexture = LoadRenderTexture(screenWidth, screenHeight);
+
   // Center the window on the screen
   SetWindowPosition((static_cast<int>(monitorWidth) - screenWidth) / 2,
                     (static_cast<int>(monitorHeight) - screenHeight) / 2);
@@ -76,8 +78,10 @@ inline void SetupDisplay(EditorContext& ec) {
   GuiSetStyle(DEFAULT, BASE_COLOR_DISABLED, ColorToInt(UI::COLORS[UI_MEDIUM]));
   GuiSetStyle(DEFAULT, TEXT_COLOR_DISABLED, ColorToInt(UI::COLORS[UI_LIGHT]));
 
-  GuiSetStyle(SLIDER,BASE_COLOR_PRESSED,ColorToInt(UI::COLORS[UI_LIGHT]));
-
+  GuiSetStyle(SLIDER, BASE_COLOR_PRESSED, ColorToInt(UI::COLORS[UI_LIGHT]));
+  GuiSetStyle(SLIDER, BASE_COLOR_FOCUSED, ColorToInt(UI::COLORS[UI_LIGHT]));
+  GuiSetStyle(SLIDER, TEXT_COLOR_PRESSED, ColorToInt(UI::COLORS[UI_DARK]));
+  GuiSetStyle(SLIDER, BORDER_COLOR_PRESSED, ColorToInt(UI::COLORS[UI_LIGHT]));
 
   GuiSetStyle(DROPDOWNBOX, TEXT_PADDING, 2);
   GuiSetStyle(DROPDOWNBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
