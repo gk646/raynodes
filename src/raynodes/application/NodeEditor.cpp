@@ -56,8 +56,22 @@ bool NodeEditor::start() {
 
 namespace {
 void DrawBackGround(EditorContext& ec) {
+  //Draw the ui to the texture but poll it already to respect the layers
+  //TODO drawing to texture makes text more unclear
+  // maybe theres a better way to solve this
+  Editor::StartUpdateTick(ec);
+  BeginTextureMode(ec.display.uiTexture);
+  {
+    ClearBackground(BLANK);
+    Editor::DrawUnsavedChanges(ec);
+    Editor::DrawContextMenu(ec);
+    Editor::DrawActions(ec);
+    Editor::DrawTopBar(ec);
+    Editor::DrawStatusBar(ec);
+  }
+  EndTextureMode();
   Editor::UpdateTick(ec);    // Updates all nodes
-  Editor::PollControls(ec);  // Poll controls after all nodes to respect layers
+  Editor::PollControls(ec);  // Poll controls after all nodes
   Editor::DrawGrid(ec);
 }
 
@@ -68,7 +82,7 @@ void DrawContent(EditorContext& ec) {
   Editor::DrawConnections(ec, isCTRLDown);
 
   if (ec.logic.isSelecting) {
-    DrawRectangleRec(ec.logic.selectRect, ColorAlpha(isCTRLDown ? RED : BLUE, 0.4F));
+    DrawRectangleRec(ec.logic.selectRect, ColorAlpha(isCTRLDown ? RED : UI::COLORS[UI_LIGHT], 0.4F));
   }
 
   if (ec.logic.isMakingConnection) {
@@ -77,11 +91,8 @@ void DrawContent(EditorContext& ec) {
 }
 
 void DrawForeGround(EditorContext& ec) {
-  Editor::DrawUnsavedChanges(ec);
-  Editor::DrawContextMenu(ec);
-  Editor::DrawActions(ec);
-  Editor::DrawTopBar(ec);
-  Editor::DrawStatusBar(ec);
+  DrawTextureRec(ec.display.uiTexture.texture, {0, 0, ec.display.screenSize.x, -ec.display.screenSize.y},
+                 {0, 0}, WHITE);
 }
 }  // namespace
 

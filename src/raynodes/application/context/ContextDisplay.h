@@ -36,6 +36,8 @@ enum AnchorPos : uint8_t {
 struct Display final {
   static constexpr float MAX_ZOOM = 3.0F;
   static constexpr float MIN_ZOOM = 0.1F;
+
+  RenderTexture uiTexture;
   Font editorFont = {};
   Camera2D camera = {};
   Vector2 screenSize = {};

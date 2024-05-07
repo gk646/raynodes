@@ -28,7 +28,7 @@ struct BuiltIns final : RaynodesPluginI {
   void registerNodes(NodeRegister& nr) override;
 };
 
-extern "C" EXPORT inline RaynodesPluginI* CreatePlugin() {
+extern "C" EXPORT  RaynodesPluginI* CreatePlugin() {
   return new BuiltIns();
 }
 

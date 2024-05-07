@@ -56,8 +56,6 @@ inline void PollControls(EditorContext& ec) {
   if (ec.input.isMouseButtonReleased(MOUSE_BUTTON_RIGHT)) {
     if (mouse.x == contextMenuPos.x && mouse.y == contextMenuPos.y) {
       ec.logic.showContextMenu = !ec.logic.showContextMenu;
-      contextMenuPos.x -= 3;
-      contextMenuPos.y -= 3;
       ec.logic.isDraggingScreen = false;
       ec.logic.isSelecting = false;
       return;

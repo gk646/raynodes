@@ -9,4 +9,5 @@ include_directories(
 
 add_subdirectory("${DEPENDENCIES_PATH}/raylib-master" raylib)
 
+
 add_library(nativefiledialogs STATIC "${DEPENDENCIES_PATH}/tinyfiledialogs/tinyfiledialogs.c")

@@ -22,32 +22,6 @@
 #define RAYNODES_SRC_APPLICATION_EDITOR_EDITORUPDATE_H_
 
 namespace {
-void StartUpdateTick(EditorContext& ec) {
-  auto& camera = ec.display.camera;
-
-  ec.display.screenSize.x = static_cast<float>(GetScreenWidth());
-  ec.display.screenSize.y = static_cast<float>(GetScreenHeight());
-
-  camera.offset = {ec.display.screenSize.x / 2.0f, ec.display.screenSize.y / 2.0f};
-
-  camera.zoom += GetMouseWheelMove() * 0.05f;
-  camera.zoom = (camera.zoom > Display::MAX_ZOOM) ? Display::MAX_ZOOM : camera.zoom;
-  camera.zoom = (camera.zoom < Display::MIN_ZOOM) ? Display::MIN_ZOOM : camera.zoom;
-
-  // Scale to normal screen space
-  const auto mouse = GetMousePosition();
-
-  ec.logic.worldMouse = GetScreenToWorld2D(mouse, camera);
-  ec.logic.mouse = mouse;
-  ec.logic.isAnyNodeHovered = false;  // Reset each tick
-  ec.logic.isAnyNodeDragged = false;  // Reset each tick
-  ec.input.reset();                   //Reset input for tick
-
-  // raygui text size - 16 per default
-  const auto scaleY = ec.display.screenSize.y / 1080.0F;
-  const auto fontSize = fmaxf(13.0F, std::round(13.0F * scaleY));
-  GuiSetStyle(DEFAULT, TEXT_SIZE, static_cast<int>(fontSize));
-}
 void FormatSelectRectangle(EditorContext& ec) {
   auto& [x, y, width, height] = ec.logic.selectRect;
   auto& selectPoint = ec.logic.selectPoint;
@@ -87,8 +61,6 @@ void FormatSelectRectangle(EditorContext& ec) {
 
 namespace Editor {
 inline void UpdateTick(EditorContext& ec) {
-  StartUpdateTick(ec);
-
   //Reverse update to correctly reflect input layers
   for (auto it = ec.core.nodes.rbegin(); it != ec.core.nodes.rend(); ++it) {
     Node::Update(ec, **it);
@@ -97,6 +69,43 @@ inline void UpdateTick(EditorContext& ec) {
   if (ec.logic.isSelecting) {
     FormatSelectRectangle(ec);
   }
+
+
 }
+inline void StartUpdateTick(EditorContext& ec) {
+  auto& camera = ec.display.camera;
+
+  auto currScreenWidth = static_cast<float>(GetScreenWidth());
+  auto currScreenHeight = static_cast<float>(GetScreenHeight());
+
+  if (ec.display.screenSize.x != currScreenWidth || ec.display.screenSize.y != currScreenHeight) {
+
+    UnloadRenderTexture(ec.display.uiTexture);
+    ec.display.uiTexture = LoadRenderTexture((int)currScreenWidth, (int)currScreenHeight);
+  }
+  ec.display.screenSize.x = currScreenWidth;
+  ec.display.screenSize.y = currScreenHeight;
+
+  camera.offset = {ec.display.screenSize.x / 2.0f, ec.display.screenSize.y / 2.0f};
+
+  camera.zoom += GetMouseWheelMove() * 0.05f;
+  camera.zoom = (camera.zoom > Display::MAX_ZOOM) ? Display::MAX_ZOOM : camera.zoom;
+  camera.zoom = (camera.zoom < Display::MIN_ZOOM) ? Display::MIN_ZOOM : camera.zoom;
+
+  // Scale to normal screen space
+  const auto mouse = GetMousePosition();
+
+  ec.logic.worldMouse = GetScreenToWorld2D(mouse, camera);
+  ec.logic.mouse = mouse;
+  ec.logic.isAnyNodeHovered = false;  // Reset each tick
+  ec.logic.isAnyNodeDragged = false;  // Reset each tick
+  ec.input.reset();                   //Reset input for tick
+
+  // raygui text size - 16 per default
+  const auto scaleY = ec.display.screenSize.y / 1080.0F;
+  const auto fontSize = fmaxf(13.0F, std::round(13.0F * scaleY));
+  GuiSetStyle(DEFAULT, TEXT_SIZE, static_cast<int>(fontSize));
+}
+
 }  // namespace Editor
 #endif  // RAYNODES_SRC_APPLICATION_EDITOR_EDITORUPDATE_H_
