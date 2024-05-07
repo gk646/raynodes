@@ -7,20 +7,24 @@ bigger projects like games, editors...
 A small showcase of its major features:
 
 - **Clean**, **modularized** and **documented** source code
+- Rich, documented **node and component** interface allowing for endless possibilities!
 - **Fast** and **optimized** import and export functionalities without dependencies!
-- Cross-platform support
+- Supports both **Windows and Linux** (and possibly MacOS)
 - Documented **plugin interface** and capabilities
-- **User created** node templates at runtime
-- Easily **extendable** with **event-driven** Component interface
+- **User created** node at runtime via a component library (script support with python and lua in the future)
 
 In a lot of places it uses my (header only) C++ helper library [cxstructs](https://github.com/gk646/cxstructs).  
 For more infos on the design choices go to [Software Design](#Software-Design)
 
+
+![Image](.github/fullEditor.png)
+
 **1.** [Controls](#Controls)   
 **2.** [Editor Features](#Editor-Features)   
 **3.** [Components!](#Expand-and-Contribute-with-Components)  
-**4.** [Plugins](#Plugins)  
-**5.** [Software Design](#Software-Design)
+**4.** [Plugins](#Plugins)
+**5.** [Nodes!](#Nodes)
+**6.** [Software Design](#Software-Design)
 
 ### Controls
 
@@ -50,49 +54,26 @@ Actions have a generic interface and new ones can easily be added.
 
 ...
 
-## Expand and Contribute with Components!
+## Custom Components!
 
-Add your own Components to enable users to create nodes with them.
-A component is a simple struct that is drawn and update inside the node.
+Components are the second level of customization you can achieve. For that you can implement the Component interface
+inside your own plugin. For the most part a component is a simple struct that is drawn and updated inside the node.
 Inside the update function you have full write and read access to the context and design and draw complex components.
 
-### Capabilities
-
-The capabilities are almost endless.
-Some powerful features include:
-
-- Access other nodes and their components from your component
-    - e.g. modify all nodes with a given label
-- Modify editor properties like resolution or camera zoom and position
-- Trigger functions like saving or adding and removing nodes
-
-Some ides that are possible:
-
-- Load a picture from a given path and display it
-    - Take a Vector3 input and shift the colors
-- Computer logic gates with clock cycle
-    - Use the boolean type to activate
-    - Use the integer type to pass bit data
-
-### One Rule to rule them all
-
-**All components are expected to stay within their bounds *(draw and update)*. Although they can freely change their
-dimensions...**
-
-### Interface
+This is a glimps at the interface but the Component.h header has a lot more and is **self documenting**! Check it out!
 
 ```cpp
   //-----------CORE-----------//
-  //Necessary to copy the component
+  // Necessary to copy the component
   virtual Component* clone() = 0;
-  //IMPORTANT: Only called when its bounds are visible on the screen!
+  // IMPORTANT: Only called when its bounds are visible on the screen!
   virtual void draw(EditorContext& ec, Node& parent) = 0;
-  //Guaranteed to be called once per tick (on the main thread) (not just when focused)
+  // Guaranteed to be called once per tick (on the main thread) (not just when focused)
   virtual void update(EditorContext& ec, Node& parent) = 0;
-  //Use the symmetric helpers : cx_save(file,myFloat)...
-  virtual void save(FILE* file) = 0;
-  //Use the symmetric helpers : cx_load(file,myFloat)...
-  virtual void load(FILE* file) = 0;
+  // Use the symmetric helpers : io_save(file,myFloat)...
+  virtual void save(FILE* file) {}
+  //Use the symmetric helpers : io_load(file,myFloat)...
+  virtual void load(FILE* file) {}
 
   //-----------EVENTS-----------//
   // All called once, guaranteed before update() is called
@@ -102,20 +83,20 @@ dimensions...**
   virtual void onFocusLoss(EditorContext& ec) {}
 
   //-----------LIFE CYCLE-----------//
-  //Called once at creation time after the constructor
+  // Called once at creation time after the constructor
   virtual void onCreate(EditorContext& ec, Node& parent) {}
-  //IMPORTANT: Only called once when the node is finally destroyed (only happens after its delete action is destroyed)
-  //This may happen very delayed or even never!
+  // IMPORTANT: Only called once when the node is finally destroyed (only happens after its delete action is destroyed)
+  // This may happen very delayed or even never!
   virtual void onDestruction(Node& parent) {}
-  //Called whenever component is removed from the screen (delete/cut)
+  // Called whenever component is removed from the screen (delete/cut)
   virtual void onRemovedFromScreen(EditorContext& ec, Node& parent) {}
-  //Called whenever component is added to the screen (paste)
+  // Called whenever component is added to the screen (paste)
   virtual void onAddedToScreen(EditorContext& ec, Node& parent) {}
 
   //-----------CONNECTIONS-----------//
-  //Called once when a new connection is added
+  // Called once when a new connection is added
   virtual void onConnectionAdded(EditorContext& ec, const Connection& con) {}
-  //Called once when an existing connection is removed
+  // Called once when an existing connection is removed
   virtual void onConnectionRemoved(EditorContext& ec, const Connection& con) {}
 ```
 
@@ -147,24 +128,24 @@ cxstructs::io_load(file, buffer);
 
 ## Plugins
 
-`raynodes` provides an easy-to-use plugin interface that allows defining custom components and building nodes out of
-them.
+Whenever you want to make custom components or nodes you will need to make your own plugin. `raynodes` provides an
+easy-to-use plugin interface that allows defining custom components and building nodes out of them.
+
+**When creating your plugin you have to link against the base editor (statically) and against raylib (shared).**
 
 ```cpp
-//The raynodes plugin interface
 struct RaynodesPluginI {
-const char* name = nullptr;  //Will be set automatically at runtime (to the file name, for clarity)
-virtual ~RaynodesPluginI() = default;
-// Called once after its been loaded
-virtual void onLoad(EditorContext& ec) {}
-// Called once at the correct time to register its components
-virtual void registerComponents(ComponentRegister& cr) {}
-// Called once at the correct time to register its nodes
-virtual void registerNodes(NodeRegister& nr) {}
+  virtual ~RaynodesPluginI() = default;
+  // Called once after its been loaded
+  virtual void onLoad(EditorContext& ec) {}
+  // Called once at the correct time to register its components
+  virtual void registerComponents(ComponentRegister& cr) {}
+  // Called once at the correct time to register its nodes
+  virtual void registerNodes(NodeRegister& nr) {}
 };
 
-extern "C" EXPORT inline RaynodesPluginI* CreatePlugin() {
- return new MyPlugin();
+extern "C" EXPORT RaynodesPluginI* CreatePlugin() {
+  return new MyPlugin();
 }
 ```
 
@@ -184,10 +165,10 @@ Syntax: `registerComponent<ComponentType>("<Component-Identifier>")`
 
 ```cpp
 void BuiltIns::registerComponents(ComponentRegister& cr) {
-cr.registerComponent<MathC>("MathOp");
-cr.registerComponent<DisplayC>("Display");
-cr.registerComponent<StringToNumberC>("StrToNum");
-cr.registerComponent<TextInputField>("TextInput");
+  cr.registerComponent<MathC>("BI_MathOp");
+  cr.registerComponent<DisplayC>("BI_Display");
+  cr.registerComponent<SeparateXYZC>("BI_SeparateXYZ");
+  cr.registerComponent<Vec3OutC>("BI_Vec3Out");
 }
 ```
 
@@ -200,19 +181,40 @@ Syntax: `registerNode("<NodeName>", { {<CustomLabel>,<Component-Identifier>}, ..
 
 ```cpp
 void BuiltIns::registerNodes(NodeRegister& nr) {
-  nr.registerNode("MathOp", {{"Operation", "MathOp"}});
-  nr.registerNode("TextField", {{"TextField", "TextInput"}});
-  nr.registerNode("StringToNum", {{"Converter", "StrToNum"}});
-  nr.registerNode("Display", {{"Display", "Display"}});
-  nr.registerNode("NumberField", {{"Number", "NumberInput"}});
+  nr.registerNode("MathOp", {{"Operation", "BI_MathOp"}});
+  nr.registerNode("TextField", {{"TextField", "BI_TextOut"}});
+  nr.registerNode("NumberField", {{"Number", "BI_NumberOut"}});
+  nr.registerNode("SeparateXYZ", {{"Vector", "BI_SeparateXYZ"}});
+  nr.registerNode("Vector 3", {{"Vector3", "BI_Vec3Out"}});
 }
 ```
 
-### Misc
-
-**When creating your plugin you might have to link against the base editor (statically) and against raylib (shared).**
-
 Plugins will be loaded from the `./plugins` folder relative to the executable
+
+## Custom Nodes!
+
+The node interface is entirely optional but can be used to gain another level of control to implement functionality.
+It's mostly there to orchestrate existing components by allowing to specify a update and render tasks that runs after
+all components.
+
+```cpp
+//-----------CORE-----------//
+[[nodiscard]] virtual Node* clone(NodeID nid);
+// Guaranteed to be called each tick and AFTER all components have been updated
+virtual void update(EditorContext& ec) {}
+// Called only when the node bounds are (partially) within the screen
+virtual void draw(EditorContext& ec) {}
+// Called at save time - allows you to save arbitrary, unrelated additional state data
+virtual void saveState(FILE* file) const {}
+// Called at load time - should be the exact same statements and order as in saveState();
+virtual void loadState(FILE* file) {}
+
+//-----------LIFE CYCLE-----------//
+// Called once when the node is created and AFTER all components
+virtual void onCreation(EditorContext& ec) {}
+```
+
+This interface is still quite young and will be expanded.
 
 ## Software Design
 
@@ -245,6 +247,7 @@ NodeEditor - Logic
 ### Format and Style
 
 - General style guide [cxutil/cxtips.h](https://github.com/gk646/cxstructs/blob/master/src/cxutil/cxtips.h)
+- .clang-format at root for format
 
 ### Node Editor Concepts
 
@@ -255,10 +258,10 @@ node based like:
 - Quest Tree (for games, DialogueTree and choices)
 - Basic Logic Circuit
 
-`raynodes` is a component-centric editor meaning that most things happen in and around components.
-In turn nodes are just glorified component containers that you can move around.
+`raynodes` is a component-centric editor meaning that most things happen in and around components. However with the
+addition custom nodes which allows for even more control you could almost call it a hybrid.
 
-This choice was made due to a number of reasons:
+This choice of having components was made due to a number of reasons:
 
 - Having reusable building blocks (components) throughout nodes is good
 - With only a node it's not clear who handles the input and outputs
@@ -266,8 +269,11 @@ This choice was made due to a number of reasons:
 - Components can be tied to some identifier (a string here) which allows nodes to built at runtime
     - This allows for instructions in string form on how to build a specific node -> plugins
 
-However this also has some drawbacks:
+However, this also has some drawbacks:
 
-- A node doesnt have the functionality of all its components combined
-    - Its just a container... -> this could be improved with inter-component data transfers
+- A node doesn't have the functionality of all its components combined
+    - It's just a container... -> this could be improved with inter-component data transfers
 - Having a nested structure adds extra complexity to reading and saving
+
+Pretty much all the drawbacks of some earlier approaches are solved by introducing custom nodes, although this adds more
+complexity and needs proper implementation of inter-component data transfer.

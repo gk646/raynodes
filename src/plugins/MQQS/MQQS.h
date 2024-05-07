@@ -29,7 +29,7 @@ struct MQQS final : RaynodesPluginI {
 };
 
 
-extern "C" EXPORT inline RaynodesPluginI* CreatePlugin() {
+extern "C" EXPORT  RaynodesPluginI* CreatePlugin() {
   return new MQQS();
 }
 

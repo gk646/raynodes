@@ -36,9 +36,9 @@ struct String {
     return buffer;
   }
   static const char* GetPaddedNum(const int num) {
-    char buff[4];
-    snprintf(buff, 4, "%d", num);
-    cxstructs::str_pad(buffer, 4, buff, '.');
+    char buff[6];
+    snprintf(buff, 6, "%d", num);
+    cxstructs::str_pad(buffer, 6, buff, '.');
     return buffer;
   }
   static void updateWindowTitle(EditorContext& ec);
