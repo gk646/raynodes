@@ -70,6 +70,7 @@ void Core::resetEditor(EditorContext& ec) {
 }
 
 Node* Core::createNode(EditorContext& ec, const char* name, const Vector2 worldPos, uint16_t hint) {
+  if (name == nullptr) return nullptr;
 
   //Use the hint when provided
   const auto nodeID = hint == UINT16_MAX ? getID() : static_cast<NodeID>(hint);
