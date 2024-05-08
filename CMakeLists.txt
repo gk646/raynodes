@@ -9,6 +9,7 @@ set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE) # Build as shared lib
 
 
 set(ENABLE_SANITIZER OFF)
+set(RUN_TESTS ON)
 
 # Compiler options for MSVC and unix
 include(cmake/CompilerOptions.cmake)
@@ -28,3 +29,8 @@ add_subdirectory(src/plugins)
 
 # Add all built targets here
 add_dependencies(raynodes MQQS BuiltIns)
+
+if (RUN_TESTS)
+    enable_testing()
+    add_subdirectory(test)
+endif ()

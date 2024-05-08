@@ -1,0 +1,13 @@
+--EditorData--
+246.485|-320.730|1.132|1|5|4|
+--Nodes--
+Dialog Choice|1|-181|-353|598|236|Tell me your name!|$My name is slim shady!|$I dont know if you really wanna know my name! Its veeeery long|$Its gk646, it came from some keyboard information i had lying around!|$Nope, i wont tell you! Hehe|$
+Dialog|2|-495|-308|215|59|Hey, who are you?|$
+Dialog|3|478|-404|268|59|Whats that? Some kind of fish?|$
+QuestHeader|0|-1688|-409|1039|196|New Beginning|$As you wake up from a dry dream, you look around wondering where you are. It looks like some kind of forest or jungle... |$NEW_BEGINNING|$5|$
+Display|4|-515|-111|212|69|$
+--Connections--
+2|-1|0|1|-1|0|
+1|1|0|3|-1|0|
+0|-1|0|2|-1|0|
+0|3|0|4|0|2|

@@ -12,11 +12,11 @@ jobs:
       - uses: actions/checkout@v2
       - name: Copy file
         run: |
-          cp src/raynodes/import/Importer.h include/
+          cp src/raynodes/import/RnImport.h include/
       - name: Commit file if changed
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add include/Importer.h
+          git add include/RnImport.h
           git commit -m "Updated include" || echo "No changes to commit"
           git push
