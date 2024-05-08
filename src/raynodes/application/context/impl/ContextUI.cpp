@@ -18,8 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <raygui.h>
 #include "application/EditorContext.h"
 
+int UI::DrawButton(EditorContext& ec, Rectangle& r, const char* txt) {
+  const auto bounds = ec.display.getFullyScaled(r);
+  const auto res = GuiButton(bounds, txt);
+
+  if (ec.ui.scaleDirection == HORIZONTAL) r.x += r.width;
+  else r.y += r.height;
+
+  if (res
+      || (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)
+          && CheckCollisionPointRec(ec.logic.mouse, bounds))) {
+    ec.input.consumeMouse();  // Consume mouse so click doesnt propagate
+  }
+  return res;
+}
+int UI::DrawWindow(EditorContext& ec, const Rectangle& r, const char* txt) {
+  const auto bounds = ec.display.getFullyScaled(r);
+  const auto res = GuiWindowBox(bounds, txt);
+  if (res || CheckCollisionPointRec(ec.logic.mouse, bounds)) {
+    ec.input.consumeMouse();     // Consume mouse so click doesnt propagate
+    ec.input.consumeKeyboard();  // Consume mouse so click doesnt propagate
+  }
+  return res;
+}
 
 void UI::invokeFileMenu(EditorContext& ec, int i) {
   if (i == -1 || i == 0) return;
@@ -48,3 +72,5 @@ void UI::invokeViewMenu(EditorContext& ec, int i) {
   //TODO zoom to fit
   if (i == 4) ec.ui.showGrid = !ec.ui.showGrid;
 }
+void UI::invokeHelpMenu(EditorContext& ec, int i) {}
+void UI::invokeSettingsMenu(EditorContext& ec, int i) {}

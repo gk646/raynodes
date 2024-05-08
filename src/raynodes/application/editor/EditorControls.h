@@ -48,6 +48,12 @@ inline void PollControls(EditorContext& ec) {
   auto& selectedNodes = ec.core.selectedNodes;
   auto& contextMenuPos = ec.logic.contextMenuPos;
 
+  if (!ec.input.mouseConsumed) {
+    camera.zoom += GetMouseWheelMove() * 0.05f;
+    camera.zoom = (camera.zoom > Display::MAX_ZOOM) ? Display::MAX_ZOOM : camera.zoom;
+    camera.zoom = (camera.zoom < Display::MIN_ZOOM) ? Display::MIN_ZOOM : camera.zoom;
+  }
+
   //Context menu
   if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
     contextMenuPos = mouse;

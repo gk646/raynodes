@@ -42,21 +42,11 @@ struct ContextMenu {
   }
 };
 
-// E = Editor
-// N = Node
-// C = Component
-enum ColorIndex : uint8_t {
-  E_BACK_GROUND = 0,
-  E_GRID,
-  N_BACK_GROUND,
-  UI_LIGHT,
-  UI_MEDIUM,
-  UI_DARK,
-  INDEX_END
-};
+// All the ui is made to be normed to 1920x1080 so FullHD
+// The methods allow you to always us absolute coordinates and then transferthem to real screen space
+// Use display.smartScaling for elements that have a minimum height -> scaling will only be apl
 
 struct UI {
-  ContextMenu contextMenu;
   static constexpr Color COLORS[INDEX_END] = {
       {45, 45, 45, 255},     // E_BACK_GROUND
       {27, 27, 27, 255},     // E_GRID
@@ -88,18 +78,41 @@ struct UI {
                                         "#107#Zoom to Fit;"
                                         "#097#Grid";
 
+  static constexpr auto* settingsMenuText = "#181#User Interface;"
+                                            "#222#Updates";
+
+  static constexpr auto* helpMenuText = "#225#Wiki;"
+                                        "#224#Github;"
+                                        "#191#About";
   static constexpr float CONTEXT_MENU_THRESHOLD = 15.0F;
+  static constexpr float UI_SPACE_W = 1920.0F;  // UI space width
+  static constexpr float UI_SPACE_H = 1080.0F;  // UI space height
+
+  ContextMenu contextMenu;
   float topBarHeight = 20;
+  ScaleDirection scaleDirection;  // Used by ui functions to automatically apply correct offset
+  int settingsScrollIndex = 0;
+  int settingsActiveIndex = 0;
+  int helpScrollIndex = 0;
+  int helpActiveIndex = 0;
+
   bool showTopBarOnlyOnHover = true;
   bool showGrid = true;
   bool showUnsavedChanges = false;
   bool fileMenuState = false;  // FileMenu dropdown state
   bool editMenuState = false;  // EditMenu dropdown state
   bool viewMenuState = false;  // ViewMenu dropdown state
+  bool showSettingsMenu = false;
+  bool showHelpMenu = false;
 
+  static int DrawWindowListMenu(EditorContext& ec, float x, float y);
+  static int DrawButton(EditorContext& ec, Rectangle& r, const char* txt);
+  static int DrawWindow(EditorContext& ec, const Rectangle& r, const char* txt);
   static void invokeFileMenu(EditorContext& ec, int i);
   static void invokeEditMenu(EditorContext& ec, int i);
   static void invokeViewMenu(EditorContext& ec, int i);
+  static void invokeHelpMenu(EditorContext& ec, int i);
+  static void invokeSettingsMenu(EditorContext& ec, int i);
 };
 
 #endif  //CONTEXTUI_H

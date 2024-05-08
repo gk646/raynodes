@@ -86,7 +86,7 @@ int LoadNodes(FILE* file, EditorContext& ec) {
   int count = 0;
   char buff[Plugin::MAX_NAME_LEN];
   while (cxstructs::io_load_inside_section(file, "Nodes")) {
-    int id= 0;
+    int id = 0;
     cxstructs::io_load(file, buff, Plugin::MAX_NAME_LEN);
     cxstructs::io_load(file, id);
     const auto newNode = ec.core.createNode(ec, buff, {0, 0}, static_cast<uint16_t>(id));
@@ -192,10 +192,10 @@ bool Persist::saveToFile(EditorContext& ec, bool saveAsMode) {
 
   // Successfully saved - reflect in the title
   ec.core.hasUnsavedChanges = false;
-  String::updateWindowTitle(ec);
+  ec.string.updateWindowTitle(ec);
 
-  printf("Saved %s nodes\n", String::GetPaddedNum(nodes));
-  printf("Saved %s connections\n", String::GetPaddedNum(connections));
+  printf("Saved %s nodes\n", ec.string.getPaddedNum(nodes));
+  printf("Saved %s connections\n", ec.string.getPaddedNum(connections));
   return true;
 }
 
@@ -210,7 +210,7 @@ bool Persist::loadFromFile(EditorContext& ec) {
 
   const auto* path = openedFilePath.c_str();
 
-  fopen_s(&file,path, "rb");
+  fopen_s(&file, path, "rb");
 
   if (file == nullptr) {
     fprintf(stderr, "Unable to open file %s\n", path);
@@ -225,13 +225,13 @@ bool Persist::loadFromFile(EditorContext& ec) {
   int nodes = LoadNodes(file, ec);
   int connections = LoadConnections(file, ec);
 
-  printf("Loaded %s nodes\n", String::GetPaddedNum(nodes));
-  printf("Loaded %s connections\n", String::GetPaddedNum(connections));
+  printf("Loaded %s nodes\n", ec.string.getPaddedNum(nodes));
+  printf("Loaded %s connections\n", ec.string.getPaddedNum(connections));
 
   if (fclose(file) != 0) return false;
 
   // Successfully loaded - reflect in the title
-  String::updateWindowTitle(ec);
+  ec.string.updateWindowTitle(ec);
   fileName = GetFileName(openedFilePath.c_str());
 
   return true;

@@ -18,65 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef TYPES_H
-#define TYPES_H
+#include "application/EditorContext.h"
 
-#include <cstdint>
-
-struct Ints {
-  uint16_t a;
-  uint16_t b;
-};
-
-struct Pointer {
-  void* data;
-  uint32_t size;
-};
-
-// Dont wanna include raylib everywhere
-
-struct Vec2 {
-  float x;
-  float y;
-};
-
-struct Vec3 {
-  float x;
-  float y;
-  float z;
-};
-
-struct Color4 {
-  unsigned char r;  // Color red value
-  unsigned char g;  // Color green value
-  unsigned char b;  // Color blue value
-  unsigned char a;  // Color alpha value
-};
-
-struct ComponentTemplate {
-  const char* label = nullptr;
-  const char* component = nullptr;
-};
-
-struct NodeTemplate {
-  const char* label = nullptr;
-  Color4 color = {0, 0, 0, 255};                 // BLACK
-  ComponentTemplate components[COMPS_PER_NODE];  // Current limit
-};
-
-// E = Editor
-// N = Node
-// C = Component
-enum ColorIndex : uint8_t {
-  E_BACK_GROUND = 0,
-  E_GRID,
-  N_BACK_GROUND,
-  UI_LIGHT,
-  UI_MEDIUM,
-  UI_DARK,
-  INDEX_END
-};
-
-enum ScaleDirection : uint8_t { HORIZONTAL, VERTICAL };
-
-#endif  //TYPES_H
+const char* Info::getVersion(EditorContext& ec) {
+  return ec.string.formatText("%d.%d", majorVersion, minorVersion);
+}

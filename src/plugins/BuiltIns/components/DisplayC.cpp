@@ -32,10 +32,10 @@ void DisplayC::draw(EditorContext& ec, Node& /**/) {
     txt = inputs[0].getData<STRING>();
     DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
   } else if (inputs[1].isConnected()) {
-    txt = String::FormatText("%f", inputs[1].getData<FLOAT>());
+    txt = ec.string.formatText("%f", inputs[1].getData<FLOAT>());
     DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
   } else if (inputs[2].isConnected()) {
-    txt = String::FormatText("%lld", inputs[2].getData<INTEGER>());
+    txt = ec.string.formatText("%lld", inputs[2].getData<INTEGER>());
     DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
   }
 }
