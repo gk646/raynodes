@@ -23,25 +23,25 @@
 
 struct String {
   static constexpr int BUFFER_SIZE = 512;
-  inline static char buffer[BUFFER_SIZE];
+  char buffer[BUFFER_SIZE];
 
   const char* applicationDir;
 
   String();
-  static const char* FormatText(const char* format, ...) {
+  const char* formatText(const char* format, ...) {
     va_list args;
     va_start(args, format);
     vsnprintf(buffer, BUFFER_SIZE, format, args);
     va_end(args);
     return buffer;
   }
-  static const char* GetPaddedNum(const int num) {
+  const char* getPaddedNum(const int num) {
     char buff[6];
     snprintf(buff, 6, "%d", num);
     cxstructs::str_pad(buffer, 6, buff, '.');
     return buffer;
   }
-  static void updateWindowTitle(EditorContext& ec);
+  void updateWindowTitle(EditorContext& ec);
 };
 
 #endif  //RAYNODES_SRC_APPLICATION_CONTEXTSTRING_H_

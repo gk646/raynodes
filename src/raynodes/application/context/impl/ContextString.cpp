@@ -29,6 +29,6 @@ void String::updateWindowTitle(EditorContext& ec) {
   if (fileName == nullptr || *fileName == '\0') {
     fileName = "Untitled";
   }
-  if (ec.core.hasUnsavedChanges) SetWindowTitle(FormatText("*%s - %s", fileName, Info::applicationName));
-  else SetWindowTitle(FormatText("%s - %s", fileName, Info::applicationName));
+  if (ec.core.hasUnsavedChanges) SetWindowTitle(formatText("*%s - %s", fileName, Info::applicationName));
+  else SetWindowTitle(formatText("%s - %s", fileName, Info::applicationName));
 }

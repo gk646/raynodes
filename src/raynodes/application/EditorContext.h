@@ -39,13 +39,13 @@
 #include "context/ContextInfo.h"
 #include "context/ContextString.h"
 #include "context/ContextCore.h"
+#include "context/ContextUI.h"
 #include "context/ContextDisplay.h"
 #include "context/ContextLogic.h"
 #include "context/ContextPersist.h"
 #include "context/ContextInput.h"
 #include "context/ContextTemplates.h"
 #include "context/ContextPlugin.h"
-#include "context/ContextUI.h"
 
 struct EditorContext {
   Core core{};
@@ -62,13 +62,13 @@ struct EditorContext {
   explicit EditorContext(int argc, char* argv[]) {
     if (argc == 2) {
       if (*argv[1] == '.') {  // Relative path
-        persist.openedFilePath = String::FormatText("%s%s", string.applicationDir, argv[1]);
+        persist.openedFilePath = string.formatText("%s%s", string.applicationDir, argv[1]);
       } else {
         persist.openedFilePath = argv[1];
       }
     }
 
-    printf("raynodes - Version %d.%d\n", Info::majorVersion, Info::minorVersion);
+    printf("raynodes - Version %s\n", Info::getVersion(*this));
   }
 };
 #endif  //RAYNODES_SRC_EDITOR_EDITORCONTEXT_H_

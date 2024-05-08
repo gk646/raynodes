@@ -61,6 +61,7 @@ inline void SetupDisplay(EditorContext& ec) {
   // raygui
   GuiSetStyle(DEFAULT, TEXT_SIZE, 15);
   GuiSetStyle(DEFAULT, TEXT_SPACING, 0);
+  GuiSetStyle(DEFAULT, LINE_COLOR, ColorToInt(UI::COLORS[UI_DARK]));
   GuiSetStyle(DEFAULT, BACKGROUND_COLOR, ColorToInt(UI::COLORS[UI_MEDIUM]));
   GuiSetStyle(DEFAULT, BORDER_COLOR_NORMAL, ColorToInt(UI::COLORS[UI_DARK]));
   GuiSetStyle(DEFAULT, BASE_COLOR_NORMAL, ColorToInt(UI::COLORS[UI_MEDIUM]));
@@ -85,6 +86,7 @@ inline void SetupDisplay(EditorContext& ec) {
 
   GuiSetStyle(DROPDOWNBOX, TEXT_PADDING, 2);
   GuiSetStyle(DROPDOWNBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
+  GuiSetStyle(LISTVIEW, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
   GuiSetStyle(STATUSBAR, TEXT_ALIGNMENT, TEXT_ALIGN_MIDDLE);
 }
 

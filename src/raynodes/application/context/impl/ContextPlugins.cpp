@@ -38,17 +38,17 @@ void RegisterPlugin(EditorContext& ec, PluginContainer& pc) {
   NodeRegister nr(ec, pc);
   pc.plugin->registerNodes(nr);
   nodesRegistered = static_cast<int>(ec.templates.nodeFactory.size()) - nodesRegistered;
-  printf("Nodes: %s / ", String::GetPaddedNum(nodesRegistered));
+  printf("Nodes: %s / ", ec.string.getPaddedNum(nodesRegistered));
 
   // Components
   int componentsRegistered = static_cast<int>(ec.templates.componentFactory.size());
   ComponentRegister cr(ec, pc);
   pc.plugin->registerComponents(cr);
   componentsRegistered = static_cast<int>(ec.templates.componentFactory.size()) - componentsRegistered;
-  printf("Components: %s / ", String::GetPaddedNum(componentsRegistered));
+  printf("Components: %s / ", ec.string.getPaddedNum(componentsRegistered));
 
   // Errors
-  printf("Errors: %s", String::GetPaddedNum(nr.getErrors() + cr.getErrors()));
+  printf("Errors: %s", ec.string.getPaddedNum(nr.getErrors() + cr.getErrors()));
   printf("\n");
   fflush(stdout);
   fflush(stderr);
@@ -57,7 +57,7 @@ void RegisterPlugin(EditorContext& ec, PluginContainer& pc) {
 }  // namespace
 
 bool Plugin::loadPlugins(EditorContext& ec) {
-  const char* basePath = String::FormatText("%s%s", ec.string.applicationDir, PLUGIN_PATH);
+  const char* basePath = ec.string.formatText("%s%s", ec.string.applicationDir, PLUGIN_PATH);
   const char* filter;
 #if defined(_WIN32)
   filter = ".dll";
@@ -88,7 +88,7 @@ bool Plugin::loadPlugins(EditorContext& ec) {
     RegisterPlugin(ec, dll);
   }
 
-  cxstructs::str_pad(nameBuff, 4, String::FormatText("%d", static_cast<int>(plugins.size())), '.');
+  cxstructs::str_pad(nameBuff, 4, ec.string.formatText("%d", static_cast<int>(plugins.size())), '.');
   printf("Loaded %s Plugin(s)\n", nameBuff);
   printf("=============================================================\n");
 

@@ -63,11 +63,13 @@ void DrawBackGround(EditorContext& ec) {
   BeginTextureMode(ec.display.uiTexture);
   {
     ClearBackground(BLANK);
-    Editor::DrawUnsavedChanges(ec);
     Editor::DrawContextMenu(ec);
     Editor::DrawActions(ec);
     Editor::DrawTopBar(ec);
     Editor::DrawStatusBar(ec);
+    Editor::DrawSettingsMenu(ec);
+    Editor::DrawHelpMenu(ec);
+    Editor::DrawUnsavedChanges(ec);
   }
   EndTextureMode();
   Editor::UpdateTick(ec);    // Updates all nodes

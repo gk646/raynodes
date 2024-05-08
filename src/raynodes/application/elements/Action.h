@@ -48,7 +48,7 @@ struct Action {
   virtual void redo(EditorContext& ec) = 0;
 
   //Allows for custom strings with context specific information
-  virtual const char* toString() {
+  [[nodiscard]] virtual const char* toString() const {
     switch (type) {
       case TEXT_EDIT:
         return "Text edit";

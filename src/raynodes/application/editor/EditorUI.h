@@ -153,29 +153,28 @@ inline void DrawActions(EditorContext& ec) {
 
   // Cache
   const auto& font = ec.display.editorFont;
-  const auto width = ec.display.getSpace(0.17);
-  const auto padding = width * 0.03F;
-  const auto height = visibleActions * ec.display.getSpace(0.022);
-  const auto [x, y] = ec.display.getAnchor(RIGHT_TOP, 0.03, width, height);
-  const auto fs = ec.display.fontSize;
+  auto rect = ec.display.getFullyScaled({1720.0F, 50.0F, 180.0F, 230.0F});
+  const float entryHeight = rect.height / visibleActions;
+  const float fs = entryHeight * 0.8F;        // Allocating 80% of entry height to font size
+  const float paddingY = entryHeight * 0.2F;  // Allocating 20% of entry height to padding
+  const auto paddingX = rect.width * 0.03F;
   const auto currActionIdx = ec.core.currentActionIndex;
-
-  auto rect = Rectangle{x, y, width, height};
-
-  DrawRectangleRec(rect, ColorAlpha(UI::COLORS[UI_DARK], 0.85F));
-  DrawRectangleLinesEx(rect, padding / 4.0F, ColorAlpha(UI::COLORS[UI_MEDIUM], 0.7F));
 
   // Adjust the start index to ensure the current action is always on screen
   const int totalActions = static_cast<int>(ec.core.actionQueue.size());
   const int start = std::max(0, std::min(currActionIdx, totalActions - visibleActions));
   const int end = std::min(start + visibleActions - 1, totalActions - 1);
 
-  rect.y += padding;
+  rect.height += paddingY * 2.0F;  // We start with the same offset
+
+  DrawRectangleRec(rect, ColorAlpha(UI::COLORS[UI_DARK], 0.85F));
+  DrawRectangleLinesEx(rect, paddingX / 4.0F, ColorAlpha(UI::COLORS[UI_MEDIUM], 0.7F));
+
+  rect.y += paddingY;
 
   //Coloring scheme is inspired by paint.net
-
   for (int i = start; i <= end; ++i) {
-    const auto action = ec.core.actionQueue[i];
+    auto* action = ec.core.actionQueue[i];
     const bool isCurrentAction = i == currActionIdx;
     const bool isCurrentOrBelow = i >= currActionIdx;
     const bool isCurrentOrAbove = i <= currActionIdx;
@@ -188,18 +187,23 @@ inline void DrawActions(EditorContext& ec) {
 
     // Draw background highlight for the current action
     if (isCurrentOrBelow) {
-      DrawRectangleRec({rect.x + padding, rect.y, width - 2 * padding, fs + padding},
+      DrawRectangleRec({rect.x + paddingX, rect.y, rect.width - 2 * paddingX, fs + paddingY},
                        ColorAlpha(highLightColor, 0.4F));
     }
 
     // Draw action text
-    DrawTextEx(font, action->toString(), {rect.x + padding, rect.y + padding / 2}, fs, 1.0F, textColor);
+    DrawTextEx(font, action->toString(), {rect.x + paddingX * 2.0F, rect.y + paddingY / 2}, fs, 1.0F,
+               textColor);
 
     // Move to the next action's position, ensuring space for text and padding
-    rect.y += fs + padding;
+    rect.y += entryHeight;
   }
 }
 inline void DrawTopBar(EditorContext& ec) {
+  //TODO improve dropdown - like paint.net have a small button that expands to a bigger window
+  // Dont make the base dropdown as big as the expanded categories
+  // Dont draw the base category
+
   constexpr auto dropDown = [](EditorContext& ec, Rectangle& r, const char* text, bool& state) {
     // Always reset to 0 cause its a dropdown
     int active = 0;
@@ -223,14 +227,20 @@ inline void DrawTopBar(EditorContext& ec) {
   auto bounds = Rectangle{20, 5, width, height};
 
   int res = -1;
-  res = dropDown(ec, bounds, ec.ui.fileMenuText, ec.ui.fileMenuState);
+  res = dropDown(ec, bounds, UI::fileMenuText, ec.ui.fileMenuState);
   UI::invokeFileMenu(ec, res);
 
-  res = dropDown(ec, bounds, ec.ui.editMenuText, ec.ui.editMenuState);
+  res = dropDown(ec, bounds, UI::editMenuText, ec.ui.editMenuState);
   UI::invokeEditMenu(ec, res);
 
-  res = dropDown(ec, bounds, ec.ui.viewMenuText, ec.ui.viewMenuState);
+  res = dropDown(ec, bounds, UI::viewMenuText, ec.ui.viewMenuState);
   UI::invokeViewMenu(ec, res);
+
+  ec.ui.scaleDirection = HORIZONTAL;
+  auto buttonBounds = Rectangle{1860, 5.0F, 24.0F, 24.0F};
+  if (UI::DrawButton(ec, buttonBounds, "#141#")) ec.ui.showSettingsMenu = !ec.ui.showSettingsMenu;
+
+  if (UI::DrawButton(ec, buttonBounds, "#193#")) ec.ui.showHelpMenu = !ec.ui.showHelpMenu;
 }
 inline void DrawStatusBar(EditorContext& ec) {
   constexpr float height = 20.0F;
@@ -248,9 +258,9 @@ inline void DrawStatusBar(EditorContext& ec) {
   // Left panels
   {
     float leftPanels = 0.0F;
-    text = String::FormatText("#098# Nodes: %d", (int)ec.core.nodes.size());
+    text = ec.string.formatText("#098# Nodes: %d", (int)ec.core.nodes.size());
     statusBar(ec, leftPanels, y, 150.0F, height, text);
-    text = String::FormatText("#070# Connections: %d", (int)ec.core.connections.size());
+    text = ec.string.formatText("#070# Connections: %d", (int)ec.core.connections.size());
     statusBar(ec, leftPanels, y, 180.0F, height, text);
   }
 
@@ -258,7 +268,7 @@ inline void DrawStatusBar(EditorContext& ec) {
   {
     // Show mouse position
     float rightPanels = 1200.0F;
-    text = String::FormatText("#021# %d/%d", (int)ec.logic.worldMouse.x, (int)ec.logic.worldMouse.y);
+    text = ec.string.formatText("#021# %d/%d", (int)ec.logic.worldMouse.x, (int)ec.logic.worldMouse.y);
     statusBar(ec, rightPanels, y, 150.0F, height, text);
 
     const auto lastWidth = 1920.0F - rightPanels;
@@ -283,52 +293,104 @@ inline void DrawStatusBar(EditorContext& ec) {
   }
 }
 inline void DrawUnsavedChanges(EditorContext& ec) {
-  if (ec.ui.showUnsavedChanges) {
-    // Centered window
-    constexpr auto winX = 790;
-    constexpr auto winW = 360;
-    constexpr auto winY = 450;
-    constexpr auto winH = 180;
+  if (!ec.ui.showUnsavedChanges) return;
+  // Centered window
+  constexpr auto winW = 360.0F;
+  constexpr auto winH = 180.0F;
 
-    auto windowRect = Rectangle{winX, winY, winW, winH};
+  const auto pos = ec.display.getAnchor(CENTER_MID, 0, winW, winH);
+  auto windowRect = Rectangle{pos.x, pos.y, winW, winH};
 
-    // Get information string
-    const char* fileName = GetFileName(ec.persist.openedFilePath.c_str());
-    if (fileName == nullptr || *fileName == '\0') fileName = "Untitled.rn";
-    const char* infoText = String::FormatText("%s has unsaved changes. What would you like to do?", fileName);
+  // Get information string
+  const char* fileName = GetFileName(ec.persist.openedFilePath.c_str());
+  if (fileName == nullptr || *fileName == '\0') fileName = "Untitled.rn";
+  const char* infoText = ec.string.formatText("%s has unsaved changes", fileName);
 
-    if (GuiWindowBox(ec.display.getFullyScaled(windowRect), infoText)) {
-      ec.input.consumeMouse();
-      ec.ui.showUnsavedChanges = false;
+  if (GuiWindowBox(ec.display.getFullyScaled(windowRect), infoText)) {
+    ec.input.consumeMouse();
+    ec.ui.showUnsavedChanges = false;
+  }
+
+  windowRect.y = pos.x + 30;
+  windowRect.height = 50.0F;
+
+  ec.ui.scaleDirection = VERTICAL;
+  if (UI::DrawButton(ec, windowRect, "#002#Save")) {
+    ec.persist.saveToFile(ec);
+    ec.ui.showUnsavedChanges = false;
+    //TODO respect user intent and execute next action -> need to save how user got here
+  }
+
+  if (UI::DrawButton(ec, windowRect, "#159#Don't Save")) {
+    ec.ui.showUnsavedChanges = false;
+    ec.core.hasUnsavedChanges = false;
+    if (ec.core.requestedClose) ec.core.closeApplication = true;
+  }
+
+  if (UI::DrawButton(ec, windowRect, "#072#Cancel")) {
+    ec.ui.showUnsavedChanges = false;
+  }
+}
+inline void DrawSettingsMenu(EditorContext& ec) {
+  if (!ec.ui.showSettingsMenu) return;
+  if (ec.input.isKeyPressed(KEY_ESCAPE)) ec.ui.showSettingsMenu = false;
+
+  constexpr auto winW = 560.0F;
+  constexpr auto winH = 280.0F;
+  constexpr auto listW = 150.0F;
+  constexpr auto pad = 25.0F;
+
+  auto middle = ec.display.getAnchor(CENTER_MID, 0, winW, winH);
+
+  if (UI::DrawWindow(ec, {middle.x, middle.y, winW, winH}, "Settings")) {
+    ec.ui.showSettingsMenu = false;
+  }
+
+  const auto listBounds = ec.display.getFullyScaled({middle.x, middle.y + pad, listW, winH - pad});
+  GuiListView(listBounds, UI::settingsMenuText, &ec.ui.settingsScrollIndex, &ec.ui.settingsActiveIndex);
+
+  int i = ec.ui.settingsActiveIndex;
+  const auto& f = ec.display.editorFont;
+  const auto winBounds = Rectangle{listBounds.x + listW + pad, listBounds.y, winW - listW - pad, winH};
+  if (i == 0) {  // User Interface
+    DrawTextEx(f, "", {winBounds.x, winBounds.y}, 15, 1.0F, WHITE);
+  } else if (i == 1) {  // Updates
+  }
+}
+inline void DrawHelpMenu(EditorContext& ec) {
+  if (!ec.ui.showHelpMenu) return;
+  if (ec.input.isKeyPressed(KEY_ESCAPE)) ec.ui.showHelpMenu = false;
+  constexpr auto winW = 560.0F;
+  constexpr auto winH = 280.0F;
+  constexpr auto listW = 150.0F;
+  constexpr auto pad = 25.0F;
+
+  auto middle = ec.display.getAnchor(CENTER_MID, 0, winW, winH);
+  if (UI::DrawWindow(ec, {middle.x, middle.y, winW, winH}, "Help")) {
+    ec.ui.showHelpMenu = false;
+  }
+
+  const auto listBounds = ec.display.getFullyScaled({middle.x, middle.y + pad, listW, winH - pad});
+  GuiListView(listBounds, UI::helpMenuText, &ec.ui.helpScrollIndex, &ec.ui.helpActiveIndex);
+
+  const int i = ec.ui.helpActiveIndex;
+  const auto& f = ec.display.editorFont;
+  const auto fs = ec.display.fontSize;
+  const auto winBounds = Rectangle{listBounds.x + listW + pad, listBounds.y, winW - listW - pad, winH};
+  if (i == 0) {  // Wiki
+    auto buttonBounds = Rectangle{winBounds.x + pad, winBounds.y, 150.0F, 24.0F};
+    if (UI::DrawButton(ec, buttonBounds, "Open the Wiki")) {
+      OpenURL(Info::wikiLink);
     }
-
-    // Button draw func
-    static constexpr auto button = [](EditorContext& ec, Rectangle& r, const char* text) {
-      const auto res = GuiButton(ec.display.getFullyScaled(r), text);
-      constexpr auto buttonHeight = 50;
-      r.y += buttonHeight;
-      if (res) ec.input.consumeMouse();  // Consume mouse so click doesnt propagate
-      return res;
-    };
-
-    windowRect.y += 30;
-    windowRect.height = 50;
-
-    if (button(ec, windowRect, "#002#Save")) {
-      ec.persist.saveToFile(ec);
-      ec.ui.showUnsavedChanges = false;
-      //TODO respect user intent and execute next action
+  } else if (i == 1) {  // Github
+    auto buttonBounds = Rectangle{winBounds.x + pad, winBounds.y, 150.0F, 24.0F};
+    if (UI::DrawButton(ec, buttonBounds, "Open the github page")) {
+      OpenURL(Info::github);
     }
-
-    if (button(ec, windowRect, "#159#Don't Save")) {
-      ec.ui.showUnsavedChanges = false;
-      ec.core.hasUnsavedChanges = false;
-      if (ec.core.requestedClose) ec.core.closeApplication = true;
-    }
-
-    if (button(ec, windowRect, "#072#Cancel")) {
-      ec.ui.showUnsavedChanges = false;
-    }
+  } else if (i == 2) {  // About
+    snprintf(ec.string.buffer, String::BUFFER_SIZE, "%s %s\0", Info::applicationName, Info::getVersion(ec));
+    DrawTextEx(f, ec.string.buffer, {winBounds.x, winBounds.y}, fs, 1.0F, WHITE);
+    GuiLabel({winBounds.x + pad, winBounds.y + pad, 150.0F, 24.0F}, Info::about);
   }
 }
 }  // namespace Editor

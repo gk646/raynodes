@@ -16,13 +16,13 @@ set_target_properties(raynodes PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINAR
 target_link_libraries(raynodes PUBLIC raylib editor)
 
 if (MSVC)
-target_link_libraries(raynodes PRIVATE user32)
-add_custom_command(TARGET raynodes POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E rename
-        "${CMAKE_BINARY_DIR}/raylib/raylib/raylib.dll"
-        "${CMAKE_BINARY_DIR}/raylib.dll"
-        COMMENT "Moving raylib.dll to project binary directory"
-)
+    target_link_libraries(raynodes PRIVATE user32)
+    add_custom_command(TARGET raynodes POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E rename
+            "${CMAKE_BINARY_DIR}/raylib/raylib/raylib.dll"
+            "${CMAKE_BINARY_DIR}/raylib.dll"
+            COMMENT "Moving raylib.dll to project binary directory"
+    )
 else ()
     add_custom_command(TARGET raynodes POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E rename
