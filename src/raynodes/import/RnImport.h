@@ -22,10 +22,14 @@
 #define IMPORTER_H
 
 #include <vector>
-#include <string>
 #include <array>
 #include <cstdio>
+#include <cstring>
+#include <cstdint>
 
+// ==============================
+// IMPORT INTERFACE
+// ==============================
 // This is a Cross-Platform, Single Header, No Dependencies, util header for importing the ".rn" format
 // Its meant to be a optimized and memory efficient abstraction over raw parsing
 // This interface provide easy and structured random access to connections, nodes, components and their data
@@ -144,6 +148,7 @@ class RnImport final {
   template <int size>
   [[nodiscard]] std::array<NodeID, size> getConnectedNodes(NodeID nodeID, int componentIndex) const;
 
+
   //TODO build save indicies to read - components names and datatypes
 
   uint32_t size = 0;         // Size of fileData
@@ -154,9 +159,9 @@ class RnImport final {
 //--------------IMPLEMENTATION---------------//
 
 namespace {
-void SkipSeparator(char*& ptr, char separator, int count) noexcept {
+void SkipSeparator(char*& ptr, int count) noexcept {
   while (*ptr != '\0' && count > 0) {
-    if (*ptr == separator) {
+    if (*ptr == USED_LINE_SEPARATOR) {
       --count;
     }
     ++ptr;
@@ -170,11 +175,18 @@ constexpr uint32_t fnv1a_32(char const* s, const size_t count) noexcept {
   }
   return hash;
 }
+char* str_dup(const char* arg) {
+  const int len = static_cast<int>(strlen(arg));
+  auto* newBuff = new char[len + 1];
+  for (int i = 0; i <= len; i++) {
+    newBuff[i] = arg[i];
+  }
+  return newBuff;
+}
 }  // namespace
 
 inline raynodes::RnImport raynodes::ParseRN(const char* path) {
-  FILE* file;
-  fopen_s(&file, path, "rb");  // Open in binary mode to avoid text translation
+  FILE* file = fopen(path, "rb");  // Open in binary mode to avoid text translation
   if (!file) {
     perror("Failed to open file securely");
   }
@@ -234,7 +246,7 @@ inline raynodes::NodeID raynodes::RnImport::getFirstConnectedNode(NodeID nodeID,
 template <raynodes::DataType dt>
 auto raynodes::ComponentData::getData(char* fileData, int index) const {
   uint32_t startByte = getStartByte();
-  SkipSeparator(fileData, USED_LINE_SEPARATOR, index);
+  SkipSeparator(fileData, index);
   if constexpr (dt == DataType::BOOLEAN) {
     return std::strtol(fileData + startByte, nullptr, 10) == 1;
   } else if (dt == DataType::STRING) {
@@ -245,7 +257,7 @@ auto raynodes::ComponentData::getData(char* fileData, int index) const {
     }
     const char temp = *(start + count);
     *(start + count) = '\0';
-    char* allocatedString = _strdup(start);
+    char* allocatedString = strdup(start);
     *(start + count) = temp;
     return allocatedString;
   } else if (dt == DataType::INTEGER) {

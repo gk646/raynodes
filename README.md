@@ -21,10 +21,10 @@ For more infos on the design choices go to [Software Design](#Software-Design)
 
 **1.** [Controls](#Controls)   
 **2.** [Editor Features](#Editor-Features)   
-**3.** [Components!](#Expand-and-Contribute-with-Components)  
-**4.** [Plugins](#Plugins)
-**5.** [Nodes!](#Nodes)
-**6.** [Software Design](#Software-Design)
+**3.** [Components!](#Custom-Nodes)  
+**4.** [Plugins](#Plugins)  
+**5.** [Nodes!](#Custom-Nodes)  
+**6.** [Software Design](#Software-Design)  
 
 ### Controls
 
