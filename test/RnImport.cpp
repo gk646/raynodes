@@ -18,6 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "RnImport.h"
+#include <catch_amalgamated.hpp>
+#include "import/RnImport.h"
 
-// Only here for CMake to pickup the header
+TEST_CASE("Test a simple import of a rn file", "SimpleImport") {
+  auto rn = raynodes::ParseRN("res/SimpleTest.rn");
+
+}
