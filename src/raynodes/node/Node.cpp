@@ -242,12 +242,11 @@ void DrawComponent(EditorContext& ec, Node& n, Component& c, float dx, float& dy
 }  // namespace
 
 Node::Node(const NodeTemplate& nt, Vec2 pos, NodeID id)
-    : name(nt.label), x(pos.x), y(pos.y), width(50), height(50), uID(id), r(0), g(0), b(0), a(255) {
+    : name(nt.label), x(pos.x), y(pos.y), width(50), height(50), uID(id), color(0, 0, 0, 255) {
   outputs.push_back(OutputPin{NODE});
 }
 Node::Node(const Node& n, const NodeID id)
-    : name(n.name), x(n.x), y(n.y), width(n.width), height(n.height), uID(id), r(n.r), g(n.g), b(n.b),
-      a(n.a) {
+    : name(n.name), x(n.x), y(n.y), width(n.width), height(n.height), uID(id), color(n.color) {
   for (const auto c : n.components) {
     auto clone = c->clone();
     for (auto& in : clone->inputs) {
@@ -348,7 +347,6 @@ void Node::Update(EditorContext& ec, Node& n) {
   }
 }
 void Node::SaveState(FILE* file, const Node& n) {
-  cxstructs::io_save(file, n.name);
   cxstructs::io_save(file, n.uID);
   cxstructs::io_save(file, static_cast<int>(n.x));
   cxstructs::io_save(file, static_cast<int>(n.y));
@@ -395,5 +393,5 @@ Rectangle Node::getBounds() const {
   return {x, y, width, height};
 }
 Color Node::getColor() const {
-  return {r, g, b, a};
+  return {color.r, color.g, color.b, color.a};
 }

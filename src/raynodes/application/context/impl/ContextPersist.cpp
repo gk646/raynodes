@@ -20,6 +20,7 @@
 
 #include "application/EditorContext.h"
 
+#include <ranges>
 #include <cxutil/cxio.h>
 #include <cxstructs/Constraint.h>
 #include <tinyfiledialogs.h>
@@ -27,93 +28,58 @@
 //TODO make save format that combines both saving and loading
 //-> should be easy as its symmetric - function wrapper and boolean for loading-saving
 
-namespace {
-void SaveEditorData(FILE* file, EditorContext& ec) {
-  //TODO save more data
-  cxstructs::io_save_section(file, "EditorData");
-  cxstructs::io_save(file, ec.display.camera.target.x);
-  cxstructs::io_save(file, ec.display.camera.target.y);
-  cxstructs::io_save(file, ec.display.camera.zoom);
-  cxstructs::io_save(file, ec.ui.showGrid);
-  cxstructs::io_save(file, static_cast<int>(ec.core.nodes.size()));        // Total nodes
-  cxstructs::io_save(file, static_cast<int>(ec.core.connections.size()));  // Total connections
-  cxstructs::io_save_newline(file);
-}
-int SaveNodes(FILE* file, EditorContext& ec) {
-  cxstructs::io_save_section(file, "Nodes");
-  int count = 0;
-  for (const auto n : ec.core.nodes) {
-    Node::SaveState(file, *n);
-    cxstructs::io_save_newline(file);
-    count++;
-  }
-  return count;
-}
-int SaveConnections(FILE* file, EditorContext& ec) {
-  cxstructs::io_save_section(file, "Connections");
-  int count = 0;
-  const auto& connections = ec.core.connections;
-  for (const auto conn : connections) {
-    Node& fromNode = conn->fromNode;  //Output Node
-    const Component* from = conn->from;
-    cxstructs::io_save(file, fromNode.uID);
-    cxstructs::io_save(file, fromNode.getComponentIndex(from));
-    cxstructs::io_save(file, fromNode.getPinIndex(from, conn->out));
-
-    Node& toNode = conn->toNode;  //Input Node
-    const Component* to = conn->to;
-    cxstructs::io_save(file, toNode.uID);
-    cxstructs::io_save(file, toNode.getComponentIndex(to));
-    cxstructs::io_save(file, toNode.getPinIndex(to, conn->in));
-    //End with newline
-    cxstructs::io_save_newline(file);
-    count++;
-  }
-  return count;
-}
-void LoadEditorData(FILE* file, EditorContext& ec) {
-  cxstructs::io_load_newline(file, true);  //Skip the Editor section
-  cxstructs::io_load(file, ec.display.camera.target.x);
-  cxstructs::io_load(file, ec.display.camera.target.y);
-  cxstructs::io_load(file, ec.display.camera.zoom);
-  cxstructs::io_load(file, ec.ui.showGrid);
-  cxstructs::io_load_newline(file);  // Node count
-  cxstructs::io_load_newline(file);  // Connection count
-
-  cxstructs::io_load_newline(file);
-}
-int LoadNodes(FILE* file, EditorContext& ec) {
-  int count = 0;
-  char buff[Plugin::MAX_NAME_LEN];
-  while (cxstructs::io_load_inside_section(file, "Nodes")) {
-    int id = 0;
-    cxstructs::io_load(file, buff, Plugin::MAX_NAME_LEN);
-    cxstructs::io_load(file, id);
-    const auto newNode = ec.core.createNode(ec, buff, {0, 0}, static_cast<uint16_t>(id));
-    if (!newNode) {
-      cxstructs::io_load_newline(file, true);
-      continue;
+static constexpr int MAX_UNIQUE_LABELS = 512;
+// One hot encoding the labels
+struct ComponentIndices {
+  char storage[Plugin::MAX_NAME_LEN * MAX_UNIQUE_LABELS] = {};
+  uint16_t count = 0;
+  int add(const char* name, int index = -1) {
+    if (name == nullptr || count >= MAX_UNIQUE_LABELS || get(name) != -1) return -1;
+    int addIndex = index == -1 ? count : index;
+    char* ptr = storage + addIndex * Plugin::MAX_NAME_LEN;
+    int added = 0;
+    while (added < Plugin::MAX_NAME_LEN && *(name + added) != '\0') {
+      *(ptr + added) = *(name + added);
+      added++;
     }
-    Node::LoadState(file, *newNode);
-    ec.core.UID = std::max(ec.core.UID, static_cast<NodeID>(newNode->uID + 1));
-    cxstructs::io_load_newline(file);
     count++;
+    return count - 1;
   }
-  return count;
-}
+  int get(const char* name) const {
+    if (name == nullptr) return -1;
+    for (int i = 0; i < count; ++i) {
+      if (strncmp(storage + i * Plugin::MAX_NAME_LEN, name, Plugin::MAX_NAME_LEN) == 0) {
+        return i;
+      }
+    }
+    return -1;
+  }
 
+  [[nodiscard]] const char* getName(int index) const {
+    if (index == -1 || index > count || index >= MAX_UNIQUE_LABELS) return nullptr;
+    return storage + index * Plugin::MAX_NAME_LEN;
+  }
+
+  void reset() {
+    std::memset(storage, 0, sizeof(storage));
+    count = 0;
+  }
+};
+
+static ComponentIndices compIndices{};
+
+using namespace cxstructs;  // using the namespace here
+namespace {
 bool IsValidConnection(int maxNodeID, int fromNode, int from, int out, int toNode, int to, int in) {
   const bool correctNode = fromNode >= 0 && fromNode < maxNodeID && toNode >= 0 && toNode < maxNodeID;
   const bool correctFromComponent = (from >= 0 && from < COMPS_PER_NODE) || from == -1;
   const bool correctToComponent = (to >= 0 && to < COMPS_PER_NODE) || to == -1;
   return correctNode && correctFromComponent && correctToComponent && out != -1 && in != -1;
 }
-
-void CreateNewConnection(EditorContext& ec, int fromNodeID, int fromI, int outI, int toNodeID, int toI,
-                         int inI) {
+void CreateNewConnection(EditorContext& ec, int fromID, int fromI, int outI, int toID, int toI, int inI) {
   const auto& nodeMap = ec.core.nodeMap;
   // We use int8_t as size_type to save space
-  Node& fromNode = *nodeMap.at(static_cast<NodeID>(fromNodeID));
+  Node& fromNode = *nodeMap.at(static_cast<NodeID>(fromID));
 
   Component* from = nullptr;
   OutputPin* out;
@@ -124,7 +90,7 @@ void CreateNewConnection(EditorContext& ec, int fromNodeID, int fromI, int outI,
     out = &fromNode.outputs[static_cast<int8_t>(outI)];
   }
 
-  Node& toNode = *nodeMap.at(static_cast<NodeID>(toNodeID));
+  Node& toNode = *nodeMap.at(static_cast<NodeID>(toID));
   Component* to = nullptr;
   InputPin* in = nullptr;
   if (toI != -1) {
@@ -136,25 +102,130 @@ void CreateNewConnection(EditorContext& ec, int fromNodeID, int fromI, int outI,
 
   ec.core.addConnection(new Connection(fromNode, from, *out, toNode, to, *in));
 }
+void SaveEditorData(FILE* file, EditorContext& ec) {
+  //TODO save more data
+  io_save_section(file, "EditorData");
+  io_save(file, static_cast<int>(ec.core.nodes.size()));        // Total nodes
+  io_save(file, static_cast<int>(ec.core.connections.size()));  // Total connections
+  io_save(file, ec.display.camera.target.x);
+  io_save(file, ec.display.camera.target.y);
+  io_save(file, ec.display.camera.zoom);
+  io_save(file, ec.ui.showGrid);
+  io_save_newline(file);
+}
+void SaveTemplates(FILE* file, EditorContext& ec) {
+  io_save_section(file, "Templates");
+  io_save(file, (int)ec.templates.nodeTemplates.size());
+  io_save_newline(file);
+  for (const auto& nt : ec.templates.nodeTemplates | std::views::values) {
+    io_save(file, compIndices.add(nt.label));  // The arbitrary id
+    io_save(file, nt.label);
+    io_save(file, ColorToInt({nt.color.r, nt.color.g, nt.color.b, nt.color.a}));
+    for (const auto& [label, component] : nt.components) {
+      io_save(file, label == nullptr ? "" : label);
+    }
+    io_save_newline(file);
+  }
+}
 
+int SaveNodes(FILE* file, EditorContext& ec) {
+  io_save_section(file, "Nodes");
+  int count = 0;
+  for (const auto n : ec.core.nodes) {
+    io_save(file, compIndices.get(n->name));
+    Node::SaveState(file, *n);
+    io_save_newline(file);
+    count++;
+  }
+  return count;
+}
+
+int SaveConnections(FILE* file, EditorContext& ec) {
+  io_save_section(file, "Connections");
+  int count = 0;
+  const auto& connections = ec.core.connections;
+  for (const auto conn : connections) {
+    Node& fromNode = conn->fromNode;  //Output Node
+    const Component* from = conn->from;
+    io_save(file, fromNode.uID);
+    io_save(file, fromNode.getComponentIndex(from));
+    io_save(file, fromNode.getPinIndex(from, conn->out));
+
+    Node& toNode = conn->toNode;  //Input Node
+    const Component* to = conn->to;
+    io_save(file, toNode.uID);
+    io_save(file, toNode.getComponentIndex(to));
+    io_save(file, toNode.getPinIndex(to, conn->in));
+    //End with newline
+    io_save_newline(file);
+    count++;
+  }
+  return count;
+}
+void LoadEditorData(FILE* file, EditorContext& ec) {
+  io_load_newline(file, true);  //Skip the Editor section
+  io_load_newline(file);        // Node count
+  io_load_newline(file);        // Connection count
+  io_load(file, ec.display.camera.target.x);
+  io_load(file, ec.display.camera.target.y);
+  io_load(file, ec.display.camera.zoom);
+  io_load(file, ec.ui.showGrid);
+  io_load_newline(file);
+}
+
+void LoadTemplates(FILE* file, EditorContext& ec) {
+  io_load_newline(file, false);
+  int amount = 0;
+  io_load(file, amount);
+  io_load_newline(file, true);
+  char buff[Plugin::MAX_NAME_LEN];
+  for (int i = 0; i < amount; ++i) {
+    int index;
+    io_load(file, index);
+    io_load(file, buff, Plugin::MAX_NAME_LEN);
+    compIndices.add(buff, index);
+    io_load_newline(file, true);
+  }
+}
+
+int LoadNodes(FILE* file, EditorContext& ec) {
+  int count = 0;
+  while (io_load_inside_section(file, "Nodes")) {
+    int index = 0;
+    io_load(file, index);
+    int id;
+    io_load(file, id);
+    auto* nodeName = compIndices.getName(index);
+    const auto newNode = ec.core.createNode(ec, nodeName, {0, 0}, static_cast<uint16_t>(id));
+    if (!newNode) {
+      io_load_newline(file, true);
+      continue;
+    }
+    Node::LoadState(file, *newNode);
+    ec.core.UID = std::max(ec.core.UID, static_cast<NodeID>(newNode->uID + 1));
+    io_load_newline(file);
+    count++;
+  }
+  return count;
+}
 int LoadConnections(FILE* file, EditorContext& ec) {
   int count = 0;
   const int maxNodeID = ec.core.UID;
-  while (cxstructs::io_load_inside_section(file, "Connections")) {
+  while (io_load_inside_section(file, "Connections")) {
     int fromNode, from, out;
     int toNode, to, in;
     //Output
-    cxstructs::io_load(file, fromNode);
-    cxstructs::io_load(file, from);
-    cxstructs::io_load(file, out);
+    io_load(file, fromNode);
+    io_load(file, from);
+    io_load(file, out);
     //Input
-    cxstructs::io_load(file, toNode);
-    cxstructs::io_load(file, to);
-    cxstructs::io_load(file, in);
+    io_load(file, toNode);
+    io_load(file, to);
+    io_load(file, in);
     if (IsValidConnection(maxNodeID, fromNode, from, out, toNode, to, in)) {
       CreateNewConnection(ec, fromNode, from, out, toNode, to, in);
     }
-    cxstructs::io_load_newline(file);
+    io_load_newline(file);
     count++;
   }
   return count;
@@ -163,7 +234,7 @@ int LoadConnections(FILE* file, EditorContext& ec) {
 
 bool Persist::saveToFile(EditorContext& ec, bool saveAsMode) {
   // Strictly enforce this to limit saving -> Actions need to be accurate
-  if (!ec.core.hasUnsavedChanges && !saveAsMode) return true;
+  if (ec.core.hasUnsavedChanges && !saveAsMode) return true;
 
   // If "SaveAs" we want to save with a new name - regardless of an existing one
   if (openedFilePath.empty() || saveAsMode) {
@@ -177,10 +248,13 @@ bool Persist::saveToFile(EditorContext& ec, bool saveAsMode) {
 
   const int size = std::max(static_cast<int>(ec.core.nodes.size()), 1);
 
+  compIndices.reset();
+
   int nodes, connections;
   //We assume 1000 bytes on average per node for the buffer
-  const auto res = cxstructs::io_save_buffered_write(openedFilePath.c_str(), size * 1000, [&](FILE* file) {
+  const auto res = io_save_buffered_write(openedFilePath.c_str(), size * 1000, [&](FILE* file) {
     SaveEditorData(file, ec);
+    SaveTemplates(file, ec);
     nodes = SaveNodes(file, ec);
     connections = SaveConnections(file, ec);
   });
@@ -194,8 +268,8 @@ bool Persist::saveToFile(EditorContext& ec, bool saveAsMode) {
   ec.core.hasUnsavedChanges = false;
   ec.string.updateWindowTitle(ec);
 
-  printf("Saved %s nodes\n", ec.string.getPaddedNum(nodes));
-  printf("Saved %s connections\n", ec.string.getPaddedNum(connections));
+  //printf("Saved %s nodes\n", ec.string.getPaddedNum(nodes));
+ // printf("Saved %s connections\n", ec.string.getPaddedNum(connections));
   return true;
 }
 
@@ -219,14 +293,20 @@ bool Persist::loadFromFile(EditorContext& ec) {
 
   // Reset editor to initial state
   ec.core.resetEditor(ec);
+  compIndices.reset();
 
   //Load data
-  LoadEditorData(file, ec);
-  int nodes = LoadNodes(file, ec);
-  int connections = LoadConnections(file, ec);
+  int nodes = 0;
+  int connections = 0;
+  {
+    LoadEditorData(file, ec);
+    LoadTemplates(file, ec);
+    nodes = LoadNodes(file, ec);
+    connections = LoadConnections(file, ec);
+  }
 
-  printf("Loaded %s nodes\n", ec.string.getPaddedNum(nodes));
-  printf("Loaded %s connections\n", ec.string.getPaddedNum(connections));
+  //printf("Loaded %s nodes\n", ec.string.getPaddedNum(nodes));
+  //printf("Loaded %s connections\n", ec.string.getPaddedNum(connections));
 
   if (fclose(file) != 0) return false;
 
@@ -238,7 +318,7 @@ bool Persist::loadFromFile(EditorContext& ec) {
 }
 
 bool Persist::loadWorkingDirectory(EditorContext& /**/) {
-  cxstructs::Constraint<true> c;
+  Constraint<true> c;
 
   c + ChangeDirectory(GetApplicationDirectory());
 
