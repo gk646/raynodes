@@ -123,7 +123,6 @@ void Core::paste(EditorContext& ec) const {
   }
   ec.core.addEditorAction(ec, action);
 }
-
 void Core::cut(EditorContext& ec) {
   if (selectedNodes.empty()) return;
   copiedNodes.clear();
@@ -134,14 +133,12 @@ void Core::cut(EditorContext& ec) {
   ec.core.addEditorAction(ec, action);
   selectedNodes.clear();
 }
-
 void Core::erase(EditorContext& ec) {
   if (selectedNodes.empty()) return;
   const auto action = new NodeDeleteAction(ec, selectedNodes);
   ec.core.addEditorAction(ec, action);
   selectedNodes.clear();
 }
-
 void Core::open(EditorContext& ec) {
   if (ec.core.hasUnsavedChanges) ec.ui.showUnsavedChanges = true;
   else {
@@ -153,7 +150,7 @@ void Core::open(EditorContext& ec) {
     }
   }
 }
-void Core::selectAll(EditorContext& ec) {
+void Core::selectAll(EditorContext& /**/) {
   for (auto* n : nodes) {
     selectedNodes.insert({n->uID, n});
   }
@@ -163,10 +160,10 @@ void Core::newFile(EditorContext& ec) {
   else {
     ec.core.resetEditor(ec);
     ec.persist.openedFilePath.clear();
-    String::updateWindowTitle(ec);
+    ec.string.updateWindowTitle(ec);
   }
 }
-void Core::copy(EditorContext& ec) {
+void Core::copy(EditorContext& /**/) {
   copiedNodes.clear();
   for (const auto& node : selectedNodes | std::views::values) {
     copiedNodes.push_back(node);
@@ -180,7 +177,7 @@ void Core::addEditorAction(EditorContext& ec, Action* action) {
   // We never unset it even if the user undoes the action - cause its straightforward
   if (!hasUnsavedChanges) {
     hasUnsavedChanges = true;
-    String::updateWindowTitle(ec);
+    ec.string.updateWindowTitle(ec);
   }
 
   // If we're not at the end, remove all forward actions

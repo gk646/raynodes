@@ -26,8 +26,13 @@ struct Info {
   static constexpr auto fileEnding = ".rn";
   static constexpr const char* fileFilter[1] = {"*.rn"};
   static constexpr auto fileDescription = "raynodes save (.rn)";
+  static constexpr auto wikiLink = "https://github.com/gk646/raynodes";
+  static constexpr auto github = "https://github.com/gk646/raynodes";
+  static constexpr auto about = "Copyright #226# 2024 gk646 raynodes";
   static constexpr int majorVersion = 0;
   static constexpr int minorVersion = 9;
+
+  static const char* getVersion(EditorContext& ec);
 };
 
 #endif  //RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_

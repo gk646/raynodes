@@ -69,17 +69,14 @@ inline void UpdateTick(EditorContext& ec) {
   if (ec.logic.isSelecting) {
     FormatSelectRectangle(ec);
   }
-
-
 }
 inline void StartUpdateTick(EditorContext& ec) {
   auto& camera = ec.display.camera;
 
-  auto currScreenWidth = static_cast<float>(GetScreenWidth());
-  auto currScreenHeight = static_cast<float>(GetScreenHeight());
+  const auto currScreenWidth = static_cast<float>(GetScreenWidth());
+  const auto currScreenHeight = static_cast<float>(GetScreenHeight());
 
   if (ec.display.screenSize.x != currScreenWidth || ec.display.screenSize.y != currScreenHeight) {
-
     UnloadRenderTexture(ec.display.uiTexture);
     ec.display.uiTexture = LoadRenderTexture((int)currScreenWidth, (int)currScreenHeight);
   }
@@ -87,10 +84,6 @@ inline void StartUpdateTick(EditorContext& ec) {
   ec.display.screenSize.y = currScreenHeight;
 
   camera.offset = {ec.display.screenSize.x / 2.0f, ec.display.screenSize.y / 2.0f};
-
-  camera.zoom += GetMouseWheelMove() * 0.05f;
-  camera.zoom = (camera.zoom > Display::MAX_ZOOM) ? Display::MAX_ZOOM : camera.zoom;
-  camera.zoom = (camera.zoom < Display::MIN_ZOOM) ? Display::MIN_ZOOM : camera.zoom;
 
   // Scale to normal screen space
   const auto mouse = GetMousePosition();
