@@ -52,8 +52,8 @@ struct Node {
   const char* const name = nullptr;                                       //Unique allocated name
   float x, y;                                                             // Position
   float width, height;                                                    // Dimensions
+  Color4 color;                                                           // Header colour
   const NodeID uID;                                                       // Unqiue node ID
-  uint8_t r, g, b, a;                                                     // Header colour
   uint16_t contentHeight = 0;                                             //Current height of the content
   bool isHovered = false;
   bool isDragged = false;

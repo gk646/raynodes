@@ -48,7 +48,7 @@ struct Core {
     return retval;
   }
   Node* getNode(const NodeID id) { return nodeMap[id]; }
-  auto createNode(EditorContext& ec, const char* name, Vector2 worldPos, uint16_t hint = UINT16_MAX) -> Node*;
+  Node* createNode(EditorContext& ec, const char* name, Vector2 worldPos, uint16_t hint = UINT16_MAX);
   void insertNode(EditorContext& ec, Node& node);
   void removeNode(EditorContext& ec, NodeID id);
   void moveToFront(Node* node) {

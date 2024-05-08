@@ -25,6 +25,7 @@ String::String() {
 }
 
 void String::updateWindowTitle(EditorContext& ec) {
+  if (!IsWindowReady()) return;  // So we can test
   const char* fileName = GetFileName(ec.persist.openedFilePath.c_str());
   if (fileName == nullptr || *fileName == '\0') {
     fileName = "Untitled";

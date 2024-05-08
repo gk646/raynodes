@@ -18,10 +18,38 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <catch_amalgamated.hpp>
-#include "import/RnImport.h"
+#ifndef REGISTERNODES_H
+#define REGISTERNODES_H
 
-TEST_CASE("Test a simple import of a rn file", "SimpleImport") {
-  auto rn = raynodes::ParseRN("res/SimpleTest.rn");
+#include "application/EditorContext.h"
+#include "plugin/RegisterInterface.h"
+#include "../plugins/BuiltIns/components/TextOutC.h"
 
+namespace {
+void registerNodes(EditorContext& ec) {
+  PluginContainer pc{nullptr, "_Dummy_", nullptr};
+  NodeRegister nr{ec, pc};
+  ComponentRegister cr{ec, pc};
+  cr.registerComponent<TextOutputC>("TextOut");
+  nr.registerNode("DummyN", {{"DummyC", "TextOut"}});
 }
+
+}  // namespace
+
+namespace TestUtil {
+// Returns a basic context with a component and a node registered
+inline EditorContext getBasicContext() {
+  EditorContext ec{0, nullptr};
+  registerNodes(ec);
+  return ec;
+}
+// Call this to use relative and short paths inside the test dir
+inline void SetupCWD() {
+  char buff[256];
+  snprintf(buff, 256, "%s/../test", GetWorkingDirectory());
+  if (!ChangeDirectory(buff)) {
+    fprintf(stderr, "Failed to change CWD\n");
+  }
+}
+}  // namespace TestUtil
+#endif  //REGISTERNODES_H

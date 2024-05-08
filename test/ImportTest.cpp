@@ -18,4 +18,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#define CATCH_CONFIG_MAIN
+#include <catch_amalgamated.hpp>
+
+#include "import/RnImport.h"
+#include "TestUtil.h"
+
+TEST_CASE("Test a simple import of a rn file") {
+  TestUtil::SetupCWD();
+  auto rn = raynodes::importRN("res/Test1.rn");
+
+  REQUIRE(rn.connCnt == 1);
+  REQUIRE(rn.nodeCnt == 2);
+  REQUIRE(rn.templateCnt == 10);
+
+  REQUIRE(rn.connections[0].fromNode == 0);
+  REQUIRE(rn.connections[0].fromComponent == -1);
+  REQUIRE(rn.connections[0].fromPin == 0);
+}
+
+TEST_CASE("Benchmark the import") {
+  TestUtil::SetupCWD();
+
+  auto* path = "./res/__TEST__.rn";
+  BENCHMARK("Import") {
+    return raynodes::importRN(path);
+  };
+
+  auto rn = raynodes::importRN(path);
+
+  REQUIRE(rn.nodeCnt == 1000);
+}

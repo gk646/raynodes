@@ -53,6 +53,7 @@ void UI::invokeFileMenu(EditorContext& ec, int i) {
   if (i == 4) ec.persist.saveToFile(ec, true);
   if (i == 5) ec.core.closeApplication = true;
 }
+
 void UI::invokeEditMenu(EditorContext& ec, int i) {
   if (i == -1 || i == 0) return;
 
@@ -64,6 +65,7 @@ void UI::invokeEditMenu(EditorContext& ec, int i) {
   if (i == 6) ec.core.erase(ec);
   if (i == 7) ec.core.selectAll(ec);
 }
+
 void UI::invokeViewMenu(EditorContext& ec, int i) {
   if (i == -1 || i == 0) return;
 

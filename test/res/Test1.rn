@@ -1,0 +1,19 @@
+--EditorData--
+2|1|0.000|0.000|1.000|1|
+--Templates--
+10|
+0|Dialog Choice|255|DisplayText|Choice1|Choice2|Choice3|Choice4||
+1|MathOp|255|Operation||||||
+2|TextField|255|TextField||||||
+3|Vector 3|255|Vector3||||||
+4|StringToNum|255|Converter||||||
+5|Display|255|Display||||||
+6|NumberField|255|Number||||||
+7|SeparateXYZ|255|Vector||||||
+8|Dialog|255|DisplayText||||||
+9|QuestHeader|255|Name|Description|Zone|Level|||
+--Nodes--
+2|0|-470|-110|215|59|Test1|$
+2|1|75|-62|215|59|Test3|$
+--Connections--
+0|-1|0|1|-1|0|
