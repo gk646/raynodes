@@ -1,54 +1,45 @@
 # raynodes
 
 `raynodes` is a standalone 2D node editor made using [raylib](https://github.com/raysan5/raylib) with a focus
-extensibility. It aims to be an attractive tool for any node based task, but focuses on source code integration within
+extensibility. It aims to be an attractive tool for any node based task, and supports being integrated into
 bigger projects like games, editors...
+In many cases it comes close to being a node-editor SDK of sorts.
 
 A small showcase of its major features:
 
-- **Clean**, **modularized** and **documented** source code
-- Rich, documented **node and component** interface allowing for endless possibilities!
-- **Fast** and **optimized** import and export functionalities without dependencies!
-- Supports both **Windows and Linux** (and possibly MacOS)
-- Documented **plugin interface** and capabilities
-- **User created** node at runtime via a component library (script support with python and lua in the future)
+- **Clean**, **modularized** and **documented** source code!
+- Extensive and easy-to-use **node and component** interface allowing for endless customization!
+- Custom filetype optimized for **low export size**
+- **Fast and optimized** import header included for working with project exports!
+- Supports both **Windows and Linux** (and possibly macOS)
+- **Plugin interface** and capabilities
+- **Unit testing** of critical parts (importing, persistence...)
+- **Modern code base** using many C++20 and above
+- **User created** nodes at runtime scripted in-editor in python (planned)
 
 In a lot of places it uses my (header only) C++ helper library [cxstructs](https://github.com/gk646/cxstructs).  
 For more infos on the design choices go to [Software Design](#Software-Design)
-
+For more information on how to use the editor look at the [raynodes-wiki](https://github.com/gk646/raynodes/wiki).
 
 ![Image](.github/fullEditor.png)
 
-**1.** [Controls](#Controls)   
-**2.** [Editor Features](#Editor-Features)   
-**3.** [Components!](#Custom-Nodes)  
-**4.** [Plugins](#Plugins)  
-**5.** [Nodes!](#Custom-Nodes)  
-**6.** [Software Design](#Software-Design)  
-
-### Controls
-
-- `CTRL+C` / **Copy selection**
-- `CTRL+V` / **Paste selection**
-- `CTRL+X` / **Cut (delete and copy) selection**
-- `CTRL+Z` / **Undo Action**
-- `CTRL+Y` / **Redo Action**
-- `CTRL+LMB`(click on a node) / **Add to Selection**
-- `CTRL+RMB`(drag) / **Delete nodes in selection**
-- `RMB`  / **Open context menu**
-- `RMB` (drag mouse) / **Select in rectangle**
-- `DEL` / **Delete selected nodes**
-
-CTRL = Control  
-LMB = Left Mouse Button   
-RMB = Right Mouse Button
+**1.** [Editor Features](#Editor-Features)   
+**2.** [Components!](#Custom-Nodes)  
+**3.** [Plugins](#Plugins)  
+**4.** [Nodes!](#Custom-Nodes)  
+**5.** [Software Design](#Software-Design)
 
 ## Editor Features:
 
-### Action History
+### Shortcuts
 
-Each action (move, edit, delete + many more) are tracked in a global list improving the workflow.
-Actions have a generic interface and new ones can easily be added.
+`raynodes` has supports all common shortcuts. For a comprehensive list check out
+the [shortcuts](https://github.com/gk646/raynodes/wiki/Shortcuts) page in the wiki!.
+
+### User Interface
+
+The user interface takes inspiration from other editors like paint.net. For a comprehensive list checkout
+the [user-interface](https://github.com/gk646/raynodes/wiki/User-Interface) page of the wiki!
 
 ### User Defined Templates *(soon)*
 
@@ -60,7 +51,7 @@ Components are the second level of customization you can achieve. For that you c
 inside your own plugin. For the most part a component is a simple struct that is drawn and updated inside the node.
 Inside the update function you have full write and read access to the context and design and draw complex components.
 
-This is a glimps at the interface but the Component.h header has a lot more and is **self documenting**! Check it out!
+This is a glimpse at the interface but the Component.h header has a lot more and is **self documenting**! Check it out!
 
 ```cpp
   //-----------CORE-----------//
@@ -194,12 +185,11 @@ Plugins will be loaded from the `./plugins` folder relative to the executable
 ## Custom Nodes!
 
 The node interface is entirely optional but can be used to gain another level of control to implement functionality.
-It's mostly there to orchestrate existing components by allowing to specify a update and render tasks that runs after
+It's mostly there to orchestrate existing components by allowing to specify an update and render tasks that runs after
 all components.
 
 ```cpp
 //-----------CORE-----------//
-[[nodiscard]] virtual Node* clone(NodeID nid);
 // Guaranteed to be called each tick and AFTER all components have been updated
 virtual void update(EditorContext& ec) {}
 // Called only when the node bounds are (partially) within the screen
@@ -251,22 +241,22 @@ NodeEditor - Logic
 
 ### Node Editor Concepts
 
-The main inspiration was to create a editor that just provides a basic interface that can be used to create anything
+The main inspiration was to create an editor that just provides a basic interface that can be used to create anything
 node based like:
 
 - Blender Node Editor
 - Quest Tree (for games, DialogueTree and choices)
 - Basic Logic Circuit
 
-`raynodes` is a component-centric editor meaning that most things happen in and around components. However with the
+`raynodes` is a component-centric editor meaning that most things happen in and around components. However, with the
 addition custom nodes which allows for even more control you could almost call it a hybrid.
 
 This choice of having components was made due to a number of reasons:
 
 - Having reusable building blocks (components) throughout nodes is good
 - With only a node it's not clear who handles the input and outputs
-    - Now each node has its dedicated input and outputs -> might add node level connections aswell
-- Components can be tied to some identifier (a string here) which allows nodes to built at runtime
+    - Now each node has its dedicated input and outputs -> might add node level connections as well
+- Components can be tied to some identifier (a string here) which allows nodes to be built at runtime
     - This allows for instructions in string form on how to build a specific node -> plugins
 
 However, this also has some drawbacks:

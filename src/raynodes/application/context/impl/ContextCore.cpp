@@ -174,9 +174,8 @@ void Core::copy(EditorContext& /**/) {
 void Core::addEditorAction(EditorContext& ec, Action* action) {
   if (!action) return;
 
-  // Correctly handle unsaved changes
   // We never unset it even if the user undoes the action - cause its straightforward
-  if (!hasUnsavedChanges) {
+  if (hasUnsavedChanges == false) {
     hasUnsavedChanges = true;
     ec.string.updateWindowTitle(ec);
   }

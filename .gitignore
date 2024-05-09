@@ -1,4 +1,5 @@
 cmake-*
 .idea
 saves
-test/res/__TEST__.rn
+test/res/__GEN1__.rn
+test/res/__GEN2__.rn

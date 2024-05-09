@@ -84,13 +84,28 @@ struct Node {
   virtual void onCreation(EditorContext& ec) {}
 
   //-----------COMPONENTS-----------//
-  Component* getComponent(const char* name);
+  // If the type fits retuns the exact component
+  template <typename ComponentType>
+  ComponentType* getComponent(const char* label) {
+    for (const auto c : components) {
+      if (strcmp(label, c->getLabel()) == 0) return static_cast<ComponentType*>(c);
+    }
+    return nullptr;
+  }
+  Component* getComponent(const char* label);
+  void addComponent(Component* comp);
+
+  // Helpers
+  [[nodiscard]] Rectangle getExtendedBounds(float ext) const;
+  [[nodiscard]] Rectangle getBounds() const;
+  [[nodiscard]] Color getColor() const;
   [[nodiscard]] int getComponentIndex(const Component* c) const {
     for (int i = 0; i < components.size(); i++) {
       if (components[static_cast<int8_t>(i)] == c) return i;
     }
     return -1;
   }
+
   [[nodiscard]] int getPinIndex(const Component* c, const Pin& p) const {
     if (!c) {
       if (p.direction == INPUT) return 0;
@@ -102,16 +117,6 @@ struct Node {
     }
     return -1;
   }
-  void addComponent(Component* comp);
-
-  // Helpers
-  [[nodiscard]] Rectangle getExtendedBounds(float ext) const;
-  [[nodiscard]] Rectangle getBounds() const;
-  [[nodiscard]] Color getColor() const;
-};
-
-struct MyNode final : Node {
-  MyNode(const NodeTemplate& nt, Vec2 pos, NodeID id) : Node(nt, pos, id) {}
 };
 
 #pragma warning(pop)
