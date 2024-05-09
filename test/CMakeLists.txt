@@ -8,4 +8,4 @@ target_include_directories(raynodes_test PRIVATE "${CMAKE_SOURCE_DIR}/src/raynod
 target_link_libraries(raynodes_test PRIVATE catch2 raylib editor)
 
 # Register the test with CMake - run from binary dir
-add_test(NAME RaynodesTest COMMAND raynodes_test  WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+add_test(NAME RaynodesTest COMMAND raynodes_test --benchmark-samples 5  WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
