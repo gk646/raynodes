@@ -21,7 +21,7 @@
 #ifndef IMPORTER_H
 #define IMPORTER_H
 
-#include <vector>
+#include <string>
 #include <array>
 #include <cstdio>
 #include <cstring>
@@ -48,14 +48,27 @@ RnImport importRN(const char* path);
 
 #define COMPS_PER_NODE 6         // Max components per node
 #define USED_LINE_SEPARATOR '|'  // Set this to the linesep used by cxio (default '|')
+#define COMPONENT_SEPARATOR '$'  // The separator between component data (default '$')
 #define RN_MAX_NAME_LEN 16       // Max length of any component or node identifiers
 
-using ByteIndex = uint32_t;
-using NodeID = uint16_t;
-using ComponentID = uint8_t;
-using TemplateID = uint8_t;  // Limits to 256 different nodes
+using ByteIndex = uint32_t;      // Limits fileSize to 4GB
+using NodeID = uint16_t;         // Limits to 65536 nodes per project
+using ComponentIndex = uint8_t;  // Limits to 256 components per node
+using TemplateID = uint8_t;      // Limits to 256 unique nodes
 
-enum class DataType : uint8_t {
+// Dont wanna include raylib everywhere
+struct Vec2 {
+  float x;
+  float y;
+};
+
+struct Vec3 {
+  float x;
+  float y;
+  float z;
+};
+
+enum DataType : uint8_t {
   BOOLEAN,
   STRING,
   INTEGER,
@@ -66,21 +79,22 @@ enum class DataType : uint8_t {
 };
 
 struct ConnectionData {
-  NodeID fromNode;
+  NodeID fromNode;       // Value between 0 and nodeCnt-1 or ]0 - nodeCnt] or (0 - nodeCnt]
   int8_t fromComponent;  // -1 if its a node-to-node connection
   uint8_t fromPin;
-  NodeID toNode;
+  NodeID toNode;       // Value between 0 and nodeCnt-1 or ]0 - nodeCnt] or (0 - nodeCnt]
   int8_t toComponent;  // -1 if its a node-to-node connection
   uint8_t toPin;
+  [[nodiscard]] bool isValid() const { return fromNode != UINT16_MAX; }
 };
 
 class ComponentData {
   // This uses a single 32bit number to store both the startByte and the ComponentLabel
   // Current split 24/8
   uint32_t dataHolder = 0;
-  [[nodiscard]] ComponentID getID() const {
+  [[nodiscard]] ComponentIndex getID() const {
     // Extract the lower 8 bits
-    return static_cast<ComponentID>(dataHolder & 0xFF);
+    return static_cast<ComponentIndex>(dataHolder & 0xFF);
   }
   [[nodiscard]] ByteIndex getStartByte() const {
     // Shift right by 8 bits and then mask to get the original 24 bits
@@ -89,34 +103,36 @@ class ComponentData {
 
  public:
   // Internal function - dont call it
-  static void AssignData(ComponentData& comp, ByteIndex startByte, ComponentID id) {
+  static void AssignData(ComponentData& comp, ByteIndex startByte, ComponentIndex id) {
     // Mask and shift `startByte` into the upper 24 bits, and `id` into the lower 8 bits
     comp.dataHolder = (static_cast<uint32_t>(startByte) & 0xFFFFFF) << 8;
     comp.dataHolder |= static_cast<uint32_t>(id) & 0xFF;
   }
+};
 
+struct NodeData {
+  ByteIndex startByte = 0;
+  const NodeID nodeID = 0;
+  const TemplateID templateID = 0;
   // Returns the data of the index-th save call made inside the component - 0 based
   // io_save(file, first), io_save(file, second), io_save(file, third);
   // IMPORTANT: strings will be returned as allocated "char*"
   template <DataType dt>
-  auto getData(char* fileData, int index) const;
-};
-
-struct NodeData {
-  NodeID nodeID = 0;
-  TemplateID templateID = 0;
+  auto getData(char* file, ComponentIndex id, int index) const;
 };
 
 struct NodeTemplate {
-  uint16_t startByte = 0;
+  const uint16_t startByte = 0;
+  ComponentIndex getCompIndex(char* fileData, const char* label) const;
 };
 
+// All members are openly accessible to allow custom tinkering - only use them if you know what your doing!
 struct RnImport final {
-  uint16_t templateCnt = 0;               // Count of templates
+  uint16_t templateCnt = 0;               // Amount of templates
   NodeTemplate* templates = nullptr;      // Node templates
-  uint16_t nodeCnt = 0;                   // Count of nodes
+  uint16_t nodeCnt = 0;                   // Amount of nodes
   NodeData* nodes = nullptr;              // Internal data holder
-  uint16_t connCnt = 0;                   // Count of connections
+  uint16_t connCnt = 0;                   // Amount of connections
   ConnectionData* connections = nullptr;  // Internal data holder
 
   char* fileData = nullptr;  // Allocated string containing the whole file data
@@ -134,36 +150,56 @@ struct RnImport final {
     free(connections);
   }
 
-  // Returns the data of the index-th save call made inside the specified component - 0 based
-  // io_save(file, first), io_save(file, second), io_save(file, third);
-  // Most components will probably only have have 1 - its up to the user to know the correct datatype
-  // IMPORTANT: strings will be returned as allocated "char*" (strdup)
+  // Returns the data of the component with the given label from the node identified by nodeID
+  // Its up to the user to know the correct type
+  // This function is a bit slower than its counterpart as it has to do the name lookup
+  // Optional: saveIndex specifies the position of the save call inside the component - most of the time 0
+  // Failure: returns a type appropriate dummy (false, 0, 0.0F, empty string).
+  // IMPORTANT: strings will be returned as std::string()
   template <DataType dt>
-  [[nodiscard]] auto getComponentData(NodeID nodeID, int component, int index = 0) const;
+  [[nodiscard]] auto getComponentData(NodeID nodeID, const char* label, int saveIndex = 0) const;
 
-  // Returns the ID of the first found node thats connected to this component
+  // Returns the data of the component at the specified index within the node - 0 based indexing
+  // Its up to the user to know the correct type
+  // Optional: saveIndex specifies the position of the save call inside the component - most of the time 0
+  // Failure: returns a type appropriate dummy (false, 0, 0.0F, empty string).
+  // IMPORTANT: strings will be returned as std::string()
+  template <DataType dt>
+  [[nodiscard]] auto getComponentData(NodeID nodeID, int componentIndex, int saveIndex = 0) const;
+
+  // Returns the connection to the first found node from the specified component - 0 based indexing
+  // Index can be -1 to get the node-to-node connection
   // Useful if a component only has 1 connection
-  // Returns UINT16_MAX if no node is found
-  [[nodiscard]] NodeID getFirstConnectedNode(NodeID nodeID, int componentIndex) const;
+  // Failure: returns connection with all values set to the max - use isValid()
+  [[nodiscard]] ConnectionData getConnection(NodeID nodeID, int componentIndex) const;
 
-  // Returns the IDs of nodes that the component has a connection to
-  // Stops if the specified size is reached or pads it with UINT16_MAX if not reached
+  // Returns and arry of connections from the specified component - 0 based indexing
+  // Index can be -1 to get the node-to-node connections
+  // Failure: array will always be filled - empty connections will contain max values - use isValid()
   template <int size>
-  [[nodiscard]] std::array<NodeID, size> getConnectedNodes(NodeID nodeID, int componentIndex) const;
+  [[nodiscard]] std::array<ConnectionData, size> getConnections(NodeID nodeID, int componentIndex) const;
 
-  //TODO build save indicies to read - components names and datatypes
  private:
-  [[nodiscard]] const NodeData& getNodeData(NodeID nodeID) const {
+  [[nodiscard]] const NodeData* getNodeData(const NodeID id) const {
+    if (id >= nodeCnt) return nullptr;
     for (int i = 0; i < nodeCnt; ++i) {
-      if (nodes[i].nodeID == nodeID) return nodes[i];
+      if (nodes[i].nodeID == id) return &nodes[i];
     }
-    std::abort();  // Node not found!
+    return nullptr;
+  }
+  [[nodiscard]] const NodeTemplate* getNodeTemplate(const TemplateID id) const {
+    if (id >= templateCnt) [[unlikely]]
+      return nullptr;
+    return &templates[id];
   }
 };
 }  // namespace raynodes
 
-//--------------IMPLEMENTATION---------------//
+// ==============================
+// IMPLEMENTATION
+// ==============================
 
+//-----------HELPER_FUNCTIONS-----------//
 // Alot of these helpers are copied from cxutil/cxstring.h
 namespace {
 void str_read_into_until(const char* data, char* buffer, size_t buffer_size, char stop) {
@@ -174,12 +210,9 @@ void str_read_into_until(const char* data, char* buffer, size_t buffer_size, cha
   }
   buffer[count] = '\0';
 }
-
 void SkipCharacter(char*& ptr, const char c, int count) noexcept {
   while (*ptr != '\0' && count > 0) {
-    if (*ptr == c) {
-      --count;
-    }
+    if (*ptr == c) { --count; }
     ++ptr;
   }
 }
@@ -199,7 +232,7 @@ char* str_dup(const char* arg) {
   }
   return newBuff;
 }
-int str_parse_int(const char* str, const int radix = 10) {
+int str_parse_int(const char* str) {
   if (str == nullptr || *str == '\0') return 0;
 
   int result = 0;
@@ -217,20 +250,96 @@ int str_parse_int(const char* str, const int radix = 10) {
     else if (digit >= 'A' && digit <= 'Z') value = 10 + digit - 'A';
     else break;
 
-    if (value >= radix) break;
+    if (value >= 10) break;
 
-    result = result * radix + value;
+    result = result * 10 + value;
     ++str;
   }
 
   return negative ? -result : result;
 }
+template <raynodes::DataType dt>
+[[nodiscard]] auto GetDefaultValue() {
+  if constexpr (dt == raynodes::STRING) {
+    return std::string();  // Shouldnt make an allocation as its a empty string
+  } else if constexpr (dt == raynodes::INTEGER) {
+    return static_cast<int64_t>(0);
+  } else if constexpr (dt == raynodes::BOOLEAN) {
+    return false;
+  } else if constexpr (dt == raynodes::FLOAT) {
+    return 0.0;
+  } else if constexpr (dt == raynodes::DATA) {
+    static_assert(dt == raynodes::STRING, "Wont be supported... How?");
+  } else if constexpr (dt == raynodes::VECTOR_3) {
+    return raynodes::Vec3{0.0F, 0.0F, 0.0F};
+  } else if constexpr (dt == raynodes::VECTOR_2) {
+    return raynodes::Vec2{0.0F, 0.0F};
+  } else {
+    static_assert(dt == raynodes::STRING, "Unsupported PinType");
+  }
+}
+bool str_cmp_stop_at(const char* newArg, const char* control, int max, char stop) {
+  int offSet = 0;
+  while (control[offSet] != stop && offSet < max) {
+    // Check if newArg ends before control reaches the stop character or max limit
+    if (newArg[offSet] == '\0' || newArg[offSet] != control[offSet]) { return false; }
+    offSet++;
+  }
+  // Returns true if newArg matches control up to the stop character
+  return true;
+}
 }  // namespace
 
-inline raynodes::RnImport raynodes::importRN(const char* path) {
+//-----------HELPER_CLASSES-----------//
+namespace raynodes {
+template <DataType dt>
+auto NodeData::getData(char* fileData, ComponentIndex id, int index) const {
+  char* workPtr = fileData + startByte;
+  SkipCharacter(workPtr, USED_LINE_SEPARATOR, 1);  // Skip the node id
+
+  SkipCharacter(workPtr, COMPONENT_SEPARATOR, id);     // Skipped if component is 0
+  SkipCharacter(workPtr, USED_LINE_SEPARATOR, index);  // Skipped if index is 0
+
+  if constexpr (dt == BOOLEAN) {
+    return std::strtol(workPtr, nullptr, 10) == 1;
+  } else if constexpr (dt == STRING) {
+    const char* start = workPtr;
+    int count = 0;
+    while (*(start + count) != USED_LINE_SEPARATOR && *(start + count) != '\0') {
+      count++;
+    }
+    std::string allocatedString(start, count);
+    return allocatedString;  // Rely on RVO for efficient return
+  } else if constexpr (dt == INTEGER) {
+    return std::strtoll(workPtr, nullptr, 10);
+  } else if constexpr (dt == FLOAT) {
+    return std::strtof(workPtr, nullptr);
+  } else if constexpr (dt == VECTOR_2) {
+    static_assert(dt == STRING, "Not yet supported");
+  } else if constexpr (dt == VECTOR_3) {
+    static_assert(dt == STRING, "Not yet supported");
+  } else if constexpr (dt == DATA) {
+    static_assert(dt == STRING, "Wont be supported... How?");
+  }
+}
+inline ComponentIndex NodeTemplate::getCompIndex(char* file, const char* label) const {
+  char* workPtr = file + startByte;
+  SkipCharacter(workPtr, USED_LINE_SEPARATOR, 1);
+  for (uint8_t i = 0; i < COMPS_PER_NODE; ++i) {
+    if (workPtr[0] == '\n') return UINT8_MAX;  // Dummy value
+    if (str_cmp_stop_at(label, workPtr, RN_MAX_NAME_LEN, USED_LINE_SEPARATOR)) return i;
+  }
+  return UINT8_MAX;  // Dummy value
+}
+}  // namespace raynodes
+
+//-----------RN_IMPORT-----------//
+namespace raynodes {
+inline RnImport raynodes::importRN(const char* path) {
   FILE* file = fopen(path, "rb");  // Open in binary mode to avoid text translation
-  if (!file) {
+  if (file == nullptr) {
     perror("Failed to open file securely");
+    return {nullptr, 0};
   }
 
   // Seek to the end to find the size of the file
@@ -275,8 +384,8 @@ inline raynodes::RnImport raynodes::importRN(const char* path) {
   // Return the result
   return {buffer, static_cast<ByteIndex>(size)};
 }
-
-inline raynodes::RnImport::RnImport(char* fileData, ByteIndex size) : fileData(fileData), size(size) {
+inline RnImport::RnImport(char* fileData, ByteIndex size) : fileData(fileData), size(size) {
+  if (fileData == nullptr) return;
   auto* indexPtr = fileData;
   // Allocating space
   {
@@ -303,8 +412,9 @@ inline raynodes::RnImport::RnImport(char* fileData, ByteIndex size) : fileData(f
     for (int i = 0; i < templateCnt; ++i) {
       int index = str_parse_int(indexPtr);
       SkipCharacter(indexPtr, USED_LINE_SEPARATOR, 1);
-      templates[index] = {static_cast<uint16_t>(indexPtr - fileData)};
-      SkipCharacter(indexPtr, '\n', 1);
+      NodeTemplate nt{static_cast<uint16_t>(indexPtr - fileData)};
+      memcpy(templates + index, &nt, sizeof(NodeTemplate));
+      SkipCharacter(indexPtr, '\n', 1);  // Copy cause of const
     }
   }
   // Parsing the nodes
@@ -314,7 +424,8 @@ inline raynodes::RnImport::RnImport(char* fileData, ByteIndex size) : fileData(f
       const int templateNum = str_parse_int(indexPtr);
       SkipCharacter(indexPtr, USED_LINE_SEPARATOR, 1);
       const int nodeID = str_parse_int(indexPtr);
-      nodes[i] = {static_cast<NodeID>(nodeID), static_cast<TemplateID>(templateNum)};
+      NodeData nd{static_cast<ByteIndex>(indexPtr - fileData), (NodeID)nodeID, (TemplateID)templateNum};
+      memcpy(nodes + i, &nd, sizeof(NodeData));  // Copy cause of const
       SkipCharacter(indexPtr, '\n', 1);
     }
   }
@@ -338,58 +449,48 @@ inline raynodes::RnImport::RnImport(char* fileData, ByteIndex size) : fileData(f
     }
   }
 }
-
-inline raynodes::NodeID raynodes::RnImport::getFirstConnectedNode(NodeID nodeID, int componentIndex) const {
-  //  for (const auto& conn : connections) {
-  //   if (conn.fromNode == nodeID && conn.fromComponent == componentIndex) return conn.toNode;
-  // }
-  return UINT16_MAX;
+template <DataType dt>
+auto RnImport::getComponentData(const NodeID nodeID, const char* label, const int saveIndex) const {
+  if (label == nullptr || saveIndex < 0) [[unlikely]] { return GetDefaultValue<dt>(); }
+  const auto* nData = getNodeData(nodeID);
+  if (nData == nullptr) [[unlikely]] { return GetDefaultValue<dt>(); }
+  const auto* nTemplate = getNodeTemplate(nData->templateID);
+  if (nTemplate == nullptr) [[unlikely]] { return GetDefaultValue<dt>(); }
+  ComponentIndex compIndex = nTemplate->getCompIndex(fileData, label);
+  if (compIndex == UINT8_MAX) [[unlikely]] { return GetDefaultValue<dt>(); }
+  return nData->getData<dt>(fileData, compIndex, saveIndex);
 }
-
-template <raynodes::DataType dt>
-auto raynodes::ComponentData::getData(char* fileData, int index) const {
-  uint32_t startByte = getStartByte();
-  SkipCharacter(fileData, USED_LINE_SEPARATOR, index);
-  if constexpr (dt == DataType::BOOLEAN) {
-    return std::strtol(fileData + startByte, nullptr, 10) == 1;
-  } else if (dt == DataType::STRING) {
-    char* start = fileData + startByte;
-    int count = 0;
-    while (*(start + count) != USED_LINE_SEPARATOR && *(start + count) != '\0') {
-      count++;
+template <DataType dt>
+auto RnImport::getComponentData(const NodeID nodeID, const int componentIndex, const int saveIndex) const {
+  if (componentIndex < 0 || saveIndex < 0) [[unlikely]] { return GetDefaultValue<dt>(); }
+  const auto* nData = getNodeData(nodeID);
+  if (nData == nullptr) [[unlikely]] { return GetDefaultValue<dt>(); }
+  return nData->getData<dt>(fileData, componentIndex, saveIndex);
+}
+inline ConnectionData RnImport::getConnection(NodeID nodeID, int componentIndex) const {
+  for (int i = 0; i < connCnt; ++i) {
+    if (connections[i].fromNode == nodeID && connections[i].fromComponent == componentIndex) {
+      return connections[i];
     }
-    const char temp = *(start + count);
-    *(start + count) = '\0';
-    char* allocatedString = strdup(start);
-    *(start + count) = temp;
-    return allocatedString;
-  } else if (dt == DataType::INTEGER) {
-    return std::strtoll(fileData + startByte, nullptr, 10);
-  } else if (dt == DataType::FLOAT) {
-    return std::strtof(fileData + startByte, nullptr);
   }
+  // Failure
+  return {UINT16_MAX, INT8_MAX, UINT8_MAX, UINT16_MAX, INT8_MAX, UINT8_MAX};
 }
-
-template <raynodes::DataType dt>
-auto raynodes::RnImport::getComponentData(NodeID nodeID, int component, int index) const {
-  // return getNodeData(nodeID).compData[component].getData<dt>(fileData, index);
-}
-
 template <int size>
-std::array<raynodes::NodeID, size> raynodes::RnImport::getConnectedNodes(NodeID nodeID,
-                                                                         int componentIndex) const {
-  int i = 0;
-  std::array<NodeID, size> ids;
-  for (const auto& conn : connections) {
-    if (conn.fromNode == nodeID && conn.fromComponent == componentIndex) {
-      ids[i++] = conn.toNode;
-      if (i == size) return ids;
+std::array<ConnectionData, size> RnImport::getConnections(NodeID nodeID, int componentIndex) const {
+  int index = 0;
+  std::array<ConnectionData, size> retval;
+  for (int i = 0; i < connCnt; ++i) {
+    if (connections[i].fromNode == nodeID && connections[i].fromComponent == componentIndex) {
+      retval[index++] = connections[i];
+      if (index >= size) break;
     }
   }
-  while (i < size) {
-    ids[i++] = UINT16_MAX;
+  while (index < size) {
+    retval[index++] = {UINT16_MAX, INT8_MAX, UINT8_MAX, UINT16_MAX, INT8_MAX, UINT8_MAX};
   }
-  return ids;
+  return retval;
 }
 
+}  // namespace raynodes
 #endif  //IMPORTER_H
