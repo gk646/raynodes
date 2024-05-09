@@ -23,17 +23,13 @@
 #include "import/RnImport.h"
 #include "TestUtil.h"
 
-TEST_CASE("Test a simple import of a rn file") {
+TEST_CASE("Test getComponentData", "[Import]") {
   TestUtil::SetupCWD();
   auto rn = raynodes::importRN("res/Test1.rn");
 
-  REQUIRE(rn.connCnt == 1);
-  REQUIRE(rn.nodeCnt == 2);
+  REQUIRE(rn.connCnt == 3);
+  REQUIRE(rn.nodeCnt == 6);
   REQUIRE(rn.templateCnt == 10);
-
-  REQUIRE(rn.connections[0].fromNode == 0);
-  REQUIRE(rn.connections[0].fromComponent == -1);
-  REQUIRE(rn.connections[0].fromPin == 0);
 
   // String data test
   auto str = rn.getComponentData<raynodes::STRING>(0, "TextField");
@@ -46,26 +42,32 @@ TEST_CASE("Test a simple import of a rn file") {
   REQUIRE(str == "Test2");
   REQUIRE(str == str1);
 
+  // Aggregate test
+  str = rn.getComponentData<raynodes::STRING>(5, "DisplayText");
+  REQUIRE(str == "Display");
+  str1 = rn.getComponentData<raynodes::STRING>(5, "Choice2");
+  REQUIRE(str1 == "C2");
+  auto str2 = rn.getComponentData<raynodes::STRING>(5, "Choice4");
+  REQUIRE(str2 == "C4");
+
+  auto str3 = rn.getComponentData<raynodes::STRING>(5, 0);
+  REQUIRE(str == str3);
+  auto str4 = rn.getComponentData<raynodes::STRING>(5, 2);
+  REQUIRE(str1 == str4);
+  auto str5 = rn.getComponentData<raynodes::STRING>(5, 4);
+  REQUIRE(str2 == str5);
+
   // Bool test
 
-  // Connection test
-
-  //Test single
+  // Integer test
+  auto val = rn.getComponentData<raynodes::FLOAT>(4, "Operation");
+  REQUIRE(val == 1);
+}
+TEST_CASE("Test getConnectionOut", "[Import]") {
+  TestUtil::SetupCWD();
+  auto rn = raynodes::importRN("res/Test1.rn");
   {
-    auto conn = rn.getConnection(0, -1);
-
-    REQUIRE(conn.isValid() == true);
-    REQUIRE(conn.fromNode == 0);
-    REQUIRE(conn.fromComponent == -1);  // node-to-node connection
-    REQUIRE(conn.fromPin == 0);
-    REQUIRE(conn.toNode == 1);
-    REQUIRE(conn.toComponent == -1);  // node-to-node connection
-    REQUIRE(conn.toPin == 0);
-  }
-
-  // Test multiple
-  {
-    auto conns = rn.getConnections<4>(0, -1);
+    auto conns = rn.getConnectionsOut<4>(0, -1);
     const auto conn = conns[0];
     REQUIRE(conn.isValid() == true);
     REQUIRE(conn.fromNode == 0);
@@ -79,9 +81,80 @@ TEST_CASE("Test a simple import of a rn file") {
       REQUIRE(conns[i].isValid() == false);
     }
   }
+  // Test vector
+  {
+    auto conns = rn.getConnectionsOut(0, -1);
+    const auto conn = conns[0];
+    REQUIRE(conn.isValid() == true);
+    REQUIRE(conn.fromNode == 0);
+    REQUIRE(conn.fromComponent == -1);  // node-to-node connection
+    REQUIRE(conn.fromPin == 0);
+    REQUIRE(conn.toNode == 1);
+    REQUIRE(conn.toComponent == -1);  // node-to-node connection
+    REQUIRE(conn.toPin == 0);
+
+    for (const auto c : conns) {
+      REQUIRE(c.isValid() == true);
+    }
+  }
+}
+TEST_CASE("Test getConnectionIn", "[Import]") {
+  TestUtil::SetupCWD();
+  auto rn = raynodes::importRN("res/Test1.rn");
+  // Test multiple
+  {
+    auto conns = rn.getConnectionsIn<4>(1, -1);
+    const auto conn = conns[0];
+    REQUIRE(conn.isValid() == true);
+    REQUIRE(conn.fromNode == 0);
+    REQUIRE(conn.fromComponent == -1);  // node-to-node connection
+    REQUIRE(conn.fromPin == 0);
+    REQUIRE(conn.toNode == 1);
+    REQUIRE(conn.toComponent == -1);  // node-to-node connection
+    REQUIRE(conn.toPin == 0);
+
+    for (int i = 1; i < 4; ++i) {
+      REQUIRE(conns[i].isValid() == false);
+    }
+  }
+  // Test multiple vector
+  {
+    auto conns = rn.getConnectionsIn(1, -1);
+    const auto conn = conns[0];
+    REQUIRE(conn.isValid() == true);
+    REQUIRE(conn.fromNode == 0);
+    REQUIRE(conn.fromComponent == -1);  // node-to-node connection
+    REQUIRE(conn.fromPin == 0);
+    REQUIRE(conn.toNode == 1);
+    REQUIRE(conn.toComponent == -1);  // node-to-node connection
+    REQUIRE(conn.toPin == 0);
+
+    for (const auto c : conns) {
+      REQUIRE(c.isValid() == true);
+    }
+  }
+}
+TEST_CASE("Test getNodes", "[Import]") {
+  TestUtil::SetupCWD();
+  auto rn = raynodes::importRN("res/Test1.rn");
+  // Test array
+  {
+    auto nodes = rn.getNodes<4>("TextField");
+    REQUIRE(nodes[0] == 0);
+    REQUIRE(nodes[1] == 1);
+    REQUIRE(nodes[2] == UINT16_MAX);
+    REQUIRE(nodes[3] == UINT16_MAX);
+  }
+  // Test multiple vector
+  {
+    auto nodes = rn.getNodes("TextField");
+    REQUIRE(nodes.size() == 2);
+    REQUIRE(nodes[0] == 0);
+    REQUIRE(nodes[1] == 1);
+  }
 }
 
-TEST_CASE("Benchmark the import") {
+TEST_CASE("Benchmark the import", "[Import]") {
   TestUtil::SetupCWD();
   auto* path = "./res/__GEN2__.rn";
   BENCHMARK("Import") {

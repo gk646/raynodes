@@ -1,4 +1,4 @@
-set(DEPENDENCIES_PATH "C:/Users/gk646/Documents/Libaries")
+set(DEPENDENCIES_PATH "/mnt/c/Users/gk646/Documents/Libaries")
 
 include_directories(
         "${DEPENDENCIES_PATH}/raylib-master/src"

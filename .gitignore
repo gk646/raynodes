@@ -1,4 +1,4 @@
-cmake-*
+/cmake-*
 .idea
 saves
 test/res/__GEN1__.rn
