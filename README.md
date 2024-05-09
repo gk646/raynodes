@@ -14,8 +14,8 @@ A small showcase of its major features:
 - **User created** node at runtime via a component library (script support with python and lua in the future)
 
 In a lot of places it uses my (header only) C++ helper library [cxstructs](https://github.com/gk646/cxstructs).  
-For more infos on the design choices go to [Software Design](#Software-Design)
-
+For more infos on the design choices go to [Software Design](#Software-Design).  
+Check out the [raynodes-wiki](https://github.com/gk646/raynodes/wiki) for user information!
 
 ![Image](.github/fullEditor.png)
 
@@ -25,23 +25,6 @@ For more infos on the design choices go to [Software Design](#Software-Design)
 **4.** [Plugins](#Plugins)  
 **5.** [Nodes!](#Custom-Nodes)  
 **6.** [Software Design](#Software-Design)  
-
-### Controls
-
-- `CTRL+C` / **Copy selection**
-- `CTRL+V` / **Paste selection**
-- `CTRL+X` / **Cut (delete and copy) selection**
-- `CTRL+Z` / **Undo Action**
-- `CTRL+Y` / **Redo Action**
-- `CTRL+LMB`(click on a node) / **Add to Selection**
-- `CTRL+RMB`(drag) / **Delete nodes in selection**
-- `RMB`  / **Open context menu**
-- `RMB` (drag mouse) / **Select in rectangle**
-- `DEL` / **Delete selected nodes**
-
-CTRL = Control  
-LMB = Left Mouse Button   
-RMB = Right Mouse Button
 
 ## Editor Features:
 
