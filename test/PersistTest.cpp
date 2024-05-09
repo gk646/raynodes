@@ -25,31 +25,33 @@
 
 TEST_CASE("Test correct saving and loading", "PersistTest1") {
   TestUtil::SetupCWD();
-  auto* testPath = "./res/__TEST__.rn";
+  auto* testPath = "./res/__GEN1__.rn";
   auto ec = TestUtil::getBasicContext();
+  constexpr int testSize = 10;
 
-  for (int i = 0; i < 10; ++i) {
+  for (int i = 0; i < testSize; ++i) {
     auto node = ec.core.createNode(ec, "DummyN", {0, 0});
+    auto* comp = node->getComponent<TextOutputC>("TextField");
   }
 
-  REQUIRE(ec.core.nodes.size() == 10);
+  REQUIRE(ec.core.nodes.size() == testSize);
 
   ec.persist.openedFilePath = testPath;
-  ec.core.hasUnsavedChanges = false;
+  ec.core.hasUnsavedChanges = true;
   ec.persist.saveToFile(ec);
 
-  REQUIRE(ec.core.nodes.size() == 10);
+  REQUIRE(ec.core.nodes.size() == testSize);
   REQUIRE(std::filesystem::exists(testPath) == true);
 
   ec.persist.loadFromFile(ec);
 
-  REQUIRE(ec.core.nodes.size() == 10);
+  REQUIRE(ec.core.nodes.size() == testSize);
   REQUIRE(std::filesystem::exists(testPath) == true);
 }
 
 TEST_CASE("Benchmark saving and loading", "PersistBench1") {
   TestUtil::SetupCWD();
-  auto* testPath = "./res/__TEST__.rn";
+  auto* testPath = "./res/__GEN2__.rn";
   auto ec = TestUtil::getBasicContext();
 
   constexpr int testSize = 1000;
@@ -61,7 +63,7 @@ TEST_CASE("Benchmark saving and loading", "PersistBench1") {
   REQUIRE(ec.core.nodes.size() == testSize);
 
   ec.persist.openedFilePath = testPath;
-  ec.core.hasUnsavedChanges = false;
+  ec.core.hasUnsavedChanges = true;
 
   BENCHMARK("Save") {
     return ec.persist.saveToFile(ec);

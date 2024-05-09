@@ -48,24 +48,22 @@ struct ComponentIndices {
   int get(const char* name) const {
     if (name == nullptr) return -1;
     for (int i = 0; i < count; ++i) {
-      if (strncmp(storage + i * Plugin::MAX_NAME_LEN, name, Plugin::MAX_NAME_LEN) == 0) {
-        return i;
-      }
+      if (strncmp(storage + i * Plugin::MAX_NAME_LEN, name, Plugin::MAX_NAME_LEN) == 0) { return i; }
     }
     return -1;
   }
-
   [[nodiscard]] const char* getName(int index) const {
     if (index == -1 || index > count || index >= MAX_UNIQUE_LABELS) return nullptr;
     return storage + index * Plugin::MAX_NAME_LEN;
   }
-
   void reset() {
     std::memset(storage, 0, sizeof(storage));
     count = 0;
   }
 };
 
+// Static instance on the stack - this is only needed inside here
+// Pure file size optimization the rest of the program doesnt know about
 static ComponentIndices compIndices{};
 
 using namespace cxstructs;  // using the namespace here
@@ -120,10 +118,10 @@ void SaveTemplates(FILE* file, EditorContext& ec) {
   for (const auto& nt : ec.templates.nodeTemplates | std::views::values) {
     io_save(file, compIndices.add(nt.label));  // The arbitrary id
     io_save(file, nt.label);
-    io_save(file, ColorToInt({nt.color.r, nt.color.g, nt.color.b, nt.color.a}));
     for (const auto& [label, component] : nt.components) {
       io_save(file, label == nullptr ? "" : label);
     }
+    io_save(file, ColorToInt({nt.color.r, nt.color.g, nt.color.b, nt.color.a}));
     io_save_newline(file);
   }
 }
@@ -139,7 +137,6 @@ int SaveNodes(FILE* file, EditorContext& ec) {
   }
   return count;
 }
-
 int SaveConnections(FILE* file, EditorContext& ec) {
   io_save_section(file, "Connections");
   int count = 0;
@@ -187,7 +184,6 @@ void LoadTemplates(FILE* file, EditorContext& ec) {
     io_load_newline(file, true);
   }
 }
-
 int LoadNodes(FILE* file, EditorContext& ec) {
   int count = 0;
   while (io_load_inside_section(file, "Nodes")) {
@@ -234,10 +230,10 @@ int LoadConnections(FILE* file, EditorContext& ec) {
 
 bool Persist::saveToFile(EditorContext& ec, bool saveAsMode) {
   // Strictly enforce this to limit saving -> Actions need to be accurate
-  if (ec.core.hasUnsavedChanges && !saveAsMode) return true;
+  if (!ec.core.hasUnsavedChanges && !saveAsMode) return true;
 
   // If "SaveAs" we want to save with a new name - regardless of an existing one
-  if (openedFilePath.empty() || saveAsMode) {
+  if (saveAsMode || openedFilePath.empty()) {
     auto* res = tinyfd_saveFileDialog("Save File", nullptr, 1, Info::fileFilter, Info::fileDescription);
     if (res != nullptr) {
       openedFilePath = res;
@@ -269,7 +265,7 @@ bool Persist::saveToFile(EditorContext& ec, bool saveAsMode) {
   ec.string.updateWindowTitle(ec);
 
   //printf("Saved %s nodes\n", ec.string.getPaddedNum(nodes));
- // printf("Saved %s connections\n", ec.string.getPaddedNum(connections));
+  //printf("Saved %s connections\n", ec.string.getPaddedNum(connections));
   return true;
 }
 

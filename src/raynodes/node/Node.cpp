@@ -242,11 +242,11 @@ void DrawComponent(EditorContext& ec, Node& n, Component& c, float dx, float& dy
 }  // namespace
 
 Node::Node(const NodeTemplate& nt, Vec2 pos, NodeID id)
-    : name(nt.label), x(pos.x), y(pos.y), width(50), height(50), uID(id), color(0, 0, 0, 255) {
+    : name(nt.label), x(pos.x), y(pos.y), width(50), height(50), color(0, 0, 0, 255), uID(id) {
   outputs.push_back(OutputPin{NODE});
 }
 Node::Node(const Node& n, const NodeID id)
-    : name(n.name), x(n.x), y(n.y), width(n.width), height(n.height), uID(id), color(n.color) {
+    : name(n.name), x(n.x), y(n.y), width(n.width), height(n.height), color(n.color), uID(id) {
   for (const auto c : n.components) {
     auto clone = c->clone();
     for (auto& in : clone->inputs) {
@@ -276,9 +276,7 @@ void Node::Draw(EditorContext& ec, Node& n) {
   DrawRectangleRec(bounds, UI::COLORS[N_BACK_GROUND]);
 
   // Draw hover outline
-  if (n.isHovered) {
-    DrawRectangleLinesEx(bounds, 1, ColorAlpha(UI::COLORS[UI_LIGHT], 0.7));
-  }
+  if (n.isHovered) { DrawRectangleLinesEx(bounds, 1, ColorAlpha(UI::COLORS[UI_LIGHT], 0.7)); }
 
   // Draw header text
   DrawTextEx(display.editorFont, n.name, headerPos, display.fontSize, 1.0F, UI::COLORS[UI_LIGHT]);
@@ -310,9 +308,7 @@ void Node::Update(EditorContext& ec, Node& n) {
   float biggestWidth = FLT_MIN;
   for (auto* c : n.components) {
     UpdateComponent(ec, n, c);
-    if (c->getWidth() > biggestWidth) {
-      biggestWidth = static_cast<float>(c->width);
-    }
+    if (c->getWidth() > biggestWidth) { biggestWidth = static_cast<float>(c->width); }
   }
 
   n.width = biggestWidth + PADDING * 4.0F;  // Components are drawn with 2 * PADDING inset (both sides)
@@ -320,9 +316,7 @@ void Node::Update(EditorContext& ec, Node& n) {
   n.update(ec);  // Call event func after components
 
   //User is selecting -> no dragging
-  if (ec.logic.isSelecting) {
-    return HandleSelection(n, ec, bounds, selectedNodes);
-  }
+  if (ec.logic.isSelecting) { return HandleSelection(n, ec, bounds, selectedNodes); }
 
   //Another node is dragged no point in updating this one
   if (!n.isDragged && ec.logic.isAnyNodeDragged) {
@@ -342,42 +336,43 @@ void Node::Update(EditorContext& ec, Node& n) {
   }
 
   //Node is dragged
-  if (n.isDragged) {
-    HandleDrag(n, ec, selectedNodes, worldMouse);
-  }
+  if (n.isDragged) { HandleDrag(n, ec, selectedNodes, worldMouse); }
 }
 void Node::SaveState(FILE* file, const Node& n) {
   cxstructs::io_save(file, n.uID);
-  cxstructs::io_save(file, static_cast<int>(n.x));
-  cxstructs::io_save(file, static_cast<int>(n.y));
-  cxstructs::io_save(file, static_cast<int>(n.width));
-  cxstructs::io_save(file, static_cast<int>(n.height));
 
-  n.saveState(file);
+  // Save components first for faster access time when importing
   for (const auto c : n.components) {
     c->save(file);
     fprintf(file, "$");  // Save where the component ends
   }
+
+  n.saveState(file);
+
+  cxstructs::io_save(file, static_cast<int>(n.x));
+  cxstructs::io_save(file, static_cast<int>(n.y));
 }
 void Node::LoadState(FILE* file, Node& n) {
   //Node name (type) was already parsed
   //Node id was already parsed
-  cxstructs::io_load(file, n.x);
-  cxstructs::io_load(file, n.y);
-  cxstructs::io_load(file, n.width);
-  cxstructs::io_load(file, n.height);
 
-  n.loadState(file);
+  //Components first
   for (const auto c : n.components) {
     c->load(file);
     fseek(file, 1, SEEK_CUR);  // Skip the component end marker
   }
+
+  n.loadState(file);
+
+  cxstructs::io_load(file, n.x);
+  cxstructs::io_load(file, n.y);
 }
 
 // Components
 void Node::addComponent(Component* comp) {
   components.push_back(comp);
 }
+
 Component* Node::getComponent(const char* label) {
   for (const auto c : components) {
     if (strcmp(label, c->getLabel()) == 0) return c;
