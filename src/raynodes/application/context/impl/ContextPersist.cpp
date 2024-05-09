@@ -280,7 +280,7 @@ bool Persist::loadFromFile(EditorContext& ec) {
 
   const auto* path = openedFilePath.c_str();
 
-  fopen_s(&file, path, "rb");
+  file = fopen( path, "rb");
 
   if (file == nullptr) {
     fprintf(stderr, "Unable to open file %s\n", path);

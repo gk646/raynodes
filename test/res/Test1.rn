@@ -1,5 +1,5 @@
 --EditorData--
-2|1|-127.000|-126.000|1.000|1|
+6|3|-94.000|-152.000|1.000|1|
 --Templates--
 10|
 0|Dialog Choice|DisplayText|Choice1|Choice2|Choice3|Choice4||255|
@@ -13,7 +13,13 @@
 8|Dialog|DisplayText||||||255|
 9|QuestHeader|Name|Description|Zone|Level|||255|
 --Nodes--
-2|0|Test1|$-500|-183|
-2|1|Test2|$-139|-251|
+2|0|Test1|$-598|-195|
+2|1|Test2|$-87|-195|
+6|2|1024|$-80|-36|
+3|3|1|1|1|$-597|-35|
+1|4|1|$-294|77|
+0|5|Display|$C1|$C2|$C3|$C4|$-331|-522|
 --Connections--
 0|-1|0|1|-1|0|
+3|-1|0|4|-1|0|
+4|-1|0|2|-1|0|

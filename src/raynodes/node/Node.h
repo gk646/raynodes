@@ -23,6 +23,7 @@
 
 #include "shared/fwd.h"
 
+#include <cstring>  // For strcmp on gcc
 #include <cxstructs/StackVector.h>
 
 #include "component/Component.h"
