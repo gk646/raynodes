@@ -23,7 +23,7 @@
 
 #include "TestUtil.h"
 
-TEST_CASE("Test correct saving and loading", "PersistTest1") {
+TEST_CASE("Test correct saving and loading", "[Persist]") {
   TestUtil::SetupCWD();
   auto* testPath = "./res/__GEN1__.rn";
   auto ec = TestUtil::getBasicContext();
@@ -49,7 +49,7 @@ TEST_CASE("Test correct saving and loading", "PersistTest1") {
   REQUIRE(std::filesystem::exists(testPath) == true);
 }
 
-TEST_CASE("Benchmark saving and loading", "PersistBench1") {
+TEST_CASE("Benchmark saving and loading", "[Persist]") {
   TestUtil::SetupCWD();
   auto* testPath = "./res/__GEN2__.rn";
   auto ec = TestUtil::getBasicContext();
