@@ -22,22 +22,27 @@
 #define IMPORTER_H
 
 #include <string>
+#include <vector>
 #include <array>
-#include <cstdio>
-#include <cstring>
-#include <cstdint>
+#include <cstring> // for strlen() on gcc
 
 // ==============================
 // IMPORT INTERFACE
 // ==============================
+
 // This is a Cross-Platform, Single Header, No Dependencies, util header for importing the ".rn" format
 // Its meant to be a optimized and memory efficient abstraction over raw parsing
 // This interface provide easy and structured random access to connections, nodes, components and their data
-// The focus is on reducing allocations and memory usage with more runtime overhead
+// The focus is on reducing memory footprint with more runtime overhead
+// For most operations it provides both allocating and non allocating return containers (vector or array)
+// ................................................................................................
+// It basically just does one pass and saves byte markers where information is stored within the file
+// This later allows for fast, random and frequent access without any more internal allocations
+// ................................................................................................
+// The RnImport interface also abstracts away the fileType so new filetypes like JSON or .csv can be added
 
-// Current memory footprint (bytes):
-// Total Memory = FileSize + nodeCount * NodeData(32) + connectionCount * ConnectionData(8) + Misc(100)(vectors,variables...)
-// ComponentData = COMPONENTS_PER_NODE * ComponentData(4) + NameHash(4)
+// Current memory footprint thats dynamically allocated (bytes):
+// Total Memory = FileSize + nodes * NodeData(8) + connections * ConnectionData(8) + nodeTypes * NodeTemplate(2)
 
 namespace raynodes {
 struct RnImport;
@@ -78,7 +83,7 @@ enum DataType : uint8_t {
   VECTOR_2,
 };
 
-struct ConnectionData {
+struct Connection {
   NodeID fromNode;       // Value between 0 and nodeCnt-1 or ]0 - nodeCnt] or (0 - nodeCnt]
   int8_t fromComponent;  // -1 if its a node-to-node connection
   uint8_t fromPin;
@@ -88,52 +93,29 @@ struct ConnectionData {
   [[nodiscard]] bool isValid() const { return fromNode != UINT16_MAX; }
 };
 
-class ComponentData {
-  // This uses a single 32bit number to store both the startByte and the ComponentLabel
-  // Current split 24/8
-  uint32_t dataHolder = 0;
-  [[nodiscard]] ComponentIndex getID() const {
-    // Extract the lower 8 bits
-    return static_cast<ComponentIndex>(dataHolder & 0xFF);
-  }
-  [[nodiscard]] ByteIndex getStartByte() const {
-    // Shift right by 8 bits and then mask to get the original 24 bits
-    return static_cast<ByteIndex>((dataHolder >> 8) & 0xFFFFFF);
-  }
-
- public:
-  // Internal function - dont call it
-  static void AssignData(ComponentData& comp, ByteIndex startByte, ComponentIndex id) {
-    // Mask and shift `startByte` into the upper 24 bits, and `id` into the lower 8 bits
-    comp.dataHolder = (static_cast<uint32_t>(startByte) & 0xFFFFFF) << 8;
-    comp.dataHolder |= static_cast<uint32_t>(id) & 0xFF;
-  }
-};
-
 struct NodeData {
   ByteIndex startByte = 0;
-  const NodeID nodeID = 0;
-  const TemplateID templateID = 0;
-  // Returns the data of the index-th save call made inside the component - 0 based
-  // io_save(file, first), io_save(file, second), io_save(file, third);
-  // IMPORTANT: strings will be returned as allocated "char*"
+  const NodeID id = 0;
+  const TemplateID tID = 0;
+
   template <DataType dt>
-  auto getData(char* file, ComponentIndex id, int index) const;
+  auto getData(char* fileData, ComponentIndex id, int index) const;
 };
 
 struct NodeTemplate {
   const uint16_t startByte = 0;
   ComponentIndex getCompIndex(char* fileData, const char* label) const;
+  bool isNodeName(const char* fileData, const char* nodeName) const;
 };
 
 // All members are openly accessible to allow custom tinkering - only use them if you know what your doing!
 struct RnImport final {
-  uint16_t templateCnt = 0;               // Amount of templates
-  NodeTemplate* templates = nullptr;      // Node templates
-  uint16_t nodeCnt = 0;                   // Amount of nodes
-  NodeData* nodes = nullptr;              // Internal data holder
-  uint16_t connCnt = 0;                   // Amount of connections
-  ConnectionData* connections = nullptr;  // Internal data holder
+  uint16_t templateCnt = 0;           // Amount of templates
+  NodeTemplate* templates = nullptr;  // Node templates
+  uint16_t nodeCnt = 0;               // Amount of nodes
+  NodeData* nodes = nullptr;          // Internal data holder
+  uint16_t connCnt = 0;               // Amount of connections
+  Connection* connections = nullptr;  // Internal data holder
 
   char* fileData = nullptr;  // Allocated string containing the whole file data
   uint32_t size = 0;         // Size of fileData
@@ -157,7 +139,7 @@ struct RnImport final {
   // Failure: returns a type appropriate dummy (false, 0, 0.0F, empty string).
   // IMPORTANT: strings will be returned as std::string()
   template <DataType dt>
-  [[nodiscard]] auto getComponentData(NodeID nodeID, const char* label, int saveIndex = 0) const;
+  [[nodiscard]] auto getComponentData(NodeID node, const char* label, int saveIndex = 0) const;
 
   // Returns the data of the component at the specified index within the node - 0 based indexing
   // Its up to the user to know the correct type
@@ -165,25 +147,48 @@ struct RnImport final {
   // Failure: returns a type appropriate dummy (false, 0, 0.0F, empty string).
   // IMPORTANT: strings will be returned as std::string()
   template <DataType dt>
-  [[nodiscard]] auto getComponentData(NodeID nodeID, int componentIndex, int saveIndex = 0) const;
+  [[nodiscard]] auto getComponentData(NodeID node, int component, int saveIndex = 0) const;
 
-  // Returns the connection to the first found node from the specified component - 0 based indexing
-  // Index can be -1 to get the node-to-node connection
-  // Useful if a component only has 1 connection
-  // Failure: returns connection with all values set to the max - use isValid()
-  [[nodiscard]] ConnectionData getConnection(NodeID nodeID, int componentIndex) const;
-
-  // Returns and arry of connections from the specified component - 0 based indexing
-  // Index can be -1 to get the node-to-node connections
-  // Failure: array will always be filled - empty connections will contain max values - use isValid()
+  // Returns an array of outgoing connections for a specified node
+  // If `component` or `pin` is not specified, all possible connections are included
+  // Use component = -1 to get the node-to-node connection pins
+  // Failure: array will always be filled - empty connections will contain max values - use Connection::isValid()
   template <int size>
-  [[nodiscard]] std::array<ConnectionData, size> getConnections(NodeID nodeID, int componentIndex) const;
+  [[nodiscard]] std::array<Connection, size> getConnectionsOut(NodeID node, int component = -2, int pin = -1) const;
+
+  // Returns a vector of outgoing connections for a specified node - reserves 5 upfront
+  // If `component` or `pin` is not specified, all possible connections are included
+  // Use component = -1 to get the node-to-node connection pins
+  // Failure: will never fail - vector is empty or filled with valid connections
+  [[nodiscard]] std::vector<Connection> getConnectionsOut(NodeID node, int component = -2, int pin = -1) const;
+
+  // Returns an array of incoming connections for a specified node
+  // If `component` or `pin` is not specified, all possible connections are included
+  // Use component = -1 to get the node-to-node connection pins
+  // Failure: array will always be filled - empty connections will contain max values - use Connection::isValid()
+  template <int size>
+  [[nodiscard]] std::array<Connection, size> getConnectionsIn(NodeID node, int component = -2, int pin = -1) const;
+
+  // Returns a vector of incoming connections for a specified node - reserves 5 upfront
+  // If `component` or `pin` is not specified, all possible connections are included
+  // Use component = -1 to get the node-to-node connection pins
+  // Failure: will never fail - vector is empty or filled with valid connections
+  [[nodiscard]] std::vector<Connection> getConnectionsIn(NodeID node, int component = -2, int pin = -1) const;
+
+  // Returns an array of nodes matching the name
+  // Failure: array will always be filled - empty values will be UINT16_MAX
+  template <int size>
+  [[nodiscard]] std::array<NodeID, size> getNodes(const char* name) const;
+
+  // Returns a vector of nodes matching the name
+  // Failure: array will always be filled - empty values will be UINT16_MAX
+  [[nodiscard]] std::vector<NodeID> getNodes(const char* name) const;
 
  private:
   [[nodiscard]] const NodeData* getNodeData(const NodeID id) const {
     if (id >= nodeCnt) return nullptr;
     for (int i = 0; i < nodeCnt; ++i) {
-      if (nodes[i].nodeID == id) return &nodes[i];
+      if (nodes[i].id == id) return &nodes[i];
     }
     return nullptr;
   }
@@ -293,7 +298,7 @@ bool str_cmp_stop_at(const char* newArg, const char* control, int max, char stop
 //-----------HELPER_CLASSES-----------//
 namespace raynodes {
 template <DataType dt>
-auto NodeData::getData(char* fileData, ComponentIndex id, int index) const {
+auto NodeData::getData(char* fileData, const ComponentIndex id, const int index) const {
   char* workPtr = fileData + startByte;
   SkipCharacter(workPtr, USED_LINE_SEPARATOR, 1);  // Skip the node id
 
@@ -313,7 +318,7 @@ auto NodeData::getData(char* fileData, ComponentIndex id, int index) const {
   } else if constexpr (dt == INTEGER) {
     return std::strtoll(workPtr, nullptr, 10);
   } else if constexpr (dt == FLOAT) {
-    return std::strtof(workPtr, nullptr);
+    return std::strtod(workPtr, nullptr);
   } else if constexpr (dt == VECTOR_2) {
     static_assert(dt == STRING, "Not yet supported");
   } else if constexpr (dt == VECTOR_3) {
@@ -322,20 +327,26 @@ auto NodeData::getData(char* fileData, ComponentIndex id, int index) const {
     static_assert(dt == STRING, "Wont be supported... How?");
   }
 }
-inline ComponentIndex NodeTemplate::getCompIndex(char* file, const char* label) const {
-  char* workPtr = file + startByte;
+inline ComponentIndex NodeTemplate::getCompIndex(char* fileData, const char* label) const {
+  char* workPtr = fileData + startByte;
   SkipCharacter(workPtr, USED_LINE_SEPARATOR, 1);
   for (uint8_t i = 0; i < COMPS_PER_NODE; ++i) {
     if (workPtr[0] == '\n') return UINT8_MAX;  // Dummy value
     if (str_cmp_stop_at(label, workPtr, RN_MAX_NAME_LEN, USED_LINE_SEPARATOR)) return i;
+    SkipCharacter(workPtr, USED_LINE_SEPARATOR, 1);
   }
   return UINT8_MAX;  // Dummy value
 }
+
+inline bool NodeTemplate::isNodeName(const char* fileData, const char* nodeName) const {
+  return str_cmp_stop_at(nodeName, fileData + startByte, RN_MAX_NAME_LEN, USED_LINE_SEPARATOR);
+}
+
 }  // namespace raynodes
 
 //-----------RN_IMPORT-----------//
 namespace raynodes {
-inline RnImport raynodes::importRN(const char* path) {
+inline RnImport importRN(const char* path) {
   FILE* file = fopen(path, "rb");  // Open in binary mode to avoid text translation
   if (file == nullptr) {
     perror("Failed to open file securely");
@@ -403,7 +414,7 @@ inline RnImport::RnImport(char* fileData, ByteIndex size) : fileData(fileData), 
     templateCnt = str_parse_int(indexPtr);
 
     nodes = static_cast<NodeData*>(malloc(nodeCnt * sizeof(NodeData)));
-    connections = static_cast<ConnectionData*>(malloc(connCnt * sizeof(ConnectionData)));
+    connections = static_cast<Connection*>(malloc(connCnt * sizeof(Connection)));
     templates = static_cast<NodeTemplate*>(malloc(templateCnt * sizeof(NodeTemplate)));
   }
   // Parsing the templates
@@ -444,52 +455,123 @@ inline RnImport::RnImport(char* fileData, ByteIndex size) : fileData(fileData), 
       const int to = str_parse_int(indexPtr);
       SkipCharacter(indexPtr, USED_LINE_SEPARATOR, 1);
       const int in = str_parse_int(indexPtr);
-      connections[i] = {(NodeID)fromNode, (int8_t)from, (uint8_t)out,
-                        (NodeID)toNode,   (int8_t)to,   (uint8_t)in};
+      connections[i] = {(NodeID)fromNode, (int8_t)from, (uint8_t)out, (NodeID)toNode, (int8_t)to, (uint8_t)in};
     }
   }
 }
 template <DataType dt>
-auto RnImport::getComponentData(const NodeID nodeID, const char* label, const int saveIndex) const {
+auto RnImport::getComponentData(const NodeID node, const char* label, const int saveIndex) const {
   if (label == nullptr || saveIndex < 0) [[unlikely]] { return GetDefaultValue<dt>(); }
-  const auto* nData = getNodeData(nodeID);
+  const auto* nData = getNodeData(node);
   if (nData == nullptr) [[unlikely]] { return GetDefaultValue<dt>(); }
-  const auto* nTemplate = getNodeTemplate(nData->templateID);
+  const auto* nTemplate = getNodeTemplate(nData->tID);
   if (nTemplate == nullptr) [[unlikely]] { return GetDefaultValue<dt>(); }
   ComponentIndex compIndex = nTemplate->getCompIndex(fileData, label);
   if (compIndex == UINT8_MAX) [[unlikely]] { return GetDefaultValue<dt>(); }
   return nData->getData<dt>(fileData, compIndex, saveIndex);
 }
 template <DataType dt>
-auto RnImport::getComponentData(const NodeID nodeID, const int componentIndex, const int saveIndex) const {
-  if (componentIndex < 0 || saveIndex < 0) [[unlikely]] { return GetDefaultValue<dt>(); }
-  const auto* nData = getNodeData(nodeID);
+auto RnImport::getComponentData(const NodeID node, const int component, const int saveIndex) const {
+  if (component < 0 || saveIndex < 0) [[unlikely]] { return GetDefaultValue<dt>(); }
+  const auto* nData = getNodeData(node);
   if (nData == nullptr) [[unlikely]] { return GetDefaultValue<dt>(); }
-  return nData->getData<dt>(fileData, componentIndex, saveIndex);
-}
-inline ConnectionData RnImport::getConnection(NodeID nodeID, int componentIndex) const {
-  for (int i = 0; i < connCnt; ++i) {
-    if (connections[i].fromNode == nodeID && connections[i].fromComponent == componentIndex) {
-      return connections[i];
-    }
-  }
-  // Failure
-  return {UINT16_MAX, INT8_MAX, UINT8_MAX, UINT16_MAX, INT8_MAX, UINT8_MAX};
+  return nData->getData<dt>(fileData, component, saveIndex);
 }
 template <int size>
-std::array<ConnectionData, size> RnImport::getConnections(NodeID nodeID, int componentIndex) const {
+std::array<Connection, size> RnImport::getConnectionsOut(const NodeID node, const int component, int pin) const {
   int index = 0;
-  std::array<ConnectionData, size> retval;
+  std::array<Connection, size> retval;
   for (int i = 0; i < connCnt; ++i) {
-    if (connections[i].fromNode == nodeID && connections[i].fromComponent == componentIndex) {
-      retval[index++] = connections[i];
-      if (index >= size) break;
-    }
+    if (connections[i].fromNode != node) [[likely]] { continue; }
+    if (component != -2 && connections[i].fromComponent != component) [[likely]] { continue; }
+    if (pin != -1 && connections[i].fromPin != pin) [[likely]] { continue; }
+    retval[index++] = connections[i];
+    if (index >= size) [[unlikely]] { break; }
   }
-  while (index < size) {
+  while (index < size) [[likely]] {
     retval[index++] = {UINT16_MAX, INT8_MAX, UINT8_MAX, UINT16_MAX, INT8_MAX, UINT8_MAX};
   }
   return retval;
+}
+inline std::vector<Connection> RnImport::getConnectionsOut(NodeID node, int component, int pin) const {
+  std::vector<Connection> retval;
+  retval.reserve(5);
+  for (int i = 0; i < connCnt; ++i) {
+    if (connections[i].fromNode != node) [[likely]] { continue; }
+    if (component != -2 && connections[i].fromComponent != component) [[likely]] { continue; }
+    if (pin != -1 && connections[i].fromPin != pin) [[likely]] { continue; }
+    retval.push_back(connections[i]);
+  }
+  return retval;
+}
+template <int size>
+std::array<Connection, size> RnImport::getConnectionsIn(NodeID node, int component, int pin) const {
+  int index = 0;
+  std::array<Connection, size> retval;
+
+  for (int i = 0; i < connCnt; ++i) {
+    if (connections[i].toNode != node) [[likely]] { continue; }
+    if (component != -2 && connections[i].toComponent != component) [[likely]] { continue; }
+    if (pin != -1 && connections[i].toPin != pin) [[likely]] { continue; }
+    retval[index++] = connections[i];
+    if (index >= size) [[unlikely]] { break; }
+  }
+  while (index < size) [[likely]] {
+    retval[index++] = {UINT16_MAX, INT8_MAX, UINT8_MAX, UINT16_MAX, INT8_MAX, UINT8_MAX};
+  }
+
+  return retval;
+}
+inline std::vector<Connection> RnImport::getConnectionsIn(NodeID node, int component, int pin) const {
+  std::vector<Connection> retval;
+  retval.reserve(5);
+  for (int i = 0; i < connCnt; ++i) {
+    if (connections[i].toNode != node) [[likely]] { continue; }
+    if (component != -2 && connections[i].toComponent != component) [[likely]] { continue; }
+    if (pin != -1 && connections[i].toPin != pin) [[likely]] { continue; }
+    retval.push_back(connections[i]);
+  }
+  return retval;
+}
+template <int size>
+std::array<NodeID, size> RnImport::getNodes(const char* name) const {
+  int index = 0;
+  std::array<NodeID, size> retVal;
+  std::memset(&retVal, 255, size * sizeof(NodeID));  // Setting all bytes to 1's -> biggest possible value
+  if (name == nullptr) return retVal;
+  TemplateID id = UINT8_MAX;
+  for (int i = 0; i < templateCnt; ++i) {
+    if (templates[i].isNodeName(fileData, name)) [[unlikely]] {
+      id = static_cast<uint8_t>(i);
+      break;
+    }
+  }
+  if (id == UINT8_MAX) return retVal;
+  for (int i = 0; i < nodeCnt; ++i) {
+    if (nodes[i].tID == id) [[unlikely]] {
+      retVal[index++] = nodes[i].id;
+      if (index >= size) break;
+    }
+  }
+  return retVal;
+}
+inline std::vector<NodeID> RnImport::getNodes(const char* name) const {
+  std::vector<NodeID> retVal;
+  if (name == nullptr) return retVal;
+  TemplateID id = UINT8_MAX;
+  for (int i = 0; i < templateCnt; ++i) {
+    if (templates[i].isNodeName(fileData, name)) [[unlikely]] {
+      id = static_cast<uint8_t>(i);
+      break;
+    }
+  }
+  if (id == UINT8_MAX) return retVal;
+  for (int i = 0; i < nodeCnt; ++i) {
+    if (nodes[i].tID == id) [[unlikely]] {
+      retVal.push_back(nodes[i].id);
+    }
+  }
+  return retVal;
 }
 
 }  // namespace raynodes
