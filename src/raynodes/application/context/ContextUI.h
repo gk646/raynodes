@@ -53,7 +53,7 @@ struct UI final {
       {63, 63, 63, 255},     // N_BACK_GROUND
       {207, 207, 207, 255},  // UI_LIGHT
       {88, 88, 88, 255},     // UI_MEDIUM
-      {56, 56, 56, 255}      // UI_DARK
+      {60, 60, 60, 255}      // UI_DARK
   };
 
   static constexpr auto* fileMenuText = "#001#File;"

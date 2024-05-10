@@ -62,27 +62,31 @@ void NodeDeleteAction::undo(EditorContext& ec) {
   for (const auto conn : deletedConnections) {
     ec.core.addConnection(conn);
   }
+  deletedConnections.clear();
 }
 
 void NodeDeleteAction::redo(EditorContext& ec) {
   removeNodes = true;
   for (const auto n : deletedNodes) {
     ec.core.removeNode(ec, n->uID);
-  }
-  for (const auto conn : deletedConnections) {
-    ec.core.removeConnection(conn);
+    ec.core.removeConnectionsFromNode(*n, deletedConnections);
   }
 }
 
 //-----------NODE_CREATE-----------//
 NodeCreateAction::NodeCreateAction(const int size) : Action(CREATE_NODE) {
-  createdNodes.reserve(size);
+  createdNodes.reserve(size+1);
+  deletedConnections.reserve(5);
 }
 
 NodeCreateAction::~NodeCreateAction() noexcept {
-  if (!removeNodes) return;
-  for (const auto n : createdNodes) {
-    delete n;
+  if (removeNodes) {
+    for (const auto n : createdNodes) {
+      delete n;
+    }
+    for (const auto conn : deletedConnections) {
+      delete conn;
+    }
   }
 }
 
@@ -90,6 +94,7 @@ void NodeCreateAction::undo(EditorContext& ec) {
   removeNodes = true;
   for (const auto n : createdNodes) {
     ec.core.removeNode(ec, n->uID);
+    ec.core.removeConnectionsFromNode(*n, deletedConnections);
   }
 }
 
@@ -98,6 +103,10 @@ void NodeCreateAction::redo(EditorContext& ec) {
   for (const auto n : createdNodes) {
     ec.core.insertNode(ec, *n);
   }
+  for (const auto conn : deletedConnections) {
+    ec.core.addConnection(conn);
+  }
+  deletedConnections.clear();
 }
 
 //-----------NODE_MOVE-----------//

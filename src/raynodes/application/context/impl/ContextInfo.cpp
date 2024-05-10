@@ -21,5 +21,5 @@
 #include "application/EditorContext.h"
 
 const char* Info::getVersion(EditorContext& ec) {
-  return ec.string.formatText2("%d.%d.%d", majorVersion, middleVersion, minorVersion);
+  return ec.string.formatText2("%d.%d.%d", majorVersion, minorVersion, patch);
 }

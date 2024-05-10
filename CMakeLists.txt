@@ -4,20 +4,20 @@ set(CMAKE_CXX_STANDARD 23)
 
 set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(BUILD_GAMES OFF CACHE BOOL "" FORCE)
-set(OPENGL_VERSION "4.3" CACHE STRING "OpenGL Version to build raylib with")
+set(OPENGL_VERSION "2.1" CACHE STRING "OpenGL Version to build raylib with")
 set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE) # Build as shared lib
 
 
 set(ENABLE_SANITIZER OFF)
-set(RUN_TESTS ON)
+set(RUN_TESTS ON) # If it should build the test executable
 
-# Compiler options for MSVC and unix
+# Compiler options for MSVC and GCC
 include(cmake/CompilerOptions.cmake)
 
 # Choose how the STL is linked
 include(cmake/LinkSTL.cmake)
 
-# Choose either one - currently only local libs supported
+# Choose how to supply dependencies - currently only local libs supported
 # include(cmake/FetchLibs.cmake)
 include(cmake/LoadLocalLibs.cmake)
 

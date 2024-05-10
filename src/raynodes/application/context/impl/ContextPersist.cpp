@@ -187,9 +187,12 @@ void LoadTemplates(FILE* file, EditorContext& ec) {
 int LoadNodes(FILE* file, EditorContext& ec) {
   int count = 0;
   while (io_load_inside_section(file, "Nodes")) {
-    printf("%d\n",(int)ftell(file));
-    int index = 0;
+    int index = -1;
     io_load(file, index);
+    if(index == -1) {
+      io_load_newline(file, true);
+      continue;
+    }
     int id;
     io_load(file, id);
     auto* nodeName = compIndices.getName(index);
