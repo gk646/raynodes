@@ -99,6 +99,7 @@ struct NodeDeleteAction final : Action {
 
 struct NodeCreateAction final : Action {
   std::vector<Node*> createdNodes;
+  std::vector<Connection*> deletedConnections;
   explicit NodeCreateAction(int size);
   ~NodeCreateAction() noexcept override;
   void undo(EditorContext& ec) override;
