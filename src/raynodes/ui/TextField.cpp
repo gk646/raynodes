@@ -101,6 +101,7 @@ void TextInputField::draw() {
   }
 }
 
+//TODO reoder operations to avoid creating rare crashes of same tick inputs
 void TextInputField::update(Vector2 mouse) {
   if (!isFocused) return;
 
@@ -146,6 +147,8 @@ void TextInputField::update(Vector2 mouse) {
   while (key > 0) {
     selectionStart = selectionEnd;
     if (IsInputAllowed(key, constraint) && buffer.length() < 1024) {
+      // Safety measure - i could produce some crashes here
+      cursorPos = cxstructs::clamp(static_cast<int>(cursorPos), 0, static_cast<int>(buffer.size()));
       buffer.insert(buffer.begin() + cursorPos, static_cast<char>(key));
       cursorPos++;
       updateDimensions();
@@ -161,6 +164,8 @@ void TextInputField::update(Vector2 mouse) {
   }
 
   if (IsKeyPressed(KEY_ENTER) && buffer.length() < 1024) {
+    // Safety measure - i could produce some crashes here
+    cursorPos = cxstructs::clamp(static_cast<int>(cursorPos), 0, static_cast<int>(buffer.size()));
     buffer.insert(buffer.begin() + cursorPos, '\n');
     cursorPos++;
     updateDimensions();
@@ -172,6 +177,8 @@ void TextInputField::update(Vector2 mouse) {
       buffer.erase(start, end - start);
       cursorPos -= end - start - 1;
     } else {
+      // Safety measure - i could produce some crashes here
+      cursorPos = cxstructs::clamp(static_cast<int>(cursorPos), 1, static_cast<int>(buffer.size()));
       buffer.erase(buffer.begin() + cursorPos - 1);
     }
     selectionStart = selectionEnd;

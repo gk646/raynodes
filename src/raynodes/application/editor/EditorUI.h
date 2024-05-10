@@ -79,7 +79,7 @@ inline void DrawContextMenu(EditorContext& ec) {
   Vector2 drawPos{pos.x, pos.y};
 
   // Draw main menu background
-  DrawRectangleRounded(menuRect, 0.1F, 10, ColorAlpha(UI::COLORS[UI_DARK], 0.8));
+  DrawRectangleRounded(menuRect, 0.1F, 10, ColorAlpha(UI::COLORS[UI_DARK], 0.9));
 
   const ContextMenuCategory* hoveredCategory = nullptr;
   bool closeToMenu = false;
@@ -113,12 +113,13 @@ inline void DrawContextMenu(EditorContext& ec) {
     // Highlight the category if it's open
     if (category.isOpen) { DrawRectangleRounded(textRect, 0.1F, 10, hightLightColor); }
 
-    DrawTextEx(font, category.name, {drawPos.x + padding, drawPos.y + padding}, fs, 0.6F, UI::COLORS[UI_LIGHT]);
+    DrawTextEx(font, category.name, {drawPos.x + padding, drawPos.y + padding / 2.0F}, fs, 0.6F,
+               UI::COLORS[UI_LIGHT]);
 
     // Draw the category's nodes if it's open
     if (category.isOpen && !category.nodes.empty()) {
       Vector2 drawPosC = {drawPos.x + menuWidth, drawPos.y};
-      DrawRectangleRounded(categoryRect, 0.1F, 10, ColorAlpha(UI::COLORS[UI_DARK], 0.8));
+      DrawRectangleRounded(categoryRect, 0.1F, 10, ColorAlpha(UI::COLORS[UI_DARK], 0.9));
       for (const auto& name : category.nodes) {
         const Rectangle nodeTextRect = {drawPosC.x, drawPosC.y, menuWidth, fs + padding};
         if (CheckCollisionPointRec(mouse, nodeTextRect)) {
@@ -129,7 +130,7 @@ inline void DrawContextMenu(EditorContext& ec) {
             break;
           }
         }
-        DrawTextEx(font, name, {drawPosC.x + padding, drawPosC.y + padding}, fs, 0.7F, UI::COLORS[UI_LIGHT]);
+        DrawTextEx(font, name, {drawPosC.x + padding, drawPosC.y + padding / 2.0F}, fs, 0.7F, UI::COLORS[UI_LIGHT]);
         drawPosC.y += fs + padding;
       }
     }
