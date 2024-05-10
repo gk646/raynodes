@@ -46,18 +46,18 @@
 //    - If you want to merge functinality to a single node
 // .....................................................................
 
-struct Node {
+struct Node {                                                             // Ordered after access pattern
   cxstructs::StackVector<Component*, COMPS_PER_NODE, int8_t> components;  // Fixed size
-  cxstructs::StackVector<OutputPin, NODE_OUTPUT_PINS, int8_t> outputs;    // Allow node-to-node connections
-  InputPin nodeIn{NODE};                                                  // Allow node-to-node connections
-  const char* const name = nullptr;                                       //Unique allocated name
   float x, y;                                                             // Position
   float width, height;                                                    // Dimensions
   Color4 color;                                                           // Header colour
-  const NodeID uID;                                                       // Unqiue node ID
   uint16_t contentHeight = 0;                                             //Current height of the content
-  bool isHovered = false;
-  bool isDragged = false;
+  bool isHovered = false;                                                 // If the node is hovered
+  bool isDragged = false;                                                 // If the node is dragged
+  const char* const name = nullptr;                                       //Unique allocated name
+  const NodeID uID;                                                       // Unqiue node ID
+  InputPin nodeIn{NODE};                                                  // Allow node-to-node connections
+  cxstructs::StackVector<OutputPin, NODE_OUTPUT_PINS, int8_t> outputs;    // Allow node-to-node connections
 
   explicit Node(const NodeTemplate& nt, Vec2 pos, NodeID id);
   Node(const Node& n, NodeID id);
@@ -106,7 +106,6 @@ struct Node {
     }
     return -1;
   }
-
   [[nodiscard]] int getPinIndex(const Component* c, const Pin& p) const {
     if (!c) {
       if (p.direction == INPUT) return 0;

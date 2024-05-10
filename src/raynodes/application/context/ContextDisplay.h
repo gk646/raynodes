@@ -37,62 +37,17 @@ struct Display final {
   static constexpr float MAX_ZOOM = 3.0F;
   static constexpr float MIN_ZOOM = 0.1F;
 
-  RenderTexture uiTexture;
+  RenderTexture uiTexture{};
   Font editorFont = {};
   Camera2D camera = {};
   Vector2 screenSize = {};
-  float fontSize = 17.0F;
+  float fontSize = 16.0F;
   float gridSpacing = 20.0F;
 
   void zoomIn() { camera.zoom = std::min(MAX_ZOOM, camera.zoom + MAX_ZOOM / 10.0F); }
   void zoomOut() { camera.zoom = std::max(MIN_ZOOM, camera.zoom - MAX_ZOOM / 10.0F); }
-
-  // Getters
-  [[nodiscard]] auto getAnchor(AnchorPos a, float relativeInset, float w, float h) const -> Vector2 {
-    Vector2 position;
-    const float inset = relativeInset == 0 ? 0 : getSpace(relativeInset);
-
-    switch (a) {
-      case LEFT_TOP:
-        position = {inset, inset};
-        break;
-      case LEFT_CENTER:
-        position = {inset, (UI::UI_SPACE_H - h) / 2};
-        break;
-      case LEFT_BOTTOM:
-        position = {inset, UI::UI_SPACE_H - h - inset};
-        break;
-      case CENTER_TOP:
-        position = {(UI::UI_SPACE_W - w) / 2, inset};
-        break;
-      case CENTER_MID:
-        position = {(UI::UI_SPACE_W - w) / 2, (UI::UI_SPACE_H - h) / 2};
-        break;
-      case CENTER_BOTTOM:
-        position = {(UI::UI_SPACE_W - w) / 2, UI::UI_SPACE_H - h - inset};
-        break;
-      case RIGHT_TOP:
-        position = {UI::UI_SPACE_W - w - inset, inset};
-        break;
-      case RIGHT_MID:
-        position = {UI::UI_SPACE_W - w - inset, (UI::UI_SPACE_H - h) / 2};
-        break;
-      case RIGHT_BOTTOM:
-        position = {UI::UI_SPACE_W - w - inset, UI::UI_SPACE_H - h - inset};
-        break;
-      default:
-        position = {inset, inset};
-        break;
-    }
-    return position;
-  }
-  [[nodiscard]] auto getFontSize(float scale) const -> float { return std::max(fontSize, getSpace(scale)); }
-  [[nodiscard]] auto getSpace(const float size) const -> float {
-    const float minDimension = (screenSize.x < screenSize.y) ? screenSize.x : screenSize.y;
-    return minDimension * size;
-  }
   // Only applies scaling when screen is bigger than the ui space -> elements dont shrink
-  [[nodiscard]] auto getSmartScaled(const Rectangle& bounds) const -> Rectangle {
+  [[nodiscard]] Rectangle getSmartScaled(const Rectangle& bounds) const {
     Rectangle ret;
 
     ret.width = bounds.width;
@@ -117,7 +72,7 @@ struct Display final {
     return ret;
   }
   // Always scales to the current screen space
-  [[nodiscard]] auto getFullyScaled(const Rectangle& bounds) const -> Rectangle {
+  [[nodiscard]] Rectangle getFullyScaled(const Rectangle& bounds) const {
     Rectangle ret;
     const float scaleX = screenSize.x / UI::UI_SPACE_W;
     const float scaleY = screenSize.y / UI::UI_SPACE_H;
@@ -126,6 +81,11 @@ struct Display final {
     ret.width = bounds.width * scaleX;
     ret.height = bounds.height * scaleY;
     return ret;
+  }
+  [[nodiscard]] Vector2 getFullyScaled(Vector2 vec) const {
+    const float scaleX = screenSize.x / UI::UI_SPACE_W;
+    const float scaleY = screenSize.y / UI::UI_SPACE_H;
+    return {vec.x * scaleX, vec.y * scaleY};
   }
 
   bool loadResources(EditorContext& ec);

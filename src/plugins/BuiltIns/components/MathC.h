@@ -49,7 +49,7 @@ enum MOperation : uint8_t {
 };
 
 struct MathC final : Component {
-  int selectedMode = ADD;
+  int selectedMode = 0;
   DropDown dropDown{};
   explicit MathC(const ComponentTemplate ct) : Component(ct, 100, 20) {}
   Component* clone() override { return new MathC(*this); }

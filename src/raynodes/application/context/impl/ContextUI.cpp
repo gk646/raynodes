@@ -19,8 +19,22 @@
 // SOFTWARE.
 
 #include <raygui.h>
+#include <cxutil/cxstring.h>
 #include "application/EditorContext.h"
 
+int UI::DrawListMenu(EditorContext& ec, bool& open, const char* title, const char* listText, int& active) {
+  if (!open) return -1;
+  if (ec.input.isKeyPressed(KEY_ESCAPE)) open = false;
+  auto windowRect = GetCenteredWindow();
+  if (DrawWindow(ec, windowRect, title)) { open = false; }
+  constexpr float pad = 25.0F;
+  constexpr float listW = 150.0F;
+  int scroll = 0;
+
+  const Rectangle listBounds = {windowRect.x, windowRect.y + pad, listW, windowRect.height - pad};
+  GuiListView(ec.display.getFullyScaled(listBounds), listText, &scroll, &active);
+  return active;
+}
 int UI::DrawButton(EditorContext& ec, Rectangle& r, const char* txt) {
   const auto bounds = ec.display.getFullyScaled(r);
   const auto res = GuiButton(bounds, txt);
@@ -28,9 +42,19 @@ int UI::DrawButton(EditorContext& ec, Rectangle& r, const char* txt) {
   if (ec.ui.scaleDirection == HORIZONTAL) r.x += r.width;
   else r.y += r.height;
 
-  if (res
-      || (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)
-          && CheckCollisionPointRec(ec.logic.mouse, bounds))) {
+  if (res || (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(ec.logic.mouse, bounds))) {
+    ec.input.consumeMouse();  // Consume mouse so click doesnt propagate
+  }
+  return res;
+}
+int UI::DrawButton(EditorContext& ec, Vector2& pos, float w, float h, const char* txt) {
+  const auto bounds = ec.display.getFullyScaled({pos.x, pos.y, w, h});
+  const auto res = GuiButton(bounds, txt);
+
+  if (ec.ui.scaleDirection == HORIZONTAL) pos.x += w;
+  else pos.y += h;
+
+  if (res || (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(ec.logic.mouse, bounds))) {
     ec.input.consumeMouse();  // Consume mouse so click doesnt propagate
   }
   return res;
@@ -44,6 +68,38 @@ int UI::DrawWindow(EditorContext& ec, const Rectangle& r, const char* txt) {
   }
   return res;
 }
+void UI::DrawText(EditorContext& ec, Vector2 pos, const char* txt, Color c, bool hasIcons) {
+  const auto& font = ec.display.editorFont;
+  const auto& fs = ec.display.fontSize;
+  pos = ec.display.getFullyScaled(pos);
+
+  // Quick and dirty way of drawing icons dynamically
+  if (hasIcons) {
+    const char* start = txt;
+    const char* p = txt;
+    while (*p != '\0') {
+      if (*p == '#') {
+        if (p != start) {
+          ec.string.formatText("%s", start);
+          ec.string.buffer[p - start] = '\0';
+          DrawTextEx(font, ec.string.buffer, pos, fs, 1.0F, c);
+          pos.x += MeasureTextEx(font, ec.string.buffer, fs, 1.0F).x;
+        }
+        p++;
+        int iconID = cxstructs::str_parse_int(p);
+        GuiDrawIcon(iconID, pos.x , pos.y, 1, COLORS[UI_DARK]);
+        p += 4;
+        start = p;
+        pos.x += 16;
+      } else {
+        p++;
+      }
+    }
+    if (*start) { DrawTextEx(font, start, pos, fs, 1.0F, c); }
+  } else {
+    DrawTextEx(font, txt, pos, fs, 1.0F, c);
+  }
+}
 
 void UI::invokeFileMenu(EditorContext& ec, int i) {
   if (i == -1 || i == 0) return;
@@ -53,7 +109,6 @@ void UI::invokeFileMenu(EditorContext& ec, int i) {
   if (i == 4) ec.persist.saveToFile(ec, true);
   if (i == 5) ec.core.closeApplication = true;
 }
-
 void UI::invokeEditMenu(EditorContext& ec, int i) {
   if (i == -1 || i == 0) return;
 
@@ -65,7 +120,6 @@ void UI::invokeEditMenu(EditorContext& ec, int i) {
   if (i == 6) ec.core.erase(ec);
   if (i == 7) ec.core.selectAll(ec);
 }
-
 void UI::invokeViewMenu(EditorContext& ec, int i) {
   if (i == -1 || i == 0) return;
 

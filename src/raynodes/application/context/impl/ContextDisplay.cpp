@@ -23,9 +23,8 @@
 #include <raygui.h>
 
 bool Display::loadResources(EditorContext& /**/) {
-  editorFont = LoadFont("res/monogram.ttf");
+  editorFont = LoadFontEx("res/monogram.ttf",128,nullptr,95);
   GuiSetFont(editorFont);
-  SetTextureFilter(editorFont.texture, TEXTURE_FILTER_BILINEAR);  // Looks the nicest out of all
   GuiLoadIcons("res/iconset.rgi", false);
   SetWindowIcon(LoadImage("res/icon.png"));
   return editorFont.texture.id != 0 || GetFontDefault().texture.id != 0;

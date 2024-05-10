@@ -25,8 +25,6 @@
 
 int main(int argc, char* argv[]) {
   NodeEditor editor{argc, argv};
-  if (editor.start()) {
-    return editor.run();
-  }
+  if (editor.start()) { return editor.run(); }
   return 1;
 }
