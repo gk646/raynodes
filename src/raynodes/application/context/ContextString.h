@@ -28,12 +28,21 @@ struct String {
   const char* applicationDir;
 
   String();
+  // Uses the full buffer
   const char* formatText(const char* format, ...) {
     va_list args;
     va_start(args, format);
     vsnprintf(buffer, BUFFER_SIZE, format, args);
     va_end(args);
     return buffer;
+  }
+  // Uses the second half of the buffer
+  const char* formatText2(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    vsnprintf(buffer + BUFFER_SIZE / 2, BUFFER_SIZE / 2, format, args);
+    va_end(args);
+    return buffer + BUFFER_SIZE / 2;
   }
   const char* getPaddedNum(const int num) {
     char buff[6];

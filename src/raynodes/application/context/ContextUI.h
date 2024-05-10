@@ -46,7 +46,7 @@ struct ContextMenu {
 // The methods allow you to always us absolute coordinates and then transferthem to real screen space
 // Use display.smartScaling for elements that have a minimum height -> scaling will only be apl
 
-struct UI {
+struct UI final {
   static constexpr Color COLORS[INDEX_END] = {
       {45, 45, 45, 255},     // E_BACK_GROUND
       {27, 27, 27, 255},     // E_GRID
@@ -84,13 +84,15 @@ struct UI {
   static constexpr auto* helpMenuText = "#225#Wiki;"
                                         "#224#Github;"
                                         "#191#About";
+
   static constexpr float CONTEXT_MENU_THRESHOLD = 15.0F;
   static constexpr float UI_SPACE_W = 1920.0F;  // UI space width
   static constexpr float UI_SPACE_H = 1080.0F;  // UI space height
+  static constexpr float PAD = 25.0F;           // UI space padding amount
 
   ContextMenu contextMenu;
   float topBarHeight = 20;
-  ScaleDirection scaleDirection;  // Used by ui functions to automatically apply correct offset
+  ScaleDirection scaleDirection = HORIZONTAL;  // Used by ui functions to automatically apply correct offset
   int settingsScrollIndex = 0;
   int settingsActiveIndex = 0;
   int helpScrollIndex = 0;
@@ -105,9 +107,33 @@ struct UI {
   bool showSettingsMenu = false;
   bool showHelpMenu = false;
 
-  static int DrawWindowListMenu(EditorContext& ec, float x, float y);
+  // UI wrappers
+  static int DrawListMenu(EditorContext& ec, bool& open, const char* title, const char* listText, int& active);
   static int DrawButton(EditorContext& ec, Rectangle& r, const char* txt);
+  static int DrawButton(EditorContext& ec, Vector2& pos, float w, float h, const char* txt);
   static int DrawWindow(EditorContext& ec, const Rectangle& r, const char* txt);
+  // If icns is set it fill look for icons in the string
+  static void DrawText(EditorContext& ec, Vector2 p, const char* txt, Color c = COLORS[UI_LIGHT], bool icns = false);
+  template <bool isBig= true>
+  constexpr static Rectangle GetCenteredWindow() {
+    if constexpr (isBig) {
+      constexpr auto winX = 700.0F;
+      constexpr auto winW = 540.0F;
+      constexpr auto winY = 400.0F;
+      constexpr auto winH = 280.0F;
+
+      return Rectangle{winX, winY, winW, winH};
+    }
+
+    constexpr auto winX = 790.0F;
+    constexpr auto winW = 360.0F;
+    constexpr auto winY = 450.0F;
+    constexpr auto winH = 180.0F;
+
+    return Rectangle{winX, winY, winW, winH};
+  }
+
+  // Menu functions
   static void invokeFileMenu(EditorContext& ec, int i);
   static void invokeEditMenu(EditorContext& ec, int i);
   static void invokeViewMenu(EditorContext& ec, int i);
