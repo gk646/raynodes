@@ -187,6 +187,7 @@ void LoadTemplates(FILE* file, EditorContext& ec) {
 int LoadNodes(FILE* file, EditorContext& ec) {
   int count = 0;
   while (io_load_inside_section(file, "Nodes")) {
+    printf("%d\n",(int)ftell(file));
     int index = 0;
     io_load(file, index);
     int id;

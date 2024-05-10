@@ -111,12 +111,9 @@ inline void DrawContextMenu(EditorContext& ec) {
     category.isOpen = hoveredCategory == &category;
 
     // Highlight the category if it's open
-    if (category.isOpen) {
-      DrawRectangleRounded(textRect, 0.1F, 10, hightLightColor);
-    }
+    if (category.isOpen) { DrawRectangleRounded(textRect, 0.1F, 10, hightLightColor); }
 
-    DrawTextEx(font, category.name, {drawPos.x + padding, drawPos.y + padding}, fs, 0.6F,
-               UI::COLORS[UI_LIGHT]);
+    DrawTextEx(font, category.name, {drawPos.x + padding, drawPos.y + padding}, fs, 0.6F, UI::COLORS[UI_LIGHT]);
 
     // Draw the category's nodes if it's open
     if (category.isOpen && !category.nodes.empty()) {
@@ -192,8 +189,7 @@ inline void DrawActions(EditorContext& ec) {
     }
 
     // Draw action text
-    DrawTextEx(font, action->toString(), {rect.x + paddingX * 2.0F, rect.y + paddingY / 2}, fs, 1.0F,
-               textColor);
+    DrawTextEx(font, action->toString(), {rect.x + paddingX * 2.0F, rect.y + paddingY / 2}, fs, 1.0F, textColor);
 
     // Move to the next action's position, ensuring space for text and padding
     rect.y += entryHeight;
@@ -216,9 +212,7 @@ inline void DrawTopBar(EditorContext& ec) {
       ec.logic.isDraggingScreen = false;
       return active;
     }
-    if (state) {
-      ec.input.consumeMouse();
-    }
+    if (state) { ec.input.consumeMouse(); }
     return -1;
   };
 
@@ -278,8 +272,7 @@ inline void DrawStatusBar(EditorContext& ec) {
     const auto bounds = ec.display.getFullyScaled({rightPanels - lastWidth + 25, y, lastWidth - 50, height});
     if (GuiSliderBar(bounds, nullptr, nullptr, &ec.display.camera.zoom, 0.1F, 3.0F)) {
       ec.input.consumeMouse();
-    } else if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)
-               && CheckCollisionPointRec(ec.logic.mouse, bounds)) {
+    } else if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(ec.logic.mouse, bounds)) {
       ec.input.consumeMouse();
     }
 
@@ -287,31 +280,21 @@ inline void DrawStatusBar(EditorContext& ec) {
     if (GuiButton(ec.display.getFullyScaled({rightPanels - lastWidth, y, 25, height}), "#221#")) {
       ec.display.zoomOut();
     }
-    if (GuiButton(ec.display.getFullyScaled({rightPanels - 25, y, 25, height}), "#220#")) {
-      ec.display.zoomIn();
-    }
+    if (GuiButton(ec.display.getFullyScaled({rightPanels - 25, y, 25, height}), "#220#")) { ec.display.zoomIn(); }
   }
 }
 inline void DrawUnsavedChanges(EditorContext& ec) {
   if (!ec.ui.showUnsavedChanges) return;
-  // Centered window
-  constexpr auto winW = 360.0F;
-  constexpr auto winH = 180.0F;
 
-  const auto pos = ec.display.getAnchor(CENTER_MID, 0, winW, winH);
-  auto windowRect = Rectangle{pos.x, pos.y, winW, winH};
+  auto windowRect = UI::GetCenteredWindow<false>();  // Centered rect in ui space
 
   // Get information string
   const char* fileName = GetFileName(ec.persist.openedFilePath.c_str());
   if (fileName == nullptr || *fileName == '\0') fileName = "Untitled.rn";
   const char* infoText = ec.string.formatText("%s has unsaved changes", fileName);
+  if (UI::DrawWindow(ec, windowRect, infoText)) { ec.ui.showUnsavedChanges = false; }
 
-  if (GuiWindowBox(ec.display.getFullyScaled(windowRect), infoText)) {
-    ec.input.consumeMouse();
-    ec.ui.showUnsavedChanges = false;
-  }
-
-  windowRect.y = pos.x + 30;
+  windowRect.y = windowRect.y + 30;
   windowRect.height = 50.0F;
 
   ec.ui.scaleDirection = VERTICAL;
@@ -320,78 +303,40 @@ inline void DrawUnsavedChanges(EditorContext& ec) {
     ec.ui.showUnsavedChanges = false;
     //TODO respect user intent and execute next action -> need to save how user got here
   }
-
   if (UI::DrawButton(ec, windowRect, "#159#Don't Save")) {
     ec.ui.showUnsavedChanges = false;
     ec.core.hasUnsavedChanges = false;
     if (ec.core.requestedClose) ec.core.closeApplication = true;
   }
-
-  if (UI::DrawButton(ec, windowRect, "#072#Cancel")) {
-    ec.ui.showUnsavedChanges = false;
-  }
+  if (UI::DrawButton(ec, windowRect, "#072#Cancel")) { ec.ui.showUnsavedChanges = false; }
 }
 inline void DrawSettingsMenu(EditorContext& ec) {
-  if (!ec.ui.showSettingsMenu) return;
-  if (ec.input.isKeyPressed(KEY_ESCAPE)) ec.ui.showSettingsMenu = false;
+  auto r = UI::DrawListMenu(ec, ec.ui.showSettingsMenu, "Settings", UI::settingsMenuText, ec.ui.settingsActiveIndex);
+  auto winBounds = UI::GetCenteredWindow();
+  Vector2 topLeft = {winBounds.x + 150.0F + UI::PAD, winBounds.y + UI::PAD};  // Hardcoded from DrawListMenu
 
-  constexpr auto winW = 560.0F;
-  constexpr auto winH = 280.0F;
-  constexpr auto listW = 150.0F;
-  constexpr auto pad = 25.0F;
-
-  auto middle = ec.display.getAnchor(CENTER_MID, 0, winW, winH);
-
-  if (UI::DrawWindow(ec, {middle.x, middle.y, winW, winH}, "Settings")) {
-    ec.ui.showSettingsMenu = false;
-  }
-
-  const auto listBounds = ec.display.getFullyScaled({middle.x, middle.y + pad, listW, winH - pad});
-  GuiListView(listBounds, UI::settingsMenuText, &ec.ui.settingsScrollIndex, &ec.ui.settingsActiveIndex);
-
-  int i = ec.ui.settingsActiveIndex;
-  const auto& f = ec.display.editorFont;
-  const auto winBounds = Rectangle{listBounds.x + listW + pad, listBounds.y, winW - listW - pad, winH};
-  if (i == 0) {  // User Interface
-    DrawTextEx(f, "", {winBounds.x, winBounds.y}, 15, 1.0F, WHITE);
-  } else if (i == 1) {  // Updates
+  if (r == 0) {  // User Interface
+    UI::DrawText(ec, topLeft, "Here will be UI options");
+  } else if (r == 1) {  // Updates
+    UI::DrawText(ec, topLeft, "Here will be automatic updates");
   }
 }
 inline void DrawHelpMenu(EditorContext& ec) {
-  if (!ec.ui.showHelpMenu) return;
-  if (ec.input.isKeyPressed(KEY_ESCAPE)) ec.ui.showHelpMenu = false;
-  constexpr auto winW = 560.0F;
-  constexpr auto winH = 280.0F;
-  constexpr auto listW = 150.0F;
-  constexpr auto pad = 25.0F;
+  auto r = UI::DrawListMenu(ec, ec.ui.showHelpMenu, "Help", UI::helpMenuText, ec.ui.helpActiveIndex);
+  auto winBounds = UI::GetCenteredWindow();
+  Vector2 topLeft = {winBounds.x + 150.0F + UI::PAD, winBounds.y + UI::PAD};  // Hardcoded from DrawListMenu
 
-  auto middle = ec.display.getAnchor(CENTER_MID, 0, winW, winH);
-  if (UI::DrawWindow(ec, {middle.x, middle.y, winW, winH}, "Help")) {
-    ec.ui.showHelpMenu = false;
-  }
-
-  const auto listBounds = ec.display.getFullyScaled({middle.x, middle.y + pad, listW, winH - pad});
-  GuiListView(listBounds, UI::helpMenuText, &ec.ui.helpScrollIndex, &ec.ui.helpActiveIndex);
-
-  const int i = ec.ui.helpActiveIndex;
-  const auto& f = ec.display.editorFont;
-  const auto fs = ec.display.fontSize;
-  const auto winBounds = Rectangle{listBounds.x + listW + pad, listBounds.y, winW - listW - pad, winH};
-  if (i == 0) {  // Wiki
-    auto buttonBounds = Rectangle{winBounds.x + pad, winBounds.y, 150.0F, 24.0F};
-    if (UI::DrawButton(ec, buttonBounds, "Open the Wiki")) {
-      OpenURL(Info::wikiLink);
-    }
-  } else if (i == 1) {  // Github
-    auto buttonBounds = Rectangle{winBounds.x + pad, winBounds.y, 150.0F, 24.0F};
-    if (UI::DrawButton(ec, buttonBounds, "Open the github page")) {
-      OpenURL(Info::github);
-    }
-  } else if (i == 2) {  // About
-    snprintf(ec.string.buffer, String::BUFFER_SIZE, "%s %s\0", Info::applicationName, Info::getVersion(ec));
-    DrawTextEx(f, ec.string.buffer, {winBounds.x, winBounds.y}, fs, 1.0F, WHITE);
-    GuiLabel({winBounds.x + pad, winBounds.y + pad, 150.0F, 24.0F}, Info::about);
+  if (r == 0) {  // Wiki
+    if (UI::DrawButton(ec, topLeft, 25, 25, "Open the Wiki")) { OpenURL(Info::wikiLink); }
+  } else if (r == 1) {  // Github
+    if (UI::DrawButton(ec, topLeft, 25, 25, "Open the github page")) { OpenURL(Info::github); }
+  } else if (r == 2) {  // About
+    ec.string.formatText("%s %s", Info::applicationName, Info::getVersion(ec));
+    UI::DrawText(ec, topLeft, ec.string.buffer);
+    topLeft.y += UI::PAD;
+    UI::DrawText(ec, topLeft, Info::about, UI::COLORS[UI_LIGHT], true);
   }
 }
 }  // namespace Editor
+
 #endif  //RAYNODES_SRC_APPLICATION_EDITOR_EDITORUI_H_

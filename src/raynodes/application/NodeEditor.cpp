@@ -47,9 +47,7 @@ bool NodeEditor::start() {
   c + context.plugin.loadPlugins(context);
 
   // Only load file if path is given - automatically opens picker
-  if (!context.persist.openedFilePath.empty()) {
-    c + context.persist.loadFromFile(context);
-  }
+  if (!context.persist.openedFilePath.empty()) { c + context.persist.loadFromFile(context); }
 
   return c.holds();
 }
@@ -57,8 +55,6 @@ bool NodeEditor::start() {
 namespace {
 void DrawBackGround(EditorContext& ec) {
   //Draw the ui to the texture but poll it already to respect the layers
-  //TODO drawing to texture makes text more unclear
-  // maybe theres a better way to solve this
   Editor::StartUpdateTick(ec);
   BeginTextureMode(ec.display.uiTexture);
   {
@@ -93,8 +89,8 @@ void DrawContent(EditorContext& ec) {
 }
 
 void DrawForeGround(EditorContext& ec) {
-  DrawTextureRec(ec.display.uiTexture.texture, {0, 0, ec.display.screenSize.x, -ec.display.screenSize.y},
-                 {0, 0}, WHITE);
+  DrawTextureRec(ec.display.uiTexture.texture, {0, 0, ec.display.screenSize.x, -ec.display.screenSize.y}, {0, 0},
+                 WHITE);
 }
 }  // namespace
 
