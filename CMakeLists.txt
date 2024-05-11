@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 23)
 
 set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(BUILD_GAMES OFF CACHE BOOL "" FORCE)
-set(OPENGL_VERSION "2.1" CACHE STRING "OpenGL Version to build raylib with")
+set(OPENGL_VERSION "3.3" CACHE STRING "OpenGL Version to build raylib with")
 set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE) # Build as shared lib
 
 
