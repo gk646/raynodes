@@ -18,23 +18,63 @@ A small showcase of its major features:
 - **User created** nodes at runtime scripted in-editor in python (planned)
 
 In a lot of places it uses my (header only) C++ helper library [cxstructs](https://github.com/gk646/cxstructs).  
-For more infos on the design choices go to [Software Design](#Software-Design)
+For more infos on the design choices go to [Software Design](#Software-Design)  
 For more information on how to use the editor look at the [raynodes-wiki](https://github.com/gk646/raynodes/wiki).
 
 ![Image](.github/fullEditor.png)
 
-**1.** [Editor Features](#Editor-Features)   
-**2.** [Components!](#Custom-Nodes)  
-**3.** [Plugins](#Plugins)  
-**4.** [Nodes!](#Custom-Nodes)  
-**5.** [Software Design](#Software-Design)
+**1.** [Installation](#Installation)  
+**2.** [Editor Features](#Editor-Features)   
+**3.** [Components!](#Custom-Nodes)  
+**4.** [Plugins](#Plugins)  
+**5.** [Nodes!](#Custom-Nodes)  
+**6.** [Software Design](#Software-Design)
+
+## Installation
+
+### For Users
+
+Just download the .zip for your operating system  from the most recent release in the [release page](https://github.com/gk646/raynodes/releases/tag/1.0.0).
+Unzip and start the executable! Have fun using `raynodes`.
+
+### For Developers
+
+This project uses CMake as buildsystem!
+
+To build the project locally you just need to do 2 simple steps:
+1. Clone this git repository
+2. Supply the needed dependencies as specified inside the LoadLocalLibs.cmake
+
+```cmake
+set(DEPENDENCIES_PATH "C:/Users/gk646/Documents/Libraries") # Set to where your libraries are stored
+
+include_directories(
+        "${DEPENDENCIES_PATH}/raylib-master/src"  # Supply a clone of raylib.git
+        "${DEPENDENCIES_PATH}/raygui-master/src"  # Supply a clone of raygui.git
+        "${DEPENDENCIES_PATH}/tinyfiledialogs" # Download from here https://sourceforge.net/projects/tinyfiledialogs/
+        "${DEPENDENCIES_PATH}/cxstructs-master/include" # Supply a clone of cxstructs.git
+)
+```
+
+At some point I will probably add an alternative version that automatically downloads the dependencies.
 
 ## Editor Features:
 
-### Shortcuts
+### Command Line interface
+
+`raynodes` can be passed a path which it will try to open over the commandline.  
+Files starting with `.` (dot) will be interpreted as relative paths:  
+`./raynodes.exe ./MyRelativePathFile.rn`  
+Else it will be interpreted as absolute path:  
+`./raynodes.exe C:\Users\Me\Documents\MyAbsoluteFile.rn`
+
+
+**On Windows you can also set it as the default executable for ".rn" files, then double click to open any such file!**
+
+### Controls
 
 `raynodes` has supports all common shortcuts. For a comprehensive list check out
-the [shortcuts](https://github.com/gk646/raynodes/wiki/Shortcuts) page in the wiki!.
+the [shortcuts](https://github.com/gk646/raynodes/wiki/Controls) page in the wiki!.
 
 ### User Interface
 
