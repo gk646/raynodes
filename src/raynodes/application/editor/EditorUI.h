@@ -328,9 +328,9 @@ inline void DrawHelpMenu(EditorContext& ec) {
   Vector2 topLeft = {winBounds.x + 150.0F + UI::PAD, winBounds.y + UI::PAD};  // Hardcoded from DrawListMenu
 
   if (r == 0) {  // Wiki
-    if (UI::DrawButton(ec, topLeft, 25, 25, "Open the Wiki")) { OpenURL(Info::wikiLink); }
+    if (UI::DrawButton(ec, topLeft, 150, 25, "Open the Wiki")) { OpenURL(Info::wikiLink); }
   } else if (r == 1) {  // Github
-    if (UI::DrawButton(ec, topLeft, 25, 25, "Open the github page")) { OpenURL(Info::github); }
+    if (UI::DrawButton(ec, topLeft, 150, 25, "Open the github page")) { OpenURL(Info::github); }
   } else if (r == 2) {  // About
     ec.string.formatText("%s %s", Info::applicationName, Info::getVersion(ec));
     UI::DrawText(ec, topLeft, ec.string.buffer);
