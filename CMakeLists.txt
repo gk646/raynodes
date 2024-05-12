@@ -7,9 +7,9 @@ set(BUILD_GAMES OFF CACHE BOOL "" FORCE)
 set(OPENGL_VERSION "4.3" CACHE STRING "OpenGL Version to build raylib with")
 set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE) # Build as shared lib
 
+option(RN_ENABLE_SANITIZER "Set to compile with adress sanitizer (MSVC)") # set(RN_ENABLE_SANITIZER ON)
+option(RN_BUILD_TESTS "Set to compile the test executable")               # set(RN_BUILD_TESTS ON)
 
-set(RN_ENABLE_SANITIZER OFF) # If compiled with address sanitizer (MSVC)
-set(RN_BUILD_TESTS OFF) # If it should build the test executable
 
 # Compiler options for MSVC and GCC
 include(cmake/CompilerOptions.cmake)
