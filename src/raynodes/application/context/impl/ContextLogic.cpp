@@ -23,7 +23,7 @@
 namespace {
 void AssignConnection(EditorContext& ec, Node& fromNode, Component* from, OutputPin& out, Node& toNode,
                       Component* to, InputPin& in) {
-  if (!out.isConnectable(in)) return;
+  if (!out.isConnectable(ec,in)) return;
   const auto conn = new Connection(fromNode, from, out, toNode, to, in);
 
   printf("Connection assigned \n");

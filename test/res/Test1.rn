@@ -1,8 +1,8 @@
 --EditorData--
-6|3|-94.000|-152.000|1.000|1|
+6|4|143.000|-237.000|1.000|1|
 --Templates--
 10|
-0|Dialog Choice|DisplayText|Choice1|Choice2|Choice3|Choice4||255|
+0|Dialog Choice|NPCType|DisplayText|Choice1|Choice2|Choice3|Choice4|255|
 1|MathOp|Operation||||||255|
 2|TextField|TextField||||||255|
 3|Vector 3|Vector3||||||255|
@@ -10,16 +10,17 @@
 5|Display|Display||||||255|
 6|NumberField|Number||||||255|
 7|SeparateXYZ|Vector||||||255|
-8|Dialog|DisplayText||||||255|
+8|Dialog|NPCType|DisplayText|||||255|
 9|QuestHeader|Name|Description|Zone|Level|||255|
 --Nodes--
-2|0|Test1|$-598|-195|
-2|1|Test2|$-87|-195|
-6|2|1024|$-80|-36|
-3|3|1|1|1|$-597|-35|
-1|4|1|$-294|77|
-0|5|Display|$C1|$C2|$C3|$C4|$-331|-522|
+2|0|Test1|$-684|-192|
+2|1|Test2|$-327|-539|
+6|2|2.33|$-274|-107|
+3|3|1.1|1.22|1.333|$-527|42|
+1|4|1|$38|33|
+0|5||$Display|$C1|$C2|$C3|$C4|$313|-524|
 --Connections--
 0|-1|0|1|-1|0|
 3|-1|0|4|-1|0|
-4|-1|0|2|-1|0|
+0|-1|0|5|-1|0|
+1|-1|0|5|-1|0|
