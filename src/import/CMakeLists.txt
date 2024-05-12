@@ -1,0 +1,4 @@
+file(GLOB_RECURSE IMPORT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
+# Only for IDE to pickup the file
+add_library(IMPORT_DUMMY STATIC ${IMPORT_FILES})
+set_target_properties(IMPORT_DUMMY PROPERTIES LINKER_LANGUAGE CXX)

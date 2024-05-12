@@ -62,19 +62,23 @@ using ComponentIndex = uint8_t;  // Limits to 256 components per node
 using TemplateID = uint8_t;      // Limits to 256 unique nodes
 
 // Dont wanna include raylib everywhere
-struct Vec2 {
+struct Vec2 final {
   float x;
   float y;
 };
 
 // This way we can return a unallocated string
-struct StringView {
+struct StringView final{
   const char* start = nullptr;
   uint16_t length = 0;
-  [[nodiscard]] std::string getString() const { return {start, length}; }
-};
+  [[nodiscard]] std::string getString() const {
+     if(start == nullptr || length == 0) [[unlikely]]{
+     return std::string() ;
+     }
+    return {start, length};
+  };
 
-struct Vec3 {
+struct Vec3 final{
   float x;
   float y;
   float z;
@@ -91,7 +95,7 @@ enum DataType : uint8_t {
   STRING_VIEW,  // Returns a StringView - unallocated string
 };
 
-struct Connection {
+struct Connection final{
   NodeID fromNode;       // Value between 0 and nodeCnt-1 or ]0 - nodeCnt] or (0 - nodeCnt]
   int8_t fromComponent;  // -1 if its a node-to-node connection
   uint8_t fromPin;
@@ -101,7 +105,7 @@ struct Connection {
   [[nodiscard]] bool isValid() const { return fromNode != UINT16_MAX; }
 };
 
-struct NodeData {
+struct NodeData final {
   ByteIndex startByte = 0;
   const NodeID id = 0;
   const TemplateID tID = 0;
@@ -110,7 +114,7 @@ struct NodeData {
   auto getData(char* fileData, ComponentIndex id, int index) const;
 };
 
-struct NodeTemplate {
+struct NodeTemplate final{
   const uint16_t startByte = 0;
   ComponentIndex getCompIndex(char* fileData, const char* label) const;
   StringView getName(const char* fileData) const;
