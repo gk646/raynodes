@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 #include <array>
-#include <cstring> // for strlen() on gcc
+#include <cstring>  // for strlen() on gcc
 
 // ==============================
 // IMPORT INTERFACE
@@ -67,6 +67,13 @@ struct Vec2 {
   float y;
 };
 
+// This way we can return a unallocated string
+struct StringView {
+  const char* start = nullptr;
+  uint16_t length = 0;
+  [[nodiscard]] std::string getString() const { return {start, length}; }
+};
+
 struct Vec3 {
   float x;
   float y;
@@ -74,13 +81,14 @@ struct Vec3 {
 };
 
 enum DataType : uint8_t {
-  BOOLEAN,
-  STRING,
-  INTEGER,
-  DATA,
-  FLOAT,
-  VECTOR_3,
-  VECTOR_2,
+  BOOLEAN,      // Returns a bool value
+  STRING,       // Returns a std::string
+  INTEGER,      // Returns a int64_t
+  DATA,         // Not supported
+  FLOAT,        // Returns a double
+  VECTOR_3,     // Returns a Vec3
+  VECTOR_2,     // Returns a Vec2
+  STRING_VIEW,  // Returns a StringView - unallocated string
 };
 
 struct Connection {
@@ -105,6 +113,7 @@ struct NodeData {
 struct NodeTemplate {
   const uint16_t startByte = 0;
   ComponentIndex getCompIndex(char* fileData, const char* label) const;
+  StringView getName(const char* fileData) const;
   bool isNodeName(const char* fileData, const char* nodeName) const;
 };
 
@@ -184,6 +193,10 @@ struct RnImport final {
   // Failure: array will always be filled - empty values will be UINT16_MAX
   [[nodiscard]] std::vector<NodeID> getNodes(const char* name) const;
 
+  // Returns the name of a node as it was registered with
+  // Failure: If the given id is invalid or doesnt exist or cant be mapped returns empty string
+  [[nodiscard]] std::string getNodeName(NodeID node) const;
+
  private:
   [[nodiscard]] const NodeData* getNodeData(const NodeID id) const {
     if (id >= nodeCnt) return nullptr;
@@ -207,6 +220,14 @@ struct RnImport final {
 //-----------HELPER_FUNCTIONS-----------//
 // Alot of these helpers are copied from cxutil/cxstring.h
 namespace {
+int str_count_chars_until(const char* data, char stop, int maxCount) {
+  int count = 0;
+  while (count < maxCount && data[count] != '\0') {
+    if (data[count] == stop) { break; }
+    count++;
+  }
+  return count;
+}
 void str_read_into_until(const char* data, char* buffer, size_t buffer_size, char stop) {
   size_t count = 0;
   while (count < buffer_size - 1 && data[count] != stop && data[count] != '\0') {
@@ -215,29 +236,14 @@ void str_read_into_until(const char* data, char* buffer, size_t buffer_size, cha
   }
   buffer[count] = '\0';
 }
-void SkipCharacter(char*& ptr, const char c, int count) noexcept {
+void str_skip_char(char*& ptr, const char c, int count) noexcept {
   while (*ptr != '\0' && count > 0) {
     if (*ptr == c) { --count; }
     ++ptr;
   }
 }
-constexpr uint32_t fnv1a_32(char const* s, const size_t count) noexcept {
-  uint32_t hash = 2166136261u;
-  for (size_t i = 0; i < count; ++i) {
-    hash ^= (uint32_t)s[i];
-    hash *= 16777619u;
-  }
-  return hash;
-}
-char* str_dup(const char* arg) {
-  const int len = static_cast<int>(strlen(arg));
-  auto* newBuff = new char[len + 1];
-  for (int i = 0; i <= len; i++) {
-    newBuff[i] = arg[i];
-  }
-  return newBuff;
-}
 int str_parse_int(const char* str) {
+  constexpr int radix = 10;
   if (str == nullptr || *str == '\0') return 0;
 
   int result = 0;
@@ -247,21 +253,31 @@ int str_parse_int(const char* str) {
     ++str;
   }
 
-  while (*str) {
+  while (*str != 0) {
     char digit = *str;
     int value;
     if (digit >= '0' && digit <= '9') value = digit - '0';
-    else if (digit >= 'a' && digit <= 'z') value = 10 + digit - 'a';
-    else if (digit >= 'A' && digit <= 'Z') value = 10 + digit - 'A';
+    else if (digit >= 'a' && digit <= 'z') value = radix + digit - 'a';
+    else if (digit >= 'A' && digit <= 'Z') value = radix + digit - 'A';
     else break;
 
-    if (value >= 10) break;
+    if (value >= radix) break;
 
-    result = result * 10 + value;
+    result = result * radix + value;
     ++str;
   }
 
   return negative ? -result : result;
+}
+bool str_cmp_stop_at(const char* newArg, const char* control, int max, char stop) {
+  int offSet = 0;
+  while (control[offSet] != stop && offSet < max) {
+    // Check if newArg ends before control reaches the stop character or max limit
+    if (newArg[offSet] == '\0' || newArg[offSet] != control[offSet]) { return false; }
+    offSet++;
+  }
+  // Returns true if newArg matches control up to the stop character
+  return true;
 }
 template <raynodes::DataType dt>
 [[nodiscard]] auto GetDefaultValue() {
@@ -283,16 +299,6 @@ template <raynodes::DataType dt>
     static_assert(dt == raynodes::STRING, "Unsupported PinType");
   }
 }
-bool str_cmp_stop_at(const char* newArg, const char* control, int max, char stop) {
-  int offSet = 0;
-  while (control[offSet] != stop && offSet < max) {
-    // Check if newArg ends before control reaches the stop character or max limit
-    if (newArg[offSet] == '\0' || newArg[offSet] != control[offSet]) { return false; }
-    offSet++;
-  }
-  // Returns true if newArg matches control up to the stop character
-  return true;
-}
 }  // namespace
 
 //-----------HELPER_CLASSES-----------//
@@ -300,10 +306,10 @@ namespace raynodes {
 template <DataType dt>
 auto NodeData::getData(char* fileData, const ComponentIndex id, const int index) const {
   char* workPtr = fileData + startByte;
-  SkipCharacter(workPtr, USED_LINE_SEPARATOR, 1);  // Skip the node id
+  str_skip_char(workPtr, USED_LINE_SEPARATOR, 1);  // Skip the node id
 
-  SkipCharacter(workPtr, COMPONENT_SEPARATOR, id);     // Skipped if component is 0
-  SkipCharacter(workPtr, USED_LINE_SEPARATOR, index);  // Skipped if index is 0
+  str_skip_char(workPtr, COMPONENT_SEPARATOR, id);     // Skipped if component is 0
+  str_skip_char(workPtr, USED_LINE_SEPARATOR, index);  // Skipped if index is 0
 
   if constexpr (dt == BOOLEAN) {
     return std::strtol(workPtr, nullptr, 10) == 1;
@@ -329,11 +335,11 @@ auto NodeData::getData(char* fileData, const ComponentIndex id, const int index)
 }
 inline ComponentIndex NodeTemplate::getCompIndex(char* fileData, const char* label) const {
   char* workPtr = fileData + startByte;
-  SkipCharacter(workPtr, USED_LINE_SEPARATOR, 1);
+  str_skip_char(workPtr, USED_LINE_SEPARATOR, 1);
   for (uint8_t i = 0; i < COMPS_PER_NODE; ++i) {
     if (workPtr[0] == '\n') return UINT8_MAX;  // Dummy value
     if (str_cmp_stop_at(label, workPtr, RN_MAX_NAME_LEN, USED_LINE_SEPARATOR)) return i;
-    SkipCharacter(workPtr, USED_LINE_SEPARATOR, 1);
+    str_skip_char(workPtr, USED_LINE_SEPARATOR, 1);
   }
   return UINT8_MAX;  // Dummy value
 }
@@ -341,7 +347,10 @@ inline ComponentIndex NodeTemplate::getCompIndex(char* fileData, const char* lab
 inline bool NodeTemplate::isNodeName(const char* fileData, const char* nodeName) const {
   return str_cmp_stop_at(nodeName, fileData + startByte, RN_MAX_NAME_LEN, USED_LINE_SEPARATOR);
 }
-
+inline StringView NodeTemplate::getName(const char* fileData) const {
+  uint16_t len = str_count_chars_until(fileData + startByte, USED_LINE_SEPARATOR, RN_MAX_NAME_LEN);
+  return {fileData + startByte, len};
+}
 }  // namespace raynodes
 
 //-----------RN_IMPORT-----------//
@@ -400,17 +409,17 @@ inline RnImport::RnImport(char* fileData, ByteIndex size) : fileData(fileData), 
   auto* indexPtr = fileData;
   // Allocating space
   {
-    // This is a fixed format header e.g.:
+    // This is a fixed format header - EditorData will always be 1 line e.g.:
     //--EditorData--
     //2|1|-145.238|-170.635|0.960|1|
     //--Templates--
     //10|
 
-    SkipCharacter(indexPtr, '\n', 1);
+    str_skip_char(indexPtr, '\n', 1);
     nodeCnt = str_parse_int(indexPtr);
-    SkipCharacter(indexPtr, USED_LINE_SEPARATOR, 1);
+    str_skip_char(indexPtr, USED_LINE_SEPARATOR, 1);
     connCnt = str_parse_int(indexPtr);
-    SkipCharacter(indexPtr, '\n', 2);
+    str_skip_char(indexPtr, '\n', 2);
     templateCnt = str_parse_int(indexPtr);
 
     nodes = static_cast<NodeData*>(malloc(nodeCnt * sizeof(NodeData)));
@@ -419,43 +428,45 @@ inline RnImport::RnImport(char* fileData, ByteIndex size) : fileData(fileData), 
   }
   // Parsing the templates
   {
-    SkipCharacter(indexPtr, '\n', 1);  // Skip the template count
+    str_skip_char(indexPtr, '\n', 1);  // Skip the template count
     for (int i = 0; i < templateCnt; ++i) {
-      int index = str_parse_int(indexPtr);
-      SkipCharacter(indexPtr, USED_LINE_SEPARATOR, 1);
+      const int index = str_parse_int(indexPtr);
+      str_skip_char(indexPtr, USED_LINE_SEPARATOR, 1);
       NodeTemplate nt{static_cast<uint16_t>(indexPtr - fileData)};
       memcpy(templates + index, &nt, sizeof(NodeTemplate));
-      SkipCharacter(indexPtr, '\n', 1);  // Copy cause of const
+      str_skip_char(indexPtr, '\n', 1);  // Copy cause of const
     }
   }
   // Parsing the nodes
   {
-    SkipCharacter(indexPtr, '\n', 1);  // Skip nodes section
+    str_skip_char(indexPtr, '\n', 1);  // Skip nodes section
     for (int i = 0; i < nodeCnt; ++i) {
       const int templateNum = str_parse_int(indexPtr);
-      SkipCharacter(indexPtr, USED_LINE_SEPARATOR, 1);
+      str_skip_char(indexPtr, USED_LINE_SEPARATOR, 1);
       const int nodeID = str_parse_int(indexPtr);
       NodeData nd{static_cast<ByteIndex>(indexPtr - fileData), (NodeID)nodeID, (TemplateID)templateNum};
       memcpy(nodes + i, &nd, sizeof(NodeData));  // Copy cause of const
-      SkipCharacter(indexPtr, '\n', 1);
+      str_skip_char(indexPtr, '\n', 1);
     }
   }
   // Parsing connections
   {
-    SkipCharacter(indexPtr, '\n', 1);  // Skip connection section
+    str_skip_char(indexPtr, '\n', 1);  // Skip connection section
+
     for (int i = 0; i < connCnt; ++i) {
       const int fromNode = str_parse_int(indexPtr);
-      SkipCharacter(indexPtr, USED_LINE_SEPARATOR, 1);
+      str_skip_char(indexPtr, USED_LINE_SEPARATOR, 1);
       const int from = str_parse_int(indexPtr);
-      SkipCharacter(indexPtr, USED_LINE_SEPARATOR, 1);
+      str_skip_char(indexPtr, USED_LINE_SEPARATOR, 1);
       const int out = str_parse_int(indexPtr);
-      SkipCharacter(indexPtr, USED_LINE_SEPARATOR, 1);
+      str_skip_char(indexPtr, USED_LINE_SEPARATOR, 1);
       const int toNode = str_parse_int(indexPtr);
-      SkipCharacter(indexPtr, USED_LINE_SEPARATOR, 1);
+      str_skip_char(indexPtr, USED_LINE_SEPARATOR, 1);
       const int to = str_parse_int(indexPtr);
-      SkipCharacter(indexPtr, USED_LINE_SEPARATOR, 1);
+      str_skip_char(indexPtr, USED_LINE_SEPARATOR, 1);
       const int in = str_parse_int(indexPtr);
       connections[i] = {(NodeID)fromNode, (int8_t)from, (uint8_t)out, (NodeID)toNode, (int8_t)to, (uint8_t)in};
+      str_skip_char(indexPtr, '\n', 1);
     }
   }
 }
@@ -567,11 +578,22 @@ inline std::vector<NodeID> RnImport::getNodes(const char* name) const {
   }
   if (id == UINT8_MAX) return retVal;
   for (int i = 0; i < nodeCnt; ++i) {
-    if (nodes[i].tID == id) [[unlikely]] {
-      retVal.push_back(nodes[i].id);
-    }
+    if (nodes[i].tID == id) [[unlikely]] { retVal.push_back(nodes[i].id); }
   }
   return retVal;
+}
+
+inline std::string RnImport::getNodeName(NodeID node) const {
+
+  if (node >= nodeCnt) [[unlikely]]
+    return {};
+  const auto* nData = getNodeData(node);
+  if (nData == nullptr) [[unlikely]] { return {}; }
+  const auto* nTemplate = getNodeTemplate(nData->tID);
+  if (nTemplate == nullptr) [[unlikely]] { return {}; }
+
+  // This way we can easily return a non allocated string aswell
+  return nTemplate->getName(fileData).getString();
 }
 
 }  // namespace raynodes

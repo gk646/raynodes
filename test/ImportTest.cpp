@@ -20,76 +20,90 @@
 
 #include <catch_amalgamated.hpp>
 
-#include "import/RnImport.h"
+#include "RnImport.h"
 #include "TestUtil.h"
 
 TEST_CASE("Test getComponentData", "[Import]") {
   TestUtil::SetupCWD();
   auto rn = raynodes::importRN("res/Test1.rn");
 
-  REQUIRE(rn.connCnt == 3);
+  REQUIRE(rn.connCnt == 4);
   REQUIRE(rn.nodeCnt == 6);
-  REQUIRE(rn.templateCnt == 10);
 
   // String data test
-  auto str = rn.getComponentData<raynodes::STRING>(0, "TextField");
-  auto str1 = rn.getComponentData<raynodes::STRING>(0, 0);
-  REQUIRE(str == "Test1");
-  REQUIRE(str == str1);
+  {
+    auto str = rn.getComponentData<raynodes::STRING>(1, "TextField");
+    auto str1 = rn.getComponentData<raynodes::STRING>(1, 0);
+    REQUIRE(str == "Test2");
+    REQUIRE(str == str1);
 
-  str = rn.getComponentData<raynodes::STRING>(1, "TextField");
-  str1 = rn.getComponentData<raynodes::STRING>(1, 0);
-  REQUIRE(str == "Test2");
-  REQUIRE(str == str1);
+    // String Aggregate test
+    str = rn.getComponentData<raynodes::STRING>(5, "DisplayText");
+    REQUIRE(str == "Display");
+    str1 = rn.getComponentData<raynodes::STRING>(5, "Choice2");
+    REQUIRE(str1 == "C2");
+    auto str2 = rn.getComponentData<raynodes::STRING>(5, "Choice4");
+    REQUIRE(str2 == "C4");
 
-  // Aggregate test
-  str = rn.getComponentData<raynodes::STRING>(5, "DisplayText");
-  REQUIRE(str == "Display");
-  str1 = rn.getComponentData<raynodes::STRING>(5, "Choice2");
-  REQUIRE(str1 == "C2");
-  auto str2 = rn.getComponentData<raynodes::STRING>(5, "Choice4");
-  REQUIRE(str2 == "C4");
-
-  auto str3 = rn.getComponentData<raynodes::STRING>(5, 0);
-  REQUIRE(str == str3);
-  auto str4 = rn.getComponentData<raynodes::STRING>(5, 2);
-  REQUIRE(str1 == str4);
-  auto str5 = rn.getComponentData<raynodes::STRING>(5, 4);
-  REQUIRE(str2 == str5);
-
+    auto str3 = rn.getComponentData<raynodes::STRING>(5, 1);
+    REQUIRE(str == str3);
+    auto str4 = rn.getComponentData<raynodes::STRING>(5, 3);
+    REQUIRE(str1 == str4);
+    auto str5 = rn.getComponentData<raynodes::STRING>(5, 5);
+    REQUIRE(str2 == str5);
+  }
   // Bool test
 
   // Integer test
-  auto val = rn.getComponentData<raynodes::FLOAT>(4, "Operation");
-  REQUIRE(val == 1);
+  {
+    auto val = rn.getComponentData<raynodes::INTEGER>(4, "Operation");
+    REQUIRE(val == 1);
+  }
+
+  {
+    // Float test
+    auto val = rn.getComponentData<raynodes::FLOAT>(2, "Number");
+    REQUIRE(val == 2.33);
+  }
+
+  // Vec3
+  /**
+   Vec3 test{1.1, 1.22, 1.333};
+   auto val = rn.getComponentData<raynodes::VECTOR_3>(3, "Vector3");
+   REQUIRE(val.x == test.x);
+   REQUIRE(val.y == test.y);
+   REQUIRE(val.z == test.z);
+   */
 }
+
 TEST_CASE("Test getConnectionOut", "[Import]") {
   TestUtil::SetupCWD();
   auto rn = raynodes::importRN("res/Test1.rn");
   {
-    auto conns = rn.getConnectionsOut<4>(0, -1);
+    auto conns = rn.getConnectionsOut<4>(1, -1);
     const auto conn = conns[0];
     REQUIRE(conn.isValid() == true);
-    REQUIRE(conn.fromNode == 0);
+    REQUIRE(conn.fromNode == 1);
     REQUIRE(conn.fromComponent == -1);  // node-to-node connection
     REQUIRE(conn.fromPin == 0);
-    REQUIRE(conn.toNode == 1);
+    REQUIRE(conn.toNode == 5);
     REQUIRE(conn.toComponent == -1);  // node-to-node connection
     REQUIRE(conn.toPin == 0);
 
+    // Correct invalidation
     for (int i = 1; i < 4; ++i) {
       REQUIRE(conns[i].isValid() == false);
     }
   }
   // Test vector
   {
-    auto conns = rn.getConnectionsOut(0, -1);
+    auto conns = rn.getConnectionsOut(1, -1);
     const auto conn = conns[0];
     REQUIRE(conn.isValid() == true);
-    REQUIRE(conn.fromNode == 0);
+    REQUIRE(conn.fromNode == 1);
     REQUIRE(conn.fromComponent == -1);  // node-to-node connection
     REQUIRE(conn.fromPin == 0);
-    REQUIRE(conn.toNode == 1);
+    REQUIRE(conn.toNode == 5);
     REQUIRE(conn.toComponent == -1);  // node-to-node connection
     REQUIRE(conn.toPin == 0);
 
@@ -97,10 +111,19 @@ TEST_CASE("Test getConnectionOut", "[Import]") {
       REQUIRE(c.isValid() == true);
     }
   }
+  // 2 nodes connection into the same input
+  {
+    auto conns = rn.getConnectionsIn(5, -1);
+    REQUIRE(conns.size() == 2);
+  }
+  // No connections
+  REQUIRE(rn.getConnectionsOut(2, -1).empty());
+  REQUIRE(rn.getConnectionsOut<1>(2, -1)[0].isValid() == false);
 }
 TEST_CASE("Test getConnectionIn", "[Import]") {
   TestUtil::SetupCWD();
   auto rn = raynodes::importRN("res/Test1.rn");
+
   // Test multiple
   {
     auto conns = rn.getConnectionsIn<4>(1, -1);
@@ -133,6 +156,10 @@ TEST_CASE("Test getConnectionIn", "[Import]") {
       REQUIRE(c.isValid() == true);
     }
   }
+
+  // No connections
+  REQUIRE(rn.getConnectionsIn(2, -1).empty());
+  REQUIRE(rn.getConnectionsIn<1>(2, -1)[0].isValid() == false);
 }
 TEST_CASE("Test getNodes", "[Import]") {
   TestUtil::SetupCWD();

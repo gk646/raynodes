@@ -27,6 +27,9 @@ add_subdirectory(src/raynodes)
 # Add subdirectories for plugins
 add_subdirectory(src/plugins)
 
+# Add the import header
+add_subdirectory(src/import)
+
 # Add all built targets here
 add_dependencies(raynodes MQQS BuiltIns)
 

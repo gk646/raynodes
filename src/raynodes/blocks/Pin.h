@@ -137,7 +137,7 @@ struct Pin {
 struct OutputPin final : Pin {
   OutputData data{nullptr};
   explicit OutputPin(const PinType pt) : Pin{pt, OUTPUT, 0} {}
-  [[nodiscard]] auto isConnectable(InputPin& other) const -> bool;
+  [[nodiscard]] bool isConnectable(EditorContext& ec, InputPin& other) const;
   template <PinType pt>
   void setData(auto val) {
     data.set<pt>(val);
@@ -147,9 +147,6 @@ struct OutputPin final : Pin {
 struct InputPin final : Pin {
   Connection* connection = nullptr;
   explicit InputPin(const PinType pt) : Pin{pt, INPUT, 0} {}
-  [[nodiscard]] auto isConnectable(const OutputPin& other) const -> bool {
-    return connection == nullptr && other.pinType == pinType;
-  }
   template <PinType pt>
   [[nodiscard]] auto getData() const {
     if (connection && pinType == pt) {  // Return dummy value on mismatch - safety measure
@@ -167,7 +164,7 @@ struct InputPin final : Pin {
       return Pointer{nullptr, 0};
     } else if constexpr (pt == VECTOR_3) {
       return Vec3{0.0F, 0.0F, 0.0F};
-    }else if constexpr (pt == VECTOR_2) {
+    } else if constexpr (pt == VECTOR_2) {
       return Vec2{0.0F, 0.0F};
     } else {
       static_assert(pt == STRING, "Unsupported PinType");

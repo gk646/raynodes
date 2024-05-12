@@ -21,6 +21,7 @@
 #ifndef REGISTERNODES_H
 #define REGISTERNODES_H
 
+#include "shared/fwd.h"
 #include "application/EditorContext.h"
 #include "plugin/RegisterInterface.h"
 #include "../plugins/BuiltIns/components/TextOutC.h"

@@ -27,14 +27,16 @@ void MQQS::registerComponents(ComponentRegister& cr) {
 }
 
 void MQQS::registerNodes(NodeRegister& nr) {
-  nr.registerNode("Dialog Choice", {{"DisplayText", "BI_TextIn"},
+  nr.registerNode("Dialog Choice", {{"NPCType", "BI_TextIn"},
+                                    {"DisplayText", "BI_TextIn"},
                                     {"Choice1", "QST_DialogChoice"},
                                     {"Choice2", "QST_DialogChoice"},
                                     {"Choice3", "QST_DialogChoice"},
                                     {"Choice4", "QST_DialogChoice"}});
 
-  nr.registerNode("Dialog", {{"DisplayText", "BI_TextOut"}});
+  nr.registerNode("Dialog", {{"NPCType", "BI_TextIn"}, {"DisplayText", "BI_TextIn"}});
 
-  nr.registerNode("QuestHeader",
-                  {{"Name", "BI_TextIn"}, {"Description", "BI_TextIn"}, {"Zone", "BI_TextIn"}, {"Level", "BI_NumberOut"}});
+  nr.registerNode(
+      "QuestHeader",
+      {{"Name", "BI_TextIn"}, {"Description", "BI_TextIn"}, {"Zone", "BI_TextIn"}, {"Level", "BI_NumberOut"}});
 }
