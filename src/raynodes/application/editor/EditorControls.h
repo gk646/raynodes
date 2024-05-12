@@ -91,11 +91,11 @@ inline void PollControls(EditorContext& ec) {
   //Selecting
   if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !ec.logic.isAnyNodeHovered
       && !ec.logic.showContextMenu) {
-    selectedNodes.clear();
     ec.logic.isSelecting = true;
     ec.logic.selectPoint = worldMouse;
     selectRect.width = 0;
     selectRect.height = 0;
+    selectedNodes.clear();
   }
 
   if (ec.input.isMouseButtonReleased(MOUSE_BUTTON_RIGHT)) {

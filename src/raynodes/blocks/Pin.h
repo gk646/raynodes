@@ -30,8 +30,10 @@ enum PinType : uint8_t {
   INTEGER,   // A 64bit integer
   DATA,      // A arbitrary data pointer
   FLOAT,     // A single Float values
-  VECTOR_3,  // 3 Float values
-  VECTOR_2,  // 2 Float values
+  VECTOR_4,  // 4 Float values  (Color)
+  VECTOR_3,  // 3 Float values  (3D Position)
+  VECTOR_2,  // 2 Float values  (2D Position)
+  IMAGE,     // Image data
   NODE,      // Signals a connection between nodes
 };
 
@@ -48,6 +50,7 @@ struct OutputData {
     bool boolean;
     double floating;
     Pointer pointer;
+    ImageData image;
     Node* node;
     Vec2 vec2;
     Vec3 vec3;
@@ -72,6 +75,8 @@ struct OutputData {
       return vec2;
     } else if constexpr (pt == VECTOR_3) {
       return vec3;
+    } else if constexpr (pt == IMAGE) {
+      return image;
     } else {
       static_assert(pt == STRING, "Unsupported PinType");
     }
@@ -94,6 +99,8 @@ struct OutputData {
       vec2 = val;
     } else if constexpr (pt == VECTOR_3) {
       vec3 = val;
+    } else if constexpr (pt == IMAGE) {
+      image = val;
     } else {
       static_assert(pt == STRING, "Unsupported PinType");
     }
@@ -126,6 +133,8 @@ struct Pin {
         return "Vec3";
       case NODE:
         return "Node";
+      case IMAGE:
+        return "Image";
       default:
         return "Unknown Type";
     }

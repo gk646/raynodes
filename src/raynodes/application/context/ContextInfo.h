@@ -31,7 +31,7 @@ struct Info {
   static constexpr auto about = "Copyright #226# 2024 gk646. MIT License";
   static constexpr int majorVersion = 1;
   static constexpr int minorVersion = 0;
-  static constexpr int patch = 0;
+  static constexpr int patch = 1;
 
   static const char* getVersion(EditorContext& ec);
 };

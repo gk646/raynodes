@@ -26,9 +26,20 @@
 struct StringToNumberC final : Component {
   explicit StringToNumberC(const ComponentTemplate ct) : Component(ct, 50, 20) {}
   Component* clone() override { return new StringToNumberC(*this); };
-  void draw(EditorContext& ec, Node& parent) override{}
-  void update(EditorContext& ec, Node& parent) override;
-  void onCreate(EditorContext &ec, Node &parent) override;
+  void draw(EditorContext& ec, Node& parent) override {}
+  void update(EditorContext& /**/, Node& /**/) override {
+    const auto inData = inputs[0].getData<STRING>();
+
+    outputs[0].setData<FLOAT>(inData ? cxstructs::str_parse_float(inData) : 0.0);
+    outputs[1].setData<INTEGER>(inData ? cxstructs::str_parse_long(inData) : 0L);
+  }
+
+  void onCreate(EditorContext& /**/, Node& /**/) override {
+    addPinInput(STRING);
+
+    addPinOutput(FLOAT);
+    addPinOutput(INTEGER);
+  }
 };
 
 #endif  //RAYNODES_SRC_COMPONENT_COMPONENTS_STRINGTONUMBERC_H_
