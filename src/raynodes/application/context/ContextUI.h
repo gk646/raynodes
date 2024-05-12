@@ -42,6 +42,7 @@ struct ContextMenu {
   }
 };
 
+
 // All the ui is made to be normed to 1920x1080 so FullHD
 // The methods allow you to always us absolute coordinates and then transferthem to real screen space
 // Use display.smartScaling for elements that have a minimum height -> scaling will only be apl
@@ -106,6 +107,9 @@ struct UI final {
   bool viewMenuState = false;  // ViewMenu dropdown state
   bool showSettingsMenu = false;
   bool showHelpMenu = false;
+
+  // Tools
+  bool nodeCreatorEnabled = true;
 
   // UI wrappers
   static int DrawListMenu(EditorContext& ec, bool& open, const char* title, const char* listText, int& active);

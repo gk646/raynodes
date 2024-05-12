@@ -28,8 +28,6 @@ struct DisplayC final : Component {
   Component* clone() override { return new DisplayC(*this); };
   void draw(EditorContext& ec, Node& parent) override;
   void update(EditorContext& ec, Node& parent) override;
-  void save(FILE* file) override;
-  void load(FILE* file) override;
   void onCreate(EditorContext& ec, Node& parent) override;
 };
 #endif  //RAYNODES_SRC_COMPONENT_COMPONENTS_DISPLAYC_H_

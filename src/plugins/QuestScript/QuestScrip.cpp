@@ -18,20 +18,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "StringToNumberC.h"
+#include "QuestScript.h"
 
+#include "components/DialogChoiceC.h"
 
-
-void StringToNumberC::update(EditorContext&  /**/, Node& /**/) {
-  const auto inData = inputs[0].getData<STRING>();
-
-  outputs[0].setData<FLOAT>(inData ? std::atof(inData) : 0.0);
-  outputs[1].setData<INTEGER>(inData ? std::atoi(inData) : 0L);
+void MQQS::registerComponents(ComponentRegister& cr) {
+  cr.registerComponent<DialogChoiceC>("QST_DialogChoice");
 }
 
-void StringToNumberC::onCreate(EditorContext&  /**/, Node& /**/) {
-  addPinInput(STRING);
+void MQQS::registerNodes(NodeRegister& nr) {
+  nr.registerNode("Dialog Choice", {{"NPCType", "BI_Text_In"},
+                                    {"DisplayText", "BI_Text_In"},
+                                    {"Choice1", "QST_DialogChoice"},
+                                    {"Choice2", "QST_DialogChoice"},
+                                    {"Choice3", "QST_DialogChoice"},
+                                    {"Choice4", "QST_DialogChoice"}});
 
-  addPinOutput(FLOAT);
-  addPinOutput(INTEGER);
+  nr.registerNode("Dialog", {{"NPCType", "BI_Text_In"}, {"DisplayText", "BI_Text_In"}});
+
+  nr.registerNode(
+      "QuestHeader",
+      {{"Name", "BI_Text_In"}, {"Description", "BI_Text_In"}, {"Zone", "BI_Text_In"}, {"Level", "BI_Number_In"}});
+
+  nr.registerNode("GOTO Player", {{"Zone", "BI_Text_In"}, {"Target", "BI_Vec2_In"}});
+  nr.registerNode("GOTO Player Proximity", {{"Zone", "BI_Text_In"}, {"Target", "BI_Vec2_In"},{"Distance","BI_Number_In"}});
 }
