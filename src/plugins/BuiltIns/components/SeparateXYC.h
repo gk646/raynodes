@@ -18,25 +18,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef VECTOR3OUTPUTC_H
-#define VECTOR3OUTPUTC_H
+#ifndef SEPARATEXY_H
+#define SEPARATEXY_H
 
-#include "component/Component.h"
-#include "ui/TextField.h"
+#include "application/EditorContext.h"
 
-class Vec3OutC final : public Component {
-  TextInputField textFields[3]{};
+struct SeparateXYC final : Component {
+  explicit SeparateXYC(const ComponentTemplate ct) : Component(ct, 100, 20) {}
+  Component* clone() override { return new SeparateXYC(*this); }
 
- public:
-  explicit Vec3OutC(const ComponentTemplate ct) : Component(ct, 200, 20) {}
-  Component* clone() override { return new Vec3OutC(*this); }
-  void draw(EditorContext& ec, Node& parent) override;
-  void update(EditorContext&, Node& parent) override;
-  void load(FILE* file) override;
-  void save(FILE* file) override;
-  void onFocusGain(EditorContext&) override;
-  void onFocusLoss(EditorContext&) override;
-  void onCreate(EditorContext& ec, Node& parent) override;
+  void draw(EditorContext& /**/, Node& /**/) override {}
+  void update(EditorContext& ec, Node& parent) override {
+    Vec2 outVec = inputs[0].getData<VECTOR_2>();
+
+    outputs[0].setData<FLOAT>(outVec.x);
+    outputs[1].setData<FLOAT>(outVec.y);
+  }
+
+  void onCreate(EditorContext& ec, Node& parent) override {
+    addPinInput(VECTOR_2);
+
+    addPinOutput(FLOAT);
+    addPinOutput(FLOAT);
+  }
 };
 
-#endif  //VECTOR3OUTPUTC_H
+#endif //SEPARATEXY_H

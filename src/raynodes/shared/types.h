@@ -33,8 +33,15 @@ struct Pointer {
   uint32_t size;
 };
 
-// Dont wanna include raylib everywhere
+// Potentially use bit encoding to save more information - size doesnt need 32 bit
+struct ImageData {
+  void* data;
+  uint32_t size;
+  uint16_t x;
+  uint16_t y;
+};
 
+// Dont wanna include raylib everywhere
 struct Vec2 {
   float x;
   float y;
@@ -67,16 +74,12 @@ struct NodeTemplate {
 // E = Editor
 // N = Node
 // C = Component
-enum ColorIndex : uint8_t {
-  E_BACK_GROUND = 0,
-  E_GRID,
-  N_BACK_GROUND,
-  UI_LIGHT,
-  UI_MEDIUM,
-  UI_DARK,
-  INDEX_END
-};
+enum ColorIndex : uint8_t { E_BACK_GROUND = 0, E_GRID, N_BACK_GROUND, UI_LIGHT, UI_MEDIUM, UI_DARK, INDEX_END };
 
 enum ScaleDirection : uint8_t { HORIZONTAL, VERTICAL };
+
+// Flavour of components with only 1 datatype - specifies if it has both input and output or only either one
+// This is mostly cosmetic - for example if you have a complex node and only wanna output node level, you can make the components have no outputs
+enum ComponentStyle : uint8_t { INPUT_ONLY, OUTPUT_ONLY, IN_AND_OUT };
 
 #endif  //TYPES_H

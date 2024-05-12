@@ -236,6 +236,10 @@ inline void DrawTopBar(EditorContext& ec) {
   if (UI::DrawButton(ec, buttonBounds, "#141#")) ec.ui.showSettingsMenu = !ec.ui.showSettingsMenu;
 
   if (UI::DrawButton(ec, buttonBounds, "#193#")) ec.ui.showHelpMenu = !ec.ui.showHelpMenu;
+
+  // Draw tool toggle buttons
+
+
 }
 inline void DrawStatusBar(EditorContext& ec) {
   constexpr float height = 20.0F;

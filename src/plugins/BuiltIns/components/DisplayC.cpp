@@ -55,11 +55,3 @@ void DisplayC::onCreate(EditorContext& ec, Node& /**/) {
   addPinOutput(FLOAT);
   addPinOutput(INTEGER);
 }
-
-void DisplayC::save(FILE* /**/) {
-  /*No state*/
-}
-
-void DisplayC::load(FILE* /**/) {
-  /*No state*/
-}

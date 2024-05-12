@@ -27,9 +27,22 @@ struct SeparateXYZC final : Component {
   explicit SeparateXYZC(const ComponentTemplate ct) : Component(ct, 100, 20) {}
   Component* clone() override { return new SeparateXYZC(*this); }
 
-  void draw(EditorContext& /**/, Node& /**/) override{}
-  void update(EditorContext& ec, Node& parent) override;
-  void onCreate(EditorContext& ec, Node& parent) override;
+  void draw(EditorContext& /**/, Node& /**/) override {}
+  void update(EditorContext& ec, Node& parent) override {
+    Vec3 outVec = inputs[0].getData<VECTOR_3>();
+
+    outputs[0].setData<FLOAT>(outVec.x);
+    outputs[1].setData<FLOAT>(outVec.y);
+    outputs[2].setData<FLOAT>(outVec.z);
+  }
+
+  void onCreate(EditorContext& ec, Node& parent) override {
+    addPinInput(VECTOR_3);
+
+    addPinOutput(FLOAT);
+    addPinOutput(FLOAT);
+    addPinOutput(FLOAT);
+  }
 };
 
 #endif  //SEPARATEXYZ_H

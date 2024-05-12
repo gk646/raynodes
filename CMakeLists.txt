@@ -9,7 +9,9 @@ set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE) # Build as shared lib
 
 option(RN_ENABLE_SANITIZER "Set to compile with adress sanitizer (MSVC)") # set(RN_ENABLE_SANITIZER ON)
 option(RN_BUILD_TESTS "Set to compile the test executable")               # set(RN_BUILD_TESTS ON)
+option(RN_BUILD_RELEASES "Set to build the release archives")             # set(RN_BUILD_RELEASES ON)
 
+#set(RN_BUILD_TESTS ON)
 
 # Compiler options for MSVC and GCC
 include(cmake/CompilerOptions.cmake)
@@ -30,7 +32,8 @@ add_subdirectory(src/plugins)
 add_subdirectory(src/import)
 
 # Add all built targets here
-add_dependencies(raynodes MQQS BuiltIns)
+add_dependencies(raynodes QuestScript BuiltIns)
+
 
 if (RN_BUILD_TESTS)
     enable_testing()

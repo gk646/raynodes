@@ -44,8 +44,7 @@ void DrawTextSelection(const Font& f, char* buffer, int bufferLength, int select
                 : 0;
         float lineEndX =
             MeasureTextUpTo(buffer + lineStartIndex, std::min(selectionEnd, i) - lineStartIndex, f, fs, 0.5F);
-        DrawRectangleRec({currentX + lineStartX, currentY, lineEndX - lineStartX, fs},
-                         ColorAlpha(WHITE, 0.5F));
+        DrawRectangleRec({currentX + lineStartX, currentY, lineEndX - lineStartX, fs}, ColorAlpha(WHITE, 0.5F));
       }
       lineStartIndex = i + 1;
       currentX = x;
@@ -68,17 +67,13 @@ void DrawCursor(const Font& f, char* buffer, int bufferLength, int cursorPos, fl
   float offset = MeasureTextUpTo(buffer + startIndex, cursorPos - startIndex, f, fs, 0.5F);
   DrawTextEx(f, "|", {x + offset, y + lineCount * fs}, fs, 0.5F, WHITE);
 }
-
 bool IsInputAllowed(const int key, InputConstraint constraint) {
-  if (constraint == NUMERIC) {
-    return (key >= 48 && key <= 57) || key == 46 /* dot*/;
-  }
+  if (constraint == NUMERIC) { return (key >= 48 && key <= 57) || key == 46 /* dot*/; }
 
-  if (constraint == NONE) {
-    return key >= 32 && key <= 125;
-  }
+  if (constraint == NONE) { return key >= 32 && key <= 125; }
   return false;
 }
+
 }  // namespace
 
 void TextInputField::draw() {
@@ -118,9 +113,7 @@ void TextInputField::update(Vector2 mouse) {
     selectionEnd = selectionStart;
   }
 
-  if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-    isDragging = false;
-  }
+  if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) { isDragging = false; }
 
   if (IsKeyPressed(KEY_V) && IsKeyDown(KEY_LEFT_CONTROL) && buffer.length() < 1024) {
     if (selectionStart != selectionEnd) {
@@ -149,6 +142,7 @@ void TextInputField::update(Vector2 mouse) {
     if (IsInputAllowed(key, constraint) && buffer.length() < 1024) {
       // Safety measure - i could produce some crashes here
       cursorPos = cxstructs::clamp(static_cast<int>(cursorPos), 0, static_cast<int>(buffer.size()));
+      //TODO replace selection when you type with active selection
       buffer.insert(buffer.begin() + cursorPos, static_cast<char>(key));
       cursorPos++;
       updateDimensions();
@@ -198,13 +192,9 @@ void TextInputField::update(Vector2 mouse) {
     updateDimensions();
   }
 
-  if (cursorPos < buffer.length() && (IsKeyPressed(KEY_RIGHT) || IsKeyPressedRepeat(KEY_RIGHT))) {
-    cursorPos++;
-  }
+  if (cursorPos < buffer.length() && (IsKeyPressed(KEY_RIGHT) || IsKeyPressedRepeat(KEY_RIGHT))) { cursorPos++; }
 
-  if (cursorPos > 0 && (IsKeyPressed(KEY_LEFT) || IsKeyPressedRepeat(KEY_LEFT))) {
-    cursorPos--;
-  }
+  if (cursorPos > 0 && (IsKeyPressed(KEY_LEFT) || IsKeyPressedRepeat(KEY_LEFT))) { cursorPos--; }
 
   // Handle blinking cursor
   blinkCounter++;
@@ -216,7 +206,7 @@ void TextInputField::update(Vector2 mouse) {
 
 void TextInputField::onFocusGain(const Vector2 mouse) {
   //Position the cursor correct inside the text
-  if (!CheckCollisionPointRec(mouse, bounds)) return;
+  if (!CheckCollisionPointRec(mouse, bounds)) return onFocusLoss() ;
   cursorPos = getIndexFromPos(mouse);
   selectionEnd = selectionStart;
   blinkCounter = 0;
@@ -276,9 +266,7 @@ uint16_t TextInputField::getIndexFromPos(const Vector2 mouse) {
         for (uint16_t j = currentLineStartIndex; j < i; ++j) {
           const auto currentWidth =
               MeasureTextUpTo(text + currentLineStartIndex, j - currentLineStartIndex + 1, *font, fs, 0.5F);
-          if (currentWidth > relX) {
-            return j;
-          }
+          if (currentWidth > relX) { return j; }
         }
         return i;
       }
@@ -291,6 +279,5 @@ uint16_t TextInputField::getIndexFromPos(const Vector2 mouse) {
 }
 
 Ints TextInputField::getSelection() const {
-  return selectionStart < selectionEnd ? Ints{selectionStart, selectionEnd}
-                                       : Ints{selectionEnd, selectionStart};
+  return selectionStart < selectionEnd ? Ints{selectionStart, selectionEnd} : Ints{selectionEnd, selectionStart};
 }

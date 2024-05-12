@@ -34,13 +34,17 @@ Color Pin::getColor() const {
     case FLOAT:
       return SKYBLUE;
     case DATA:
-      return PURPLE;
+      return DARKGRAY;
+    case VECTOR_4:
+      return {25, 60, 62, 255};  // Dark Green
     case VECTOR_3:
-      break;
+      return {38, 92, 66, 255};  // Green
     case VECTOR_2:
-      break;
+      return {62, 137, 72, 255};  // Light Green
     case NODE:
       return VIOLET;
+    case IMAGE:
+      return {184, 111, 80, 255};  // Light Brown
   }
   return RED;
 }

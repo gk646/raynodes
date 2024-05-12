@@ -27,8 +27,8 @@
 
 namespace cxstructs {
 // Pads the given string "arg" inside "buff" with the "padSymbol" - optional prefix and suffix
-inline void str_pad(char* buff, const int size, const char* arg, const char padSymbol,
-                    const char* prefix = nullptr, const char* suffix = nullptr) {
+inline void str_pad(char* buff, const int size, const char* arg, const char padSymbol, const char* prefix = nullptr,
+                    const char* suffix = nullptr) {
   int currPos = 0;
   std::memset(buff, 0, size);
 
@@ -40,14 +40,10 @@ inline void str_pad(char* buff, const int size, const char* arg, const char padS
     currPos += snprintf(buff + currPos, size - currPos, "%s", arg);
     currPos = currPos > size ? size : currPos;
   }
-  if (suffix && currPos < size) {
-    snprintf(buff + currPos, size - currPos, "%s", suffix);
-  }
+  if (suffix && currPos < size) { snprintf(buff + currPos, size - currPos, "%s", suffix); }
 
   for (int i = currPos; i < size - 1; i++) {
-    if (buff[i] == '\0') {
-      buff[i] = padSymbol;
-    }
+    if (buff[i] == '\0') { buff[i] = padSymbol; }
   }
   buff[size - 1] = '\0';
 }

@@ -16,4 +16,4 @@
 #target_link_libraries(MyPlugin PRIVATE editor) # Link against the editor (static) or possibly raylib (shared)
 
 add_subdirectory(BuiltIns) # Built in Types (raynodes STL...)
-add_subdirectory(MQQS) # MageQuest Quest Script
+add_subdirectory(QuestScript) # MageQuest Quest Script
