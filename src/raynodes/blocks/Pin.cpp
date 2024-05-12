@@ -51,15 +51,14 @@ void Pin::DrawPin(Pin& p, const Font& f, float x, float y, bool showText) {
   const auto middlePos = Vector2{x, y + pinRadius};
 
   if (p.direction == INPUT && static_cast<InputPin*>(&p)->connection == nullptr) {
-    DrawCircleSector(middlePos,pinRadius,0,360,50,UI::COLORS[N_BACK_GROUND]);
+    DrawCircleSector(middlePos, pinRadius, 0, 360, 50, UI::COLORS[N_BACK_GROUND]);
     DrawCircleLinesV(middlePos, pinRadius, p.getColor());
   } else {
     DrawCircleV(middlePos, pinRadius, p.getColor());
   }
   if (showText) {
     const auto txt = TypeToString(p.pinType);
-    const Vector2 textPos = {middlePos.x + (p.direction == INPUT ? -textOff : textOff),
-                             middlePos.y - pinRadius};
+    const Vector2 textPos = {middlePos.x + (p.direction == INPUT ? -textOff : textOff), middlePos.y - pinRadius};
     DrawCenteredText(f, txt, textPos, Pin::PIN_SIZE + 2, 0, UI::COLORS[UI_LIGHT]);
   }
   p.yPos = y + pinRadius;
@@ -76,6 +75,16 @@ bool Pin::UpdatePin(EditorContext& ec, Node& n, Component* c, Pin& p, float x) {
   return false;
 }
 
-auto OutputPin::isConnectable(InputPin& other) const -> bool {
-  return other.pinType == pinType && other.connection == nullptr;
+auto OutputPin::isConnectable(EditorContext& ec, InputPin& other) const -> bool {
+  if (other.pinType != pinType) [[unlikely]] { return false; }
+
+  if (pinType == NODE) [[unlikely]] {
+    // Have to check if the connection already exists - we allow multiple node-to-node inputs
+    for (const auto n : ec.core.connections) {
+      if (&n->out == this && &n->in == &other) return false;
+    }
+    return true;
+  }
+
+  return other.connection == nullptr;
 }
