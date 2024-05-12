@@ -27,9 +27,6 @@ TEST_CASE("Test getComponentData", "[Import]") {
   TestUtil::SetupCWD();
   auto rn = raynodes::importRN("res/Test1.rn");
 
-  REQUIRE(rn.connCnt == 4);
-  REQUIRE(rn.nodeCnt == 6);
-
   // String data test
   {
     auto str = rn.getComponentData<raynodes::STRING>(1, "TextField");
@@ -60,10 +57,21 @@ TEST_CASE("Test getComponentData", "[Import]") {
     REQUIRE(val == 1);
   }
 
+  // Float test
   {
-    // Float test
     auto val = rn.getComponentData<raynodes::FLOAT>(2, "Number");
     REQUIRE(val == 2.33);
+  }
+
+  // String View
+  {
+    auto view = rn.getComponentData<raynodes::STRING_VIEW>(5, "DisplayText");
+    auto str = rn.getComponentData<raynodes::STRING>(5, "DisplayText");
+    auto* staticStr = "Display";  // Component Data String
+    REQUIRE(str == view.getString());
+    REQUIRE(raynodes::StringView::Hash(str) == view.getHash());
+    auto hash = raynodes::StringView::Hash(staticStr);
+    REQUIRE(hash == view.getHash());
   }
 
   // Vec3
@@ -75,7 +83,6 @@ TEST_CASE("Test getComponentData", "[Import]") {
    REQUIRE(val.z == test.z);
    */
 }
-
 TEST_CASE("Test getConnectionOut", "[Import]") {
   TestUtil::SetupCWD();
   auto rn = raynodes::importRN("res/Test1.rn");
@@ -156,6 +163,26 @@ TEST_CASE("Test getConnectionIn", "[Import]") {
       REQUIRE(c.isValid() == true);
     }
   }
+  // Test pin specific
+  {
+    auto conns = rn.getConnectionsIn(4, -1, 0);
+    REQUIRE(conns.size() == 1);
+    REQUIRE(conns.front().fromNode == 3);
+
+    conns = rn.getConnectionsIn(4, 0, 0);
+    REQUIRE(conns.size() == 1);
+    REQUIRE(conns.front().fromNode == 2);
+
+    conns = rn.getConnectionsIn(4, 0, 1);
+    REQUIRE(conns.size() == 1);
+    REQUIRE(conns.front().fromNode == 2);
+
+    // 2 out connections
+    conns = rn.getConnectionsOut(2, 0, 1);
+    REQUIRE(conns.size() == 2);
+    REQUIRE(conns.front().fromNode == 2);
+    REQUIRE(conns.front().toNode == 4);
+  }
 
   // No connections
   REQUIRE(rn.getConnectionsIn(2, -1).empty());
@@ -179,8 +206,58 @@ TEST_CASE("Test getNodes", "[Import]") {
     REQUIRE(nodes[0] == 0);
     REQUIRE(nodes[1] == 1);
   }
+  // Empty
+  REQUIRE(rn.getNodes("aöalsföd").empty() == true);
+  // Empty
+  REQUIRE(rn.getNodes(nullptr).empty() == true);
 }
+TEST_CASE("Test getNodeName", "[Import]") {
+  TestUtil::SetupCWD();
+  auto rn = raynodes::importRN("res/Test1.rn");
+  // Test invalid
+  {
+    auto name = rn.getNodeName(-1);
+    REQUIRE(name.start == nullptr);
+    REQUIRE(name.length == 0);
+    REQUIRE(name.getHash() == UINT32_MAX);
+    REQUIRE(name.getString().empty() == true);
+  }
+  // Test name and switch
+  {
+    bool madeSwitch = false;
+    raynodes::StringView view = rn.getNodeName(0);
+    uint32_t hsh = view.getHash();
+    switch (hsh) {
+      case raynodes::StringView::Hash("Not"):
+      case raynodes::StringView::Hash(std::string("Not std::string")):
+      case raynodes::StringView::Hash("Not2"):
+      case raynodes::StringView::Hash("TextFieldd"):  // Very Close
+        break;
+      case raynodes::StringView::Hash("TextField"):
+        madeSwitch = true;
+        break;
+    }
 
+    REQUIRE(madeSwitch == true);
+  }
+}
+TEST_CASE("Test completeness - static tests", "[Import]") {
+  TestUtil::SetupCWD();
+  auto rn = raynodes::importRN("res/Test1.rn");
+
+  REQUIRE(rn.nodeCnt == 6);
+  REQUIRE(rn.connCnt == 6);
+
+  REQUIRE(rn.templates[0].isNodeName(rn.fileData, "Dialog Choice") == true);
+
+  REQUIRE(rn.connections[1].fromNode == 3);
+  REQUIRE(rn.connections[1].fromComponent == -1);
+  REQUIRE(rn.connections[1].fromPin == 0);
+
+  REQUIRE(rn.connections[1].toNode == 4);
+  REQUIRE(rn.connections[1].toComponent == -1);
+  REQUIRE(rn.connections[1].toPin == 0);
+}
 TEST_CASE("Benchmark the import", "[Import]") {
   TestUtil::SetupCWD();
   auto* path = "./res/__GEN2__.rn";

@@ -61,6 +61,7 @@ void MathC::save(FILE* file) {
 
 void MathC::load(FILE* file) {
   cxstructs::io_load(file, selectedMode);
+  dropDown.selectedIndex = selectedMode;
 }
 
 double MathC::performOperation(double x, double y, MOperation op) {
