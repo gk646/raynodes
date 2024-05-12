@@ -1,6 +1,6 @@
 # raynodes
 
-`raynodes` is a standalone 2D node editor made using [raylib](https://github.com/raysan5/raylib) with a focus
+`raynodes` is a standalone 2D node editor made using [raylib](https://github.com/raysan5/raylib) and [raygui](https://github.com/raysan5/raygui) with a focus
 extensibility. It aims to be an attractive tool for any node based task, and supports being integrated into
 bigger projects like games, editors...
 In many cases it comes close to being a node-editor SDK of sorts.
@@ -17,10 +17,10 @@ A small showcase of its major features:
 - **Modern code base** using many C++20 and above
 - **User created** nodes at runtime scripted in-editor in python (planned)
 
-In a lot of places it uses my (header only) C++ helper library [cxstructs](https://github.com/gk646/cxstructs).  
 For more infos on the design choices go to [Software Design](#Software-Design)  
-For more information on how to use the editor look at the [raynodes-wiki](https://github.com/gk646/raynodes/wiki).
+For more information on how to use the editor look at the [raynodes-wiki](https://github.com/gk646/raynodes/wiki).  
 
+The other dependencies are [cxstructs](https://github.com/gk646/cxstructs), [tinyfiledialogs](https://sourceforge.net/projects/tinyfiledialogs/) for file dialogs and [catch2](https://github.com/catchorg/Catch2) for testing.
 ![Image](.github/fullEditor.png)
 
 **1.** [Installation](#Installation)  
@@ -34,29 +34,22 @@ For more information on how to use the editor look at the [raynodes-wiki](https:
 
 ### For Users
 
-Just download the .zip for your operating system  from the most recent release in the [release page](https://github.com/gk646/raynodes/releases/tag/1.0.0).
+Just download the .zip for your operating system  from the most recent release in the [release page](https://github.com/gk646/raynodes/releases).
 Unzip and start the executable! Have fun using `raynodes`.
 
 ### For Developers
 
 This project uses CMake as buildsystem!
 
-To build the project locally you just need to do 2 simple steps:
+To build the project locally you just need to do 4 simple steps:
+
 1. Clone this git repository
-2. Supply the needed dependencies as specified inside the LoadLocalLibs.cmake
+2. Create a new directory inside the clone repository (e.g. cmake-build-debug)
+3. Configure the build from inside the build directory with `cmake ..`
+4. Build the project from inside the build directory with `make ..`
 
-```cmake
-set(DEPENDENCIES_PATH "C:/Users/gk646/Documents/Libraries") # Set to where your libraries are stored
-
-include_directories(
-        "${DEPENDENCIES_PATH}/raylib-master/src"  # Supply a clone of raylib.git
-        "${DEPENDENCIES_PATH}/raygui-master/src"  # Supply a clone of raygui.git
-        "${DEPENDENCIES_PATH}/tinyfiledialogs" # Download from here https://sourceforge.net/projects/tinyfiledialogs/
-        "${DEPENDENCIES_PATH}/cxstructs-master/include" # Supply a clone of cxstructs.git
-)
-```
-
-At some point I will probably add an alternative version that automatically downloads the dependencies.
+All external dependencies are included in the source!
+This model is chose based on their combined low size (only **14mb**) and the provided simplicity for sharing and integrated testing.
 
 ## Editor Features:
 
