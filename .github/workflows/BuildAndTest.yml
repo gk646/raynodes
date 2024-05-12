@@ -8,7 +8,6 @@ on:
 jobs:
   build-and-test:
     runs-on: ${{ matrix.os }}
-
     strategy:
       fail-fast: false
       matrix:
@@ -33,14 +32,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-build-
 
+      - name: Install dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y wayland-protocols
+
       - name: Configure CMake
-        run: |
-          cmake -B build \
-          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
-          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-          -S .
+        run: cmake -B build -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DRN_ENABLE_SANITIZER=OFF -DRN_BUILD_TESTS=ON -S .
         working-directory: ${{ github.workspace }}
+        shell:
+          ${{ matrix.os == 'windows-latest' ? 'C:\\Program Files\\PowerShell\\7\\pwsh.EXE -command ". \'{0}\'"': 'bash' } }
 
       - name: Build
         run: cmake --build build --config ${{ matrix.build_type }}
