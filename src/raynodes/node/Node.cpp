@@ -47,7 +47,7 @@ void UpdateNodePins(EditorContext& ec, Node& n) {
   }
 }
 
-void DrawNodePins(EditorContext& ec, Node& n) {
+void DrawNodePins(const EditorContext& ec, Node& n) {
   float posY = n.y + OFFSET_Y / 2.0F;
   const auto& font = ec.display.editorFont;
   const bool showText = ec.input.isKeyDown(KEY_LEFT_ALT);
@@ -79,9 +79,7 @@ void UpdateComponent(EditorContext& ec, Node& n, Component* c) {
   if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
     //First check if the mouse is close to the rect and mouse is pressed
     //TODO this check is done for all components / only needs to be done once
-    if (CheckCollisionPointRec(worldMouse, n.getExtendedBounds(Pin::PIN_SIZE))) {
-      CheckPinCollisions(ec, n, c);
-    }
+    if (CheckCollisionPointRec(worldMouse, n.getExtendedBounds(Pin::PIN_SIZE))) { CheckPinCollisions(ec, n, c); }
   }
 
   //Mouse Enter
@@ -150,7 +148,7 @@ void HandleHover(EditorContext& ec, Node& n, std::unordered_map<NodeID, Node*>& 
     if (moveAction == nullptr) {                    //Let's not leak too much...
       moveAction = new NodeMovedAction(static_cast<int>(selectedNodes.size()) + 1);
       for (auto pair : selectedNodes) {
-        auto node = pair.second;
+        const auto node = pair.second;
         moveAction->movedNodes.push_back({pair.first, {node->x, node->y}});
       }
     }
@@ -190,7 +188,7 @@ void HandleDrag(Node& n, EditorContext& ec, auto& selectedNodes, auto worldMouse
   }
 }
 
-void DrawComponentPins(EditorContext& ec, Component& c, float dx, float startIn, float startOut, float w) {
+void DrawComponentPins(const EditorContext& ec, Component& c, float dx, float startIn, float startOut, float w) {
   const bool showText = ec.input.isKeyDown(KEY_LEFT_ALT);
   const auto& font = ec.display.editorFont;
   // Draw Input Pins
@@ -241,12 +239,12 @@ void DrawComponent(EditorContext& ec, Node& n, Component& c, float dx, float& dy
 }
 }  // namespace
 
-Node::Node(const NodeTemplate& nt, Vec2 pos, NodeID id)
-    : name(nt.label), x(pos.x), y(pos.y), width(50), height(50), color(0, 0, 0, 255), uID(id) {
+Node::Node(const NodeTemplate& nt, const Vec2 pos, const NodeID id)
+    : x(pos.x), y(pos.y), width(50), height(50), color(0, 0, 0, 255), name(nt.label), uID(id) {
   outputs.push_back(OutputPin{NODE});
 }
 Node::Node(const Node& n, const NodeID id)
-    : name(n.name), x(n.x), y(n.y), width(n.width), height(n.height), color(n.color), uID(id) {
+    : x(n.x), y(n.y), width(n.width), height(n.height), color(n.color), name(n.name), uID(id) {
   for (const auto c : n.components) {
     auto clone = c->clone();
     for (auto& in : clone->inputs) {

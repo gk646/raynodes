@@ -20,6 +20,7 @@
 
 #ifndef CONTEXTUI_H
 #define CONTEXTUI_H
+#include "ui/Window.h"
 
 struct ContextMenuCategory {
   const char* name;
@@ -41,7 +42,6 @@ struct ContextMenu {
     categories.push_back(cat);
   }
 };
-
 
 // All the ui is made to be normed to 1920x1080 so FullHD
 // The methods allow you to always us absolute coordinates and then transferthem to real screen space
@@ -79,52 +79,68 @@ struct UI final {
                                         "#107#Zoom to Fit;"
                                         "#097#Grid";
 
-  static constexpr auto* settingsMenuText = "#181#User Interface;"
-                                            "#222#Updates";
-
-  static constexpr auto* helpMenuText = "#225#Wiki;"
-                                        "#224#Github;"
-                                        "#191#About";
-
   static constexpr float CONTEXT_MENU_THRESHOLD = 15.0F;
   static constexpr float UI_SPACE_W = 1920.0F;  // UI space width
   static constexpr float UI_SPACE_H = 1080.0F;  // UI space height
   static constexpr float PAD = 25.0F;           // UI space padding amount
 
   ContextMenu contextMenu;
-  float topBarHeight = 20;
-  ScaleDirection scaleDirection = HORIZONTAL;  // Used by ui functions to automatically apply correct offset
-  int settingsScrollIndex = 0;
-  int settingsActiveIndex = 0;
-  int helpScrollIndex = 0;
-  int helpActiveIndex = 0;
+  std::vector<Window*> windows;  // UI Windows
 
-  bool showTopBarOnlyOnHover = true;
-  bool showGrid = true;
+  // General State
   bool showUnsavedChanges = false;
+
+  // Dropdowns
   bool fileMenuState = false;  // FileMenu dropdown state
   bool editMenuState = false;  // EditMenu dropdown state
   bool viewMenuState = false;  // ViewMenu dropdown state
-  bool showSettingsMenu = false;
-  bool showHelpMenu = false;
 
-  // Tools
-  bool nodeCreatorEnabled = true;
+  // UI Elements
+  bool showActionHistory = true;
+  bool showMiniMap = true;
+
+  // Settings
+  bool showTopBarOnlyOnHover = false;
+  bool showGrid = true;
+
+  UI();
 
   // UI wrappers
   static int DrawListMenu(EditorContext& ec, bool& open, const char* title, const char* listText, int& active);
   static int DrawButton(EditorContext& ec, Rectangle& r, const char* txt);
   static int DrawButton(EditorContext& ec, Vector2& pos, float w, float h, const char* txt);
   static int DrawWindow(EditorContext& ec, const Rectangle& r, const char* txt);
-  // If icns is set it fill look for icons in the string
+  static const char* DrawTextPopUp(EditorContext& ec, const Rectangle& r, const char* text, bool& visible);
+  // If icns is set it will look for icons in the string
   static void DrawText(EditorContext& ec, Vector2 p, const char* txt, Color c = COLORS[UI_LIGHT], bool icns = false);
-  template <bool isBig= true>
-  constexpr static Rectangle GetCenteredWindow() {
+  static void DrawRect(EditorContext& ec, Rectangle rec, int borderWidth, Color borderColor, Color color);
+
+  // Allows to retrive the windows as both base class pointer and its direct class
+  template <class T = Window>
+  T* getWindow(WindowType type) {
+    Window* window = nullptr;
+    for (const auto w : windows) {
+      if (w->getType() == type) {
+        window = w;
+        break;
+      }
+    }
+
+    if (window == nullptr) return nullptr;
+    if constexpr (std::is_same_v<T, Window>) {
+      return window;
+    } else {
+      return static_cast<T*>(window);
+    }
+  }
+
+  template <bool isBig = true>
+  constexpr static Rectangle GetCenteredWindowBounds() {
     if constexpr (isBig) {
-      constexpr auto winX = 700.0F;
-      constexpr auto winW = 540.0F;
-      constexpr auto winY = 400.0F;
-      constexpr auto winH = 280.0F;
+      constexpr auto winX = 650.0F;
+      constexpr auto winW = 640.0F;
+      constexpr auto winY = 350.0F;
+      constexpr auto winH = 380.0F;
 
       return Rectangle{winX, winY, winW, winH};
     }

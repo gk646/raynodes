@@ -18,22 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
-#define RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
+#ifndef SETTINGSMENU_H
+#define SETTINGSMENU_H
 
-struct Info {
-  static constexpr auto applicationName = "raynodes";
-  static constexpr auto fileEnding = ".rn";
-  static constexpr const char* fileFilter[1] = {"*.rn"};
-  static constexpr auto fileDescription = "raynodes save (.rn)";
-  static constexpr auto wikiLink = "https://github.com/gk646/raynodes/wiki";
-  static constexpr auto github = "https://github.com/gk646/raynodes";
-  static constexpr auto about = "Copyright #226# 2024 gk646. MIT License";
-  static constexpr int majorVersion = 1;
-  static constexpr int minorVersion = 0;
-  static constexpr int patch = 2;
+#include "ui/Window.h"
+class SettingsMenu final : public Window {
+  static constexpr auto* menuText = "#181#User Interface;"
+                                    "#222#Updates";
+  int activeIndex = 0;
+  int scrollIndex = 0;
 
-  static const char* getVersion(EditorContext& ec);
+ public:
+  SettingsMenu(const Rectangle& r, const char* headerText) : Window(r, SETTINGS_MENU, headerText) {}
+  void drawContent(EditorContext& ec, const Rectangle& body) override;
 };
 
-#endif  //RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
+#endif  //SETTINGSMENU_H

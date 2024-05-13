@@ -34,10 +34,10 @@ void RegisterPlugin(EditorContext& ec, PluginContainer& pc) {
   printf("    > %s ", nameBuff);  // Print the initial loading message
 
   // Nodes
-  int nodesRegistered = static_cast<int>(ec.templates.nodeFactory.size());
+  int nodesRegistered = static_cast<int>(ec.templates.registeredNodes.size());
   NodeRegister nr(ec, pc);
   pc.plugin->registerNodes(nr);
-  nodesRegistered = static_cast<int>(ec.templates.nodeFactory.size()) - nodesRegistered;
+  nodesRegistered = static_cast<int>(ec.templates.registeredNodes.size()) - nodesRegistered;
   printf("Nodes: %s / ", ec.string.getPaddedNum(nodesRegistered));
 
   // Components

@@ -26,7 +26,7 @@
 #include "application/EditorContext.h"
 #include "component/Component.h"
 #include "application/elements/Action.h"
-#include "ui/TextField.h"
+#include "ui/elements/TextField.h"
 
 template <ComponentStyle style = IN_AND_OUT>
 class TextFieldC final : public Component {

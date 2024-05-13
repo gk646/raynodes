@@ -25,39 +25,51 @@ using Comp = cxstructs::StrEqual;
 using Hash = cxstructs::Fnv1aHash;
 
 using ComponentMap = std::unordered_map<const char*, ComponentCreateFunc, Hash, Comp>;
-using NodeTemplateMap = std::unordered_map<const char*, NodeTemplate, Hash, Comp>;
-using NodeCreateMap = std::unordered_map<const char*, NodeCreateFunc, Hash, Comp>;
+using NodeCreateMap = std::unordered_map<const char*, NodeInfo, Hash, Comp>;
 
 struct Template {
   ComponentMap componentFactory;
-  NodeTemplateMap nodeTemplates;
-  NodeCreateMap nodeFactory;
+  NodeCreateMap registeredNodes;
+  NodeCreateMap userDefinedNodes;
 
   // Passed name only has to be valid until this function returns (copied)
   bool registerComponent(const char* name, ComponentCreateFunc func, const PluginContainer& plugin);
   // "ComponentTemplate" MUST BE allocated and unchanged for the lifetime of the component
   Component* createComponent(const ComponentTemplate component) {
     const auto it = componentFactory.find(component.component);
-    if (it != componentFactory.end()) {
-      return it->second(component);  //Reuse the allocated name
-    }
-    return nullptr;
+    if (it == componentFactory.end()) [[unlikely]] { return nullptr; }
+    return it->second(component);  //Reuse the allocated name
   }
   // Passed template names only have to be valid until this function returns (copied)
   bool registerNode(const NodeTemplate& nt, NodeCreateFunc func, const PluginContainer& plugin);
   // Passed name only has to be valid until this function returns
   Node* createNode(const char* name, Vec2 pos, NodeID nodeID) {
-    const auto it = nodeTemplates.find(name);
-    if (it != nodeTemplates.end()) {
-      auto* node = nodeFactory[name](it->second, pos, nodeID);  // Has to exist
-      for (const auto component : it->second.components) {
-        if (component.component == nullptr) continue;  // We dont break for safety
-        auto* comp = createComponent(component);
-        if (comp) node->components.push_back(comp);
-      }
-      return node;
+    NodeInfo* info = nullptr;
+
+    if (registeredNodes.contains(name)) [[likely]] {
+      info = &registeredNodes[name];
+    } else if (userDefinedNodes.contains(name)) [[likely]] {
+      info = &userDefinedNodes[name];
+    } else {
+      fprintf(stderr, "No node registered with the name %s", name);
+      return nullptr;
     }
-    return nullptr;
+    if (info == nullptr) return nullptr;  // Safety
+
+    auto* node = info->createFunc(info->nTemplate, pos, nodeID);  // Has to exist
+    for (const auto component : info->nTemplate.components) {
+      if (component.component == nullptr) continue;  // We dont break for safety
+      auto* comp = createComponent(component);
+      if (comp) node->components.push_back(comp);
+      else fprintf(stderr, "No component registered with the name %s", component.component);
+    }
+    return node;
+  }
+
+  bool registerUserNode(const NodeTemplate& nt, NodeCreateFunc func) {
+
+    userDefinedNodes.insert({nt.label,{nt, func}});
+    return true;
   }
 };
 

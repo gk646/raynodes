@@ -18,22 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
-#define RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
+#include <raygui.h>
 
-struct Info {
-  static constexpr auto applicationName = "raynodes";
-  static constexpr auto fileEnding = ".rn";
-  static constexpr const char* fileFilter[1] = {"*.rn"};
-  static constexpr auto fileDescription = "raynodes save (.rn)";
-  static constexpr auto wikiLink = "https://github.com/gk646/raynodes/wiki";
-  static constexpr auto github = "https://github.com/gk646/raynodes";
-  static constexpr auto about = "Copyright #226# 2024 gk646. MIT License";
-  static constexpr int majorVersion = 1;
-  static constexpr int minorVersion = 0;
-  static constexpr int patch = 2;
+#include "SettingsMenu.h"
+#include "application/EditorContext.h"
 
-  static const char* getVersion(EditorContext& ec);
-};
+void SettingsMenu::drawContent(EditorContext& ec, const Rectangle& body) {
+  constexpr float listWidth = 150.0F;
+  const Rectangle listBounds = {body.x, body.y, listWidth, body.height};
+  GuiListView(ec.display.getFullyScaled(listBounds), menuText, &scrollIndex, &activeIndex);
 
-#endif  //RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
+  Vector2 topLeft = {body.x + listWidth + UI::PAD, body.y + UI::PAD};
+
+  if (activeIndex == 0) {  // User Interface
+    UI::DrawText(ec, topLeft, "Here will be UI options");
+  } else if (activeIndex == 1) {  // Updates
+    UI::DrawText(ec, topLeft, "Here will be automatic updates");
+  }
+}

@@ -34,8 +34,7 @@ inline float MeasureTextUpTo(char* text, int idx, const Font& f, const float fs,
 }
 
 //Horizontally centers the text
-inline void DrawCenteredText(const Font& f, const char* txt, const Vector2 pos, float fs, float spc,
-                             Color c) {
+inline void DrawCenteredText(const Font& f, const char* txt, const Vector2 pos, float fs, float spc, Color c) {
   const auto width = MeasureTextEx(f, txt, fs, spc).x;
   DrawTextEx(f, txt, {pos.x - width / 2.0F, pos.y}, fs, spc, c);
 }
@@ -55,13 +54,16 @@ inline bool CheckCollisionBezierRect(const Vector2 startPos, const Vector2 endPo
     current.x = startPos.x + t * (endPos.x - startPos.x);
     current.y = EaseCubicIn(t * numPoints, startPos.y, endPos.y - startPos.y, numPoints);
 
-    if (CheckCollisionPointRec(current, rect)) {
-      return true;
-    }
+    if (CheckCollisionPointRec(current, rect)) { return true; }
   }
   return false;
 }
 inline bool CheckExtendedRec(const Vector2 p, const Rectangle& r, float ext) {
   return CheckCollisionPointRec(p, {r.x - ext, r.y - ext, r.width + ext * 2, r.height + ext * 2});
 }
+
+inline float DistEuclidean(Vector2 vec1, Vector2 vec2) {
+  return std::sqrt((vec1.x - vec2.x) * (vec1.x - vec2.x) + (vec1.y - vec2.y) * (vec1.y - vec2.y));
+}
+
 #endif  //RAYNODES_SRC_SHARED_RAYUTILS_H_

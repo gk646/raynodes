@@ -20,6 +20,7 @@
 
 #ifndef RAYNODES_SRC_EDITOR_EDITORCONTROLS_H_
 #define RAYNODES_SRC_EDITOR_EDITORCONTROLS_H_
+#include "shared/rayutils.h"
 
 namespace Editor {
 //TODO split up
@@ -50,18 +51,16 @@ inline void PollControls(EditorContext& ec) {
 
   if (!ec.input.mouseConsumed) {
     camera.zoom += GetMouseWheelMove() * 0.05f;
-    camera.zoom = (camera.zoom > Display::MAX_ZOOM) ? Display::MAX_ZOOM : camera.zoom;
-    camera.zoom = (camera.zoom < Display::MIN_ZOOM) ? Display::MIN_ZOOM : camera.zoom;
+    camera.zoom = camera.zoom > Display::MAX_ZOOM ? Display::MAX_ZOOM : camera.zoom;
+    camera.zoom = camera.zoom < Display::MIN_ZOOM ? Display::MIN_ZOOM : camera.zoom;
   }
 
   //Context menu
-  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
-    contextMenuPos = mouse;
-  }
+  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_RIGHT)) { contextMenuPos = mouse; }
 
   if (ec.input.isMouseButtonReleased(MOUSE_BUTTON_RIGHT)) {
-    if (mouse.x == contextMenuPos.x && mouse.y == contextMenuPos.y) {
-      ec.logic.showContextMenu = !ec.logic.showContextMenu;
+    if (DistEuclidean(contextMenuPos, mouse) <= 5.0F) {
+      ec.logic.showContextMenu = true;
       ec.logic.isDraggingScreen = false;
       ec.logic.isSelecting = false;
       return;
@@ -89,8 +88,7 @@ inline void PollControls(EditorContext& ec) {
   }
 
   //Selecting
-  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !ec.logic.isAnyNodeHovered
-      && !ec.logic.showContextMenu) {
+  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !ec.logic.isAnyNodeHovered && !ec.logic.showContextMenu) {
     ec.logic.isSelecting = true;
     ec.logic.selectPoint = worldMouse;
     selectRect.width = 0;
@@ -98,25 +96,19 @@ inline void PollControls(EditorContext& ec) {
     selectedNodes.clear();
   }
 
-  if (ec.input.isMouseButtonReleased(MOUSE_BUTTON_RIGHT)) {
-    ec.logic.isSelecting = false;
-  }
+  if (ec.input.isMouseButtonReleased(MOUSE_BUTTON_RIGHT)) { ec.logic.isSelecting = false; }
 
   //Delete
-  if (ec.input.isKeyPressed(KEY_DELETE) || ec.input.isKeyPressed(KEY_BACKSPACE)) {
-    ec.core.erase(ec);
-  }
+  if (ec.input.isKeyPressed(KEY_DELETE) || ec.input.isKeyPressed(KEY_BACKSPACE)) { ec.core.erase(ec); }
 
   //My keyboard...
   //Redo
-  if ((ec.input.isKeyPressed(KEY_Z) || ec.input.isKeyPressedRepeat(KEY_Z))
-      && ec.input.isKeyDown(KEY_LEFT_CONTROL)) {
+  if ((ec.input.isKeyPressed(KEY_Z) || ec.input.isKeyPressedRepeat(KEY_Z)) && ec.input.isKeyDown(KEY_LEFT_CONTROL)) {
     ec.core.redo(ec);
   }
 
   //Undo
-  if ((ec.input.isKeyPressed(KEY_Y) || ec.input.isKeyPressedRepeat(KEY_Y))
-      && ec.input.isKeyDown(KEY_LEFT_CONTROL)) {
+  if ((ec.input.isKeyPressed(KEY_Y) || ec.input.isKeyPressedRepeat(KEY_Y)) && ec.input.isKeyDown(KEY_LEFT_CONTROL)) {
     ec.core.undo(ec);
   }
 

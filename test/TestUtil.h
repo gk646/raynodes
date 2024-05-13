@@ -24,14 +24,15 @@
 #include "shared/fwd.h"
 #include "application/EditorContext.h"
 #include "plugin/RegisterInterface.h"
-#include "../plugins/BuiltIns/components/TextOutC.h"
+#include <cxutil/cxio.h>
+#include "../plugins/BuiltIns/components/TextFieldC.h"
 
 namespace {
 void registerNodes(EditorContext& ec) {
   PluginContainer pc{nullptr, "_Dummy_", nullptr};
   NodeRegister nr{ec, pc};
   ComponentRegister cr{ec, pc};
-  cr.registerComponent<TextOutputC>("TextOut");
+  cr.registerComponent<TextFieldC<IN_AND_OUT>>("TextOut");
   nr.registerNode("DummyN", {{"DummyC", "TextOut"}});
 }
 

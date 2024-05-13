@@ -31,7 +31,7 @@ TEST_CASE("Test correct saving and loading", "[Persist]") {
 
   for (int i = 0; i < testSize; ++i) {
     auto node = ec.core.createNode(ec, "DummyN", {0, 0});
-    auto* comp = node->getComponent<TextOutputC>("TextField");
+    auto* comp = node->getComponent<TextFieldC<IN_AND_OUT>>("TextField");
   }
 
   REQUIRE(ec.core.nodes.size() == testSize);

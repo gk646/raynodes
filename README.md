@@ -19,8 +19,8 @@ A small showcase of its major features:
 
 For more infos on the design choices go to [Software Design](#Software-Design)  
 For more information on how to use the editor look at the [raynodes-wiki](https://github.com/gk646/raynodes/wiki).  
-
 The other dependencies are [cxstructs](https://github.com/gk646/cxstructs), [tinyfiledialogs](https://sourceforge.net/projects/tinyfiledialogs/) for file dialogs and [catch2](https://github.com/catchorg/Catch2) for testing.
+
 ![Image](.github/fullEditor.png)
 
 **1.** [Installation](#Installation)  

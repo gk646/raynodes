@@ -30,8 +30,8 @@ bool Template::registerComponent(const char* name, ComponentCreateFunc func, con
   return true;
 }
 
-bool Template::registerNode(const NodeTemplate& nt, NodeCreateFunc func,const PluginContainer& pc) {
-  if (nodeFactory.contains(nt.label)) {
+bool Template::registerNode(const NodeTemplate& nt, NodeCreateFunc func, const PluginContainer& pc) {
+  if (registeredNodes.contains(nt.label)) {
     auto* format = "Naming collision: %s/%s wont be loaded. Please contact the plugin author.\n";
     fprintf(stderr, format, pc.name, nt.label);
     return false;
@@ -46,7 +46,6 @@ bool Template::registerNode(const NodeTemplate& nt, NodeCreateFunc func,const Pl
     newTemplate.components[i].label = cxstructs::str_dup(nt.components[i].label);
   }
 
-  nodeTemplates.insert({newTemplate.label, newTemplate});
-  nodeFactory.insert({newTemplate.label, func});
+  registeredNodes.insert({newTemplate.label, NodeInfo{newTemplate, func}});
   return true;
 }

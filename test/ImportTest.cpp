@@ -248,7 +248,7 @@ TEST_CASE("Test completeness - static tests", "[Import]") {
   REQUIRE(rn.nodeCnt == 6);
   REQUIRE(rn.connCnt == 6);
 
-  REQUIRE(rn.templates[0].isNodeName(rn.fileData, "Dialog Choice") == true);
+  REQUIRE(rn.templates[9].isNodeName(rn.fileData, "Dialog Choice") == true);
 
   REQUIRE(rn.connections[1].fromNode == 3);
   REQUIRE(rn.connections[1].fromComponent == -1);

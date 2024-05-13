@@ -71,6 +71,15 @@ struct NodeTemplate {
   ComponentTemplate components[COMPS_PER_NODE];  // Current limit
 };
 
+struct Node;
+enum NodeID : uint16_t;
+using NodeCreateFunc = Node* (*)(const NodeTemplate&, Vec2, NodeID);  // Creates a new node
+
+struct NodeInfo {
+  NodeTemplate nTemplate{};
+  NodeCreateFunc createFunc = nullptr;
+};
+
 // E = Editor
 // N = Node
 // C = Component
@@ -82,4 +91,5 @@ enum ScaleDirection : uint8_t { HORIZONTAL, VERTICAL };
 // This is mostly cosmetic - for example if you have a complex node and only wanna output node level, you can make the components have no outputs
 enum ComponentStyle : uint8_t { INPUT_ONLY, OUTPUT_ONLY, IN_AND_OUT };
 
+enum WindowType : uint8_t { SETTINGS_MENU, HELP_MENU, NODE_CREATOR };
 #endif  //TYPES_H

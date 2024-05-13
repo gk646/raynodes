@@ -22,10 +22,21 @@
 #include <cxutil/cxstring.h>
 #include "application/EditorContext.h"
 
+#include "ui/windows/HelpMenu.h"
+#include "ui/windows/NodeCreator.h"
+#include "ui/windows/SettingsMenu.h"
+
+UI::UI() {
+  const auto bounds = GetCenteredWindowBounds<true>();
+  windows.push_back(new HelpMenu(bounds, "Help"));
+  windows.push_back(new SettingsMenu(bounds, "Settings"));
+  windows.push_back(new NodeCreator(bounds, "Node Creator"));
+}
+
 int UI::DrawListMenu(EditorContext& ec, bool& open, const char* title, const char* listText, int& active) {
-  if (!open) return -1;
   if (ec.input.isKeyPressed(KEY_ESCAPE)) open = false;
-  auto windowRect = GetCenteredWindow();
+  if (!open) return -1;
+  const auto windowRect = GetCenteredWindowBounds();
   if (DrawWindow(ec, windowRect, title)) { open = false; }
   constexpr float pad = 25.0F;
   constexpr float listW = 150.0F;
@@ -39,9 +50,6 @@ int UI::DrawButton(EditorContext& ec, Rectangle& r, const char* txt) {
   const auto bounds = ec.display.getFullyScaled(r);
   const auto res = GuiButton(bounds, txt);
 
-  if (ec.ui.scaleDirection == HORIZONTAL) r.x += r.width;
-  else r.y += r.height;
-
   if (res || (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(ec.logic.mouse, bounds))) {
     ec.input.consumeMouse();  // Consume mouse so click doesnt propagate
   }
@@ -50,9 +58,6 @@ int UI::DrawButton(EditorContext& ec, Rectangle& r, const char* txt) {
 int UI::DrawButton(EditorContext& ec, Vector2& pos, float w, float h, const char* txt) {
   const auto bounds = ec.display.getFullyScaled({pos.x, pos.y, w, h});
   const auto res = GuiButton(bounds, txt);
-
-  if (ec.ui.scaleDirection == HORIZONTAL) pos.x += w;
-  else pos.y += h;
 
   if (res || (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(ec.logic.mouse, bounds))) {
     ec.input.consumeMouse();  // Consume mouse so click doesnt propagate
@@ -68,6 +73,51 @@ int UI::DrawWindow(EditorContext& ec, const Rectangle& r, const char* txt) {
   }
   return res;
 }
+const char* UI::DrawTextPopUp(EditorContext& ec, const Rectangle& r, const char* text, bool& visible) {
+  const auto& font = ec.display.editorFont;
+  const auto fs = ec.display.fontSize;
+
+  static bool textBoxActive = false;
+
+  if (visible) {
+    Rectangle popupRec = ec.display.getFullyScaled(r);
+    DrawRectangleRec(popupRec, Fade(GRAY, 0.5f));  // Draw background rectangle
+    DrawTextEx(font, text, {popupRec.x + 10, popupRec.y + 10}, fs, 0.0, BLACK);
+
+    // Define positions and sizes for the text box and buttons
+    Rectangle textBoxRect = ec.display.getFullyScaled({r.x + 10, r.y + 30, r.width - 20, 20});
+    Rectangle confirmButton = {popupRec.x + 10, popupRec.y + 60, popupRec.width / 2 - 15, 30};
+    Rectangle cancelButton = {popupRec.x + popupRec.width / 2 + 5, popupRec.y + 60, popupRec.width / 2 - 15, 30};
+
+    // Text input box
+    if (GuiTextBox(textBoxRect, ec.string.buffer + String::BUFFER_SIZE / 2, String::BUFFER_SIZE / 2,
+                   textBoxActive)) {
+      textBoxActive = true;  // The text box is active when clicked or when typing
+    }
+
+    // Confirm button
+    if (GuiButton(confirmButton, "Confirm")) {
+      visible = false;        // Hide popup
+      textBoxActive = false;  // Reset text box active state
+      if (strlen(ec.string.buffer + String::BUFFER_SIZE / 2) > 0) {
+        return ec.string.buffer + String::BUFFER_SIZE / 2;  // Return the input text only if not empty
+      }
+    }
+
+    // Cancel button
+    if (GuiButton(cancelButton, "Cancel")) {
+      visible = false;                                       // Hide popup
+      textBoxActive = false;                                 // Reset text box active state
+      *(ec.string.buffer + String::BUFFER_SIZE / 2) = '\0';  // Clear the buffer
+    }
+
+    // Keep the popup open if neither confirm nor cancel is pressed
+    return nullptr;
+  }
+
+  return nullptr;
+}
+
 void UI::DrawText(EditorContext& ec, Vector2 pos, const char* txt, Color c, bool hasIcons) {
   const auto& font = ec.display.editorFont;
   const auto& fs = ec.display.fontSize;
@@ -87,7 +137,7 @@ void UI::DrawText(EditorContext& ec, Vector2 pos, const char* txt, Color c, bool
         }
         p++;
         int iconID = cxstructs::str_parse_int(p);
-        GuiDrawIcon(iconID, pos.x , pos.y, 1, COLORS[UI_DARK]);
+        GuiDrawIcon(iconID, pos.x, pos.y, 1, COLORS[UI_DARK]);
         p += 4;
         start = p;
         pos.x += 16;
@@ -100,7 +150,6 @@ void UI::DrawText(EditorContext& ec, Vector2 pos, const char* txt, Color c, bool
     DrawTextEx(font, txt, pos, fs, 1.0F, c);
   }
 }
-
 void UI::invokeFileMenu(EditorContext& ec, int i) {
   if (i == -1 || i == 0) return;
   if (i == 1) ec.core.newFile(ec);
@@ -130,3 +179,20 @@ void UI::invokeViewMenu(EditorContext& ec, int i) {
 }
 void UI::invokeHelpMenu(EditorContext& ec, int i) {}
 void UI::invokeSettingsMenu(EditorContext& ec, int i) {}
+void UI::DrawRect(EditorContext& ec, Rectangle rec, int borderWidth, Color borderColor, Color color) {
+  // Copied from raygui.h
+  rec = ec.display.getFullyScaled(rec);
+  if (color.a > 0) {
+    // Draw rectangle filled with color
+    DrawRectangle((int)rec.x, (int)rec.y, (int)rec.width, (int)rec.height, color);
+  }
+
+  if (borderWidth > 0) {
+    // Draw rectangle border lines with color
+    DrawRectangle((int)rec.x, (int)rec.y, (int)rec.width, borderWidth, borderColor);
+    DrawRectangle((int)rec.x, (int)rec.y + borderWidth, borderWidth, (int)rec.height - 2 * borderWidth, borderColor);
+    DrawRectangle((int)rec.x + (int)rec.width - borderWidth, (int)rec.y + borderWidth, borderWidth,
+                  (int)rec.height - 2 * borderWidth, borderColor);
+    DrawRectangle((int)rec.x, (int)rec.y + (int)rec.height - borderWidth, (int)rec.width, borderWidth, borderColor);
+  }
+}
