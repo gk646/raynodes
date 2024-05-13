@@ -94,7 +94,7 @@ void CreateNewConnection(EditorContext& ec, int fromID, int fromI, int outI, int
   if (toI != -1) {
     to = toNode.components[static_cast<int8_t>(toI)];
     in = &to->inputs[static_cast<int8_t>(inI)];
-  } else if (inI == 0) {
+  } else {
     in = &toNode.nodeIn;
   }
 
@@ -113,15 +113,16 @@ void SaveEditorData(FILE* file, EditorContext& ec) {
 }
 void SaveTemplates(FILE* file, EditorContext& ec) {
   io_save_section(file, "Templates");
-  io_save(file, (int)ec.templates.nodeTemplates.size());
+  io_save(file, (int)ec.templates.registeredNodes.size());
   io_save_newline(file);
-  for (const auto& nt : ec.templates.nodeTemplates | std::views::values) {
-    io_save(file, compIndices.add(nt.label));  // The arbitrary id
-    io_save(file, nt.label);
-    for (const auto& [label, component] : nt.components) {
+  for (const auto& nt : ec.templates.registeredNodes | std::views::values) {
+    io_save(file, compIndices.add(nt.nTemplate.label));  // The arbitrary id of the template
+    io_save(file, nt.nTemplate.label);                   // The node name
+    for (const auto& [label, component] : nt.nTemplate.components) {
       io_save(file, label == nullptr ? "" : label);
     }
-    io_save(file, ColorToInt({nt.color.r, nt.color.g, nt.color.b, nt.color.a}));
+    const auto [r, g, b, a] = nt.nTemplate.color;
+    io_save(file, ColorToInt({r, g, b, a}));
     io_save_newline(file);
   }
 }
@@ -184,12 +185,13 @@ void LoadTemplates(FILE* file, EditorContext& ec) {
     io_load_newline(file, true);
   }
 }
+
 int LoadNodes(FILE* file, EditorContext& ec) {
   int count = 0;
   while (io_load_inside_section(file, "Nodes")) {
     int index = -1;
     io_load(file, index);
-    if(index == -1) {
+    if (index == -1) {
       io_load_newline(file, true);
       continue;
     }
@@ -284,7 +286,7 @@ bool Persist::loadFromFile(EditorContext& ec) {
 
   const auto* path = openedFilePath.c_str();
 
-  file = fopen( path, "rb");
+  file = fopen(path, "rb");
 
   if (file == nullptr) {
     fprintf(stderr, "Unable to open file %s\n", path);

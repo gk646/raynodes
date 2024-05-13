@@ -30,6 +30,12 @@
 #include "components/Vec2C.h"
 #include "components/Vec3C.h"
 
+//=============================
+//raynodes Standard Library
+//=============================
+
+// These are basic components you can use for any custom nodes
+
 void BuiltIns::registerComponents(ComponentRegister& cr) {
   cr.registerComponent<MathC>("BI_MathOp");
   cr.registerComponent<DisplayC>("BI_Display");
@@ -58,8 +64,6 @@ void BuiltIns::registerComponents(ComponentRegister& cr) {
   cr.registerComponent<Vec2C<OUTPUT_ONLY>>("BI_Vec2_Out");
 }
 
-// IMPORTANT :: DONT CHANGE ORDER -> Will invalidate all saves made
-// TODO properly manage that -> maybe register with a number region?
 void BuiltIns::registerNodes(NodeRegister& nr) {
   // Misc
   nr.registerNode("MathOp", {{"Operation", "BI_MathOp"}});
@@ -75,5 +79,4 @@ void BuiltIns::registerNodes(NodeRegister& nr) {
   nr.registerNode("NumberField", {{"Number", "BI_Number_Out"}});
   nr.registerNode("Vector3", {{"Vec3", "BI_Vec3_Out"}});
   nr.registerNode("Vector2", {{"Vec2", "BI_Vec2_Out"}});
-
 }

@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "ui/TextField.h"
+#include "ui/elements/TextField.h"
 
 #include <cxutil/cxmath.h>
 

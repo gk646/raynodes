@@ -217,7 +217,7 @@ inline void DrawTopBar(EditorContext& ec) {
     return -1;
   };
 
-  const auto height = ec.ui.topBarHeight;
+  const auto height = 20;
   const auto width = 140.0F;
   auto bounds = Rectangle{20, 5, width, height};
 
@@ -231,15 +231,12 @@ inline void DrawTopBar(EditorContext& ec) {
   res = dropDown(ec, bounds, UI::viewMenuText, ec.ui.viewMenuState);
   UI::invokeViewMenu(ec, res);
 
-  ec.ui.scaleDirection = HORIZONTAL;
   auto buttonBounds = Rectangle{1860, 5.0F, 24.0F, 24.0F};
-  if (UI::DrawButton(ec, buttonBounds, "#141#")) ec.ui.showSettingsMenu = !ec.ui.showSettingsMenu;
-
-  if (UI::DrawButton(ec, buttonBounds, "#193#")) ec.ui.showHelpMenu = !ec.ui.showHelpMenu;
+  if (UI::DrawButton(ec, buttonBounds, "#141#")) ec.ui.getWindow(SETTINGS_MENU)->openWindow();
+  buttonBounds.x += 24.0F;
+  if (UI::DrawButton(ec, buttonBounds, "#193#")) ec.ui.getWindow(HELP_MENU)->openWindow();
 
   // Draw tool toggle buttons
-
-
 }
 inline void DrawStatusBar(EditorContext& ec) {
   constexpr float height = 20.0F;
@@ -291,7 +288,7 @@ inline void DrawStatusBar(EditorContext& ec) {
 inline void DrawUnsavedChanges(EditorContext& ec) {
   if (!ec.ui.showUnsavedChanges) return;
 
-  auto windowRect = UI::GetCenteredWindow<false>();  // Centered rect in ui space
+  auto windowRect = UI::GetCenteredWindowBounds<false>();  // Centered rect in ui space
 
   // Get information string
   const char* fileName = GetFileName(ec.persist.openedFilePath.c_str());
@@ -302,44 +299,29 @@ inline void DrawUnsavedChanges(EditorContext& ec) {
   windowRect.y = windowRect.y + 30;
   windowRect.height = 50.0F;
 
-  ec.ui.scaleDirection = VERTICAL;
   if (UI::DrawButton(ec, windowRect, "#002#Save")) {
     ec.persist.saveToFile(ec);
     ec.ui.showUnsavedChanges = false;
     //TODO respect user intent and execute next action -> need to save how user got here
   }
+  windowRect.y += 30.0F;
   if (UI::DrawButton(ec, windowRect, "#159#Don't Save")) {
     ec.ui.showUnsavedChanges = false;
     ec.core.hasUnsavedChanges = false;
     if (ec.core.requestedClose) ec.core.closeApplication = true;
   }
+  windowRect.y += 30.0F;
   if (UI::DrawButton(ec, windowRect, "#072#Cancel")) { ec.ui.showUnsavedChanges = false; }
 }
-inline void DrawSettingsMenu(EditorContext& ec) {
-  auto r = UI::DrawListMenu(ec, ec.ui.showSettingsMenu, "Settings", UI::settingsMenuText, ec.ui.settingsActiveIndex);
-  auto winBounds = UI::GetCenteredWindow();
-  Vector2 topLeft = {winBounds.x + 150.0F + UI::PAD, winBounds.y + UI::PAD};  // Hardcoded from DrawListMenu
-
-  if (r == 0) {  // User Interface
-    UI::DrawText(ec, topLeft, "Here will be UI options");
-  } else if (r == 1) {  // Updates
-    UI::DrawText(ec, topLeft, "Here will be automatic updates");
+inline void DrawSideBar(EditorContext& ec) {
+  Rectangle button = {5, 250, 25, 25};
+  if (GuiButton(ec.display.getFullyScaled(button), "Create custom Node")) {
+    ec.ui.getWindow(NODE_CREATOR)->openWindow();
   }
 }
-inline void DrawHelpMenu(EditorContext& ec) {
-  auto r = UI::DrawListMenu(ec, ec.ui.showHelpMenu, "Help", UI::helpMenuText, ec.ui.helpActiveIndex);
-  auto winBounds = UI::GetCenteredWindow();
-  Vector2 topLeft = {winBounds.x + 150.0F + UI::PAD, winBounds.y + UI::PAD};  // Hardcoded from DrawListMenu
-
-  if (r == 0) {  // Wiki
-    if (UI::DrawButton(ec, topLeft, 150, 25, "Open the Wiki")) { OpenURL(Info::wikiLink); }
-  } else if (r == 1) {  // Github
-    if (UI::DrawButton(ec, topLeft, 150, 25, "Open the github page")) { OpenURL(Info::github); }
-  } else if (r == 2) {  // About
-    ec.string.formatText("%s %s", Info::applicationName, Info::getVersion(ec));
-    UI::DrawText(ec, topLeft, ec.string.buffer);
-    topLeft.y += UI::PAD;
-    UI::DrawText(ec, topLeft, Info::about, UI::COLORS[UI_LIGHT], true);
+inline void DrawWindows(EditorContext& ec) {
+  for (const auto w : ec.ui.windows) {
+    w->draw(ec);
   }
 }
 }  // namespace Editor

@@ -18,22 +18,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
-#define RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
+#ifndef NODECREATOR_H
+#define NODECREATOR_H
 
-struct Info {
-  static constexpr auto applicationName = "raynodes";
-  static constexpr auto fileEnding = ".rn";
-  static constexpr const char* fileFilter[1] = {"*.rn"};
-  static constexpr auto fileDescription = "raynodes save (.rn)";
-  static constexpr auto wikiLink = "https://github.com/gk646/raynodes/wiki";
-  static constexpr auto github = "https://github.com/gk646/raynodes";
-  static constexpr auto about = "Copyright #226# 2024 gk646. MIT License";
-  static constexpr int majorVersion = 1;
-  static constexpr int minorVersion = 0;
-  static constexpr int patch = 2;
+#include "ui/Window.h"
+#include "ui/elements/TextField.h"
 
-  static const char* getVersion(EditorContext& ec);
+class NodeCreator final : public Window {
+  TextInputField searchField{150, 18};
+  Node* activeNode = nullptr;
+  int activeEntry = 0;
+  bool showNamePopup = false;
+
+ public:
+  NodeCreator(const Rectangle& r, const char* headerText) : Window(r, NODE_CREATOR, headerText) {}
+  void drawContent(EditorContext& ec, const Rectangle& body) override;
+
+ private:
 };
 
-#endif  //RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
+#endif  //NODECREATOR_H

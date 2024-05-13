@@ -24,6 +24,7 @@
 #include <cxstructs/Constraint.h>
 
 #include "shared/rayutils.h"
+#include "ui/Window.h"
 
 #include "application/elements/Action.h"
 #include "application/editor/EditorControls.h"
@@ -63,8 +64,8 @@ void DrawBackGround(EditorContext& ec) {
     Editor::DrawActions(ec);
     Editor::DrawTopBar(ec);
     Editor::DrawStatusBar(ec);
-    Editor::DrawSettingsMenu(ec);
-    Editor::DrawHelpMenu(ec);
+    Editor::DrawSideBar(ec);
+    Editor::DrawWindows(ec);
     Editor::DrawUnsavedChanges(ec);
   }
   EndTextureMode();
