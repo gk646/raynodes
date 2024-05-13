@@ -64,7 +64,7 @@ struct Component {                                                   // Ordered 
   const char* const id;                                              // Uniquely identifying id (allocated ptr)
 
   explicit Component(const ComponentTemplate ct, uint16_t w = 0, uint16_t h = 0)
-      : id(ct.component), label(ct.label), width(w), height(h) {}
+      : width(w), height(h), label(ct.label), id(ct.component) {}
   virtual ~Component() = default;
 
   //-----------CORE-----------//

@@ -22,7 +22,7 @@
 #define DIALOGUECHOICEC_H
 
 #include "component/Component.h"
-#include "ui/TextField.h"
+#include "ui/elements/TextField.h"
 #include "application/elements/Action.h"
 
 class DialogChoiceC final : public Component {

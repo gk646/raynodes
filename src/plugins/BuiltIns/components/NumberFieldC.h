@@ -27,7 +27,7 @@
 
 #include "application/EditorContext.h"
 #include "application/elements/Action.h"
-#include "ui/TextField.h"
+#include "ui/elements/TextField.h"
 
 template <ComponentStyle style = IN_AND_OUT>
 class NumberFieldC final : public Component {

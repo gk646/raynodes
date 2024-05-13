@@ -25,7 +25,7 @@
 #include <string>
 
 #include "application/EditorContext.h"
-#include "ui/TextField.h"
+#include "ui/elements/TextField.h"
 
 template <ComponentStyle style = IN_AND_OUT>
 class Vec3C final : public Component {

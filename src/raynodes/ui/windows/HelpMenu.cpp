@@ -18,22 +18,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
-#define RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
+#include <raygui.h>
 
-struct Info {
-  static constexpr auto applicationName = "raynodes";
-  static constexpr auto fileEnding = ".rn";
-  static constexpr const char* fileFilter[1] = {"*.rn"};
-  static constexpr auto fileDescription = "raynodes save (.rn)";
-  static constexpr auto wikiLink = "https://github.com/gk646/raynodes/wiki";
-  static constexpr auto github = "https://github.com/gk646/raynodes";
-  static constexpr auto about = "Copyright #226# 2024 gk646. MIT License";
-  static constexpr int majorVersion = 1;
-  static constexpr int minorVersion = 0;
-  static constexpr int patch = 2;
+#include "HelpMenu.h"
+#include "application/EditorContext.h"
 
-  static const char* getVersion(EditorContext& ec);
-};
+void HelpMenu::drawContent(EditorContext& ec, const Rectangle& body) {
+  constexpr float listWidth = 150.0F;
+  const Rectangle listBounds = {body.x, body.y , listWidth, body.height};
+  GuiListView(ec.display.getFullyScaled(listBounds), menuText, &scrollIndex, &activeIndex);
 
-#endif  //RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
+  Vector2 topLeft = {body.x + listWidth + UI::PAD, body.y + UI::PAD};
+
+  if (activeIndex == 0) {  // Wiki
+    if (UI::DrawButton(ec, topLeft, 150, 25, "Open the Wiki")) { OpenURL(Info::wikiLink); }
+  } else if (activeIndex == 1) {  // Github
+    if (UI::DrawButton(ec, topLeft, 150, 25, "Open the github page")) { OpenURL(Info::github); }
+  } else if (activeIndex == 2) {  // About
+    ec.string.formatText("%s %s", Info::applicationName, Info::getVersion(ec));
+    UI::DrawText(ec, topLeft, ec.string.buffer);
+    topLeft.y += UI::PAD;
+    UI::DrawText(ec, topLeft, Info::about, UI::COLORS[UI_LIGHT], true);
+  }
+}

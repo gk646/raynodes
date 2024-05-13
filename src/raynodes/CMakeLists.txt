@@ -19,7 +19,7 @@ if (MSVC)
     target_sources(raynodes PRIVATE shared/app.rc) # Add the icon resource file
     target_link_libraries(raynodes PRIVATE user32) # Need to link to avoid duplicate symbols
     add_custom_command(TARGET raynodes POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E rename
+            COMMAND ${CMAKE_COMMAND} -E copy
             "${CMAKE_BINARY_DIR}/raylib/raylib/raylib.dll"
             "${CMAKE_BINARY_DIR}/raylib.dll"
             COMMENT "Moving raylib.dll to project binary directory"
@@ -27,9 +27,14 @@ if (MSVC)
 
 else ()
     add_custom_command(TARGET raynodes POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E rename
+            COMMAND ${CMAKE_COMMAND} -E copy
             "${CMAKE_BINARY_DIR}/raylib/raylib/libraylib.so"
             "${CMAKE_BINARY_DIR}/libraylib.so"
             COMMENT "Moving raylib.so to project binary directory"
     )
+endif ()
+
+
+if (RN_BUILD_RELEASE)
+    include(${CMAKE_SOURCE_DIR}/cmake/BuildRelease.cmake)
 endif ()

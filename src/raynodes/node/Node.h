@@ -56,7 +56,7 @@ struct Node {                                                             // Ord
   bool isDragged = false;                                                 // If the node is dragged
   const char* const name = nullptr;                                       //Unique allocated name
   const NodeID uID;                                                       // Unqiue node ID
-  InputPin nodeIn{NODE};                                                  // Allow node-to-node connections
+  InputPin nodeIn{NODE};                                               // Allow node-to-node connections
   cxstructs::StackVector<OutputPin, NODE_OUTPUT_PINS, int8_t> outputs;    // Allow node-to-node connections
 
   explicit Node(const NodeTemplate& nt, Vec2 pos, NodeID id);

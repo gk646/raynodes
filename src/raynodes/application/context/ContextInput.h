@@ -28,7 +28,7 @@ struct Input {
     return !mouseConsumed && IsMouseButtonPressed(button);
   }
   [[nodiscard]] bool isMouseButtonReleased(const int button) const {
-    return !mouseConsumed && IsMouseButtonReleased(button);
+    return mouseConsumed || IsMouseButtonReleased(button);
   }
   [[nodiscard]] bool isMouseButtonDown(const int button) const {
     return !mouseConsumed && IsMouseButtonDown(button);
