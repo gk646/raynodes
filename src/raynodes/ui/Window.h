@@ -25,6 +25,10 @@ class Window {
   void openWindow() noexcept;
   // Opens the window
   void closeWindow() noexcept;
+  void toggleWindow() noexcept {
+    if (isWindowOpen) closeWindow();
+    else openWindow();
+  }
 
   // Getters
   [[nodiscard]] WindowType getType() const { return type; }

@@ -75,15 +75,9 @@ Node* Core::createNode(EditorContext& ec, const char* name, const Vector2 worldP
   //Use the hint when provided
   const auto nodeID = hint == UINT16_MAX ? getID() : static_cast<NodeID>(hint);
 
-  Node* newNode = ec.templates.createNode(name, {worldPos.x, worldPos.y}, nodeID);
+  // Calls event function internally
+  Node* newNode = ec.templates.createNode(ec, name, {worldPos.x, worldPos.y}, nodeID);
   if (!newNode) return nullptr;
-
-  // Call event functions
-  for (const auto c : newNode->components) {
-    c->onCreate(ec, *newNode);
-  }
-
-  newNode->onCreation(ec);  // Called after all components
 
   insertNode(ec, *newNode);
 
@@ -109,8 +103,7 @@ void Core::removeNode(EditorContext& ec, NodeID id) {
 
 void Core::paste(EditorContext& ec) const {
   if (copiedNodes.empty()) return;
-  const Vector2 delta = {ec.logic.worldMouse.x - copiedNodes[0]->x,
-                         ec.logic.worldMouse.y - copiedNodes[0]->y};
+  const Vector2 delta = {ec.logic.worldMouse.x - copiedNodes[0]->x, ec.logic.worldMouse.y - copiedNodes[0]->y};
 
   const auto action = new NodeCreateAction(static_cast<int>(copiedNodes.size()) + 1);
   // It can happen here that we try to copy deleted nodes

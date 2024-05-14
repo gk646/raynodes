@@ -23,7 +23,7 @@
 #include <raygui.h>
 
 bool Display::loadResources(EditorContext& /**/) {
-  editorFont = LoadFontEx("res/monogram.ttf",128,nullptr,95);
+  editorFont = LoadFontEx("res/monogram.ttf",64,nullptr,95);
   GuiSetFont(editorFont);
   GuiLoadIcons("res/iconset.rgi", false);
   SetWindowIcon(LoadImage("res/icon.png"));

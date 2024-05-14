@@ -104,11 +104,12 @@ struct UI final {
   bool showGrid = true;
 
   UI();
+  bool loadUI(EditorContext& ec);
 
   // UI wrappers
   static int DrawListMenu(EditorContext& ec, bool& open, const char* title, const char* listText, int& active);
-  static int DrawButton(EditorContext& ec, Rectangle& r, const char* txt);
-  static int DrawButton(EditorContext& ec, Vector2& pos, float w, float h, const char* txt);
+  static int DrawButton(EditorContext& ec, const Rectangle& r, const char* txt);
+  static int DrawButton(EditorContext& ec, const Vector2& pos, float w, float h, const char* txt);
   static int DrawWindow(EditorContext& ec, const Rectangle& r, const char* txt);
   static const char* DrawTextPopUp(EditorContext& ec, const Rectangle& r, const char* text, bool& visible);
   // If icns is set it will look for icons in the string

@@ -232,9 +232,9 @@ inline void DrawTopBar(EditorContext& ec) {
   UI::invokeViewMenu(ec, res);
 
   auto buttonBounds = Rectangle{1860, 5.0F, 24.0F, 24.0F};
-  if (UI::DrawButton(ec, buttonBounds, "#141#")) ec.ui.getWindow(SETTINGS_MENU)->openWindow();
+  if (UI::DrawButton(ec, buttonBounds, "#141#")) ec.ui.getWindow(SETTINGS_MENU)->toggleWindow();
   buttonBounds.x += 24.0F;
-  if (UI::DrawButton(ec, buttonBounds, "#193#")) ec.ui.getWindow(HELP_MENU)->openWindow();
+  if (UI::DrawButton(ec, buttonBounds, "#193#")) ec.ui.getWindow(HELP_MENU)->toggleWindow();
 
   // Draw tool toggle buttons
 }
@@ -314,9 +314,9 @@ inline void DrawUnsavedChanges(EditorContext& ec) {
   if (UI::DrawButton(ec, windowRect, "#072#Cancel")) { ec.ui.showUnsavedChanges = false; }
 }
 inline void DrawSideBar(EditorContext& ec) {
-  Rectangle button = {5, 250, 25, 25};
+  Rectangle button = {5, 250, 50, 25};
   if (GuiButton(ec.display.getFullyScaled(button), "Create custom Node")) {
-    ec.ui.getWindow(NODE_CREATOR)->openWindow();
+    ec.ui.getWindow(NODE_CREATOR)->toggleWindow();
   }
 }
 inline void DrawWindows(EditorContext& ec) {
