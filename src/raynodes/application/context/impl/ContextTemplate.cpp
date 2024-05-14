@@ -49,3 +49,40 @@ bool Template::registerNode(const NodeTemplate& nt, NodeCreateFunc func, const P
   registeredNodes.insert({newTemplate.label, NodeInfo{newTemplate, func}});
   return true;
 }
+Node* Template::createNode(EditorContext& ec, const char* name, Vec2 pos, NodeID nodeID) {
+  NodeInfo* info = nullptr;
+
+  if (registeredNodes.contains(name)) [[likely]] {
+    info = &registeredNodes[name];
+  } else if (userDefinedNodes.contains(name)) [[likely]] {
+    info = &userDefinedNodes[name];
+  } else {
+    fprintf(stderr, "No node registered with the name %s", name);
+    return nullptr;
+  }
+
+  if (info == nullptr) return nullptr;  // Safety
+
+  auto* node = info->createFunc(info->nTemplate, pos, nodeID);  // Has to exist
+  for (const auto component : info->nTemplate.components) {
+    if (component.component == nullptr) continue;  // We dont break for safety
+    auto* comp = createComponent(component);
+    if (comp) node->components.push_back(comp);
+    else fprintf(stderr, "No component registered with the name %s", component.component);
+  }
+
+  // Call event functions
+  for (const auto c : node->components) {
+    c->onCreate(ec, *node);
+  }
+
+  node->onCreation(ec);  // Called after all components
+
+  return node;
+}
+
+bool Template::registerUserNode(EditorContext& ec, const NodeTemplate& nt, NodeCreateFunc func) {
+
+  userDefinedNodes.insert({nt.label, {nt, func}});
+  return true;
+}

@@ -300,12 +300,10 @@ bool Persist::loadFromFile(EditorContext& ec) {
   //Load data
   int nodes = 0;
   int connections = 0;
-  {
-    LoadEditorData(file, ec);
-    LoadTemplates(file, ec);
-    nodes = LoadNodes(file, ec);
-    connections = LoadConnections(file, ec);
-  }
+  LoadEditorData(file, ec);
+  LoadTemplates(file, ec);
+  nodes = LoadNodes(file, ec);
+  connections = LoadConnections(file, ec);
 
   //printf("Loaded %s nodes\n", ec.string.getPaddedNum(nodes));
   //printf("Loaded %s connections\n", ec.string.getPaddedNum(connections));
