@@ -46,6 +46,7 @@ struct TextInputField final {
   bool showCursor = false;
   bool isFocused = false;
   bool growAutomatic = true;
+  bool wasUpdated = false;
   uint8_t blinkCounter = 0;
   const InputConstraint constraint = NONE;
 
@@ -57,8 +58,10 @@ struct TextInputField final {
   void onFocusGain(Vector2 mouse);
   void onFocusLoss();
   void updateDimensions();
+  bool hasUpdate();
 
  private:
+  void deleteSelection();
   [[nodiscard]] Ints getSelection() const;
   [[nodiscard]] uint16_t getIndexFromPos(Vector2 mouse);
 };

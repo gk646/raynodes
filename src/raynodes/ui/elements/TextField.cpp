@@ -73,7 +73,6 @@ bool IsInputAllowed(const int key, InputConstraint constraint) {
   if (constraint == NONE) { return key >= 32 && key <= 125; }
   return false;
 }
-
 }  // namespace
 
 void TextInputField::draw() {
@@ -96,35 +95,38 @@ void TextInputField::draw() {
   }
 }
 
-//TODO reoder operations to avoid creating rare crashes of same tick inputs
 void TextInputField::update(Vector2 mouse) {
   if (!isFocused) return;
 
-  if (isDragging) {
-    selectionEnd = getIndexFromPos(mouse);
-    const auto [start, end] = getSelection();
-    cursorPos = end;
-  }
+  cursorPos = cxstructs::clamp(static_cast<int>(cursorPos), 0, static_cast<int>(buffer.size()));
 
   if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
     isDragging = true;
     cursorPos = getIndexFromPos(mouse);
     selectionStart = cursorPos;
     selectionEnd = selectionStart;
+    return;
   }
 
-  if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) { isDragging = false; }
+  if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+    isDragging = false;
+    return;
+  }
+
+  if (isDragging) {
+    selectionEnd = getIndexFromPos(mouse);
+    const auto [start, end] = getSelection();
+    cursorPos = end;
+    return;
+  }
 
   if (IsKeyPressed(KEY_V) && IsKeyDown(KEY_LEFT_CONTROL) && buffer.length() < 1024) {
-    if (selectionStart != selectionEnd) {
-      const auto [start, end] = getSelection();
-      buffer.erase(start, end - start);
-      cursorPos = start;
-    }
+    deleteSelection();
     const int prev = static_cast<int>(buffer.size());
     buffer.insert(cursorPos, GetClipboardText());
     updateDimensions();
-    cursorPos = prev + (buffer.size() - prev);
+    cursorPos = cursorPos + (buffer.size() - prev);
+    return;
   }
 
   if (IsKeyPressed(KEY_C) && IsKeyDown(KEY_LEFT_CONTROL)) {
@@ -134,27 +136,13 @@ void TextInputField::update(Vector2 mouse) {
     *(data + end) = '\0';
     SetClipboardText(data + start);
     *(data + end) = temp;
+    return;
   }
 
-  int key = GetCharPressed();
-  while (key > 0) {
-    selectionStart = selectionEnd;
-    if (IsInputAllowed(key, constraint) && buffer.length() < 1024) {
-      // Safety measure - i could produce some crashes here
-      cursorPos = cxstructs::clamp(static_cast<int>(cursorPos), 0, static_cast<int>(buffer.size()));
-      //TODO replace selection when you type with active selection
-      buffer.insert(buffer.begin() + cursorPos, static_cast<char>(key));
-      cursorPos++;
-      updateDimensions();
-    }
-    key = GetCharPressed();  // Check next character in the queue
-  }
-
-  if (IsKeyDown(KEY_LEFT_CONTROL)) {
-    if (IsKeyPressed(KEY_A)) {
-      selectionStart = 0;
-      selectionEnd = buffer.size();
-    }
+  if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_A)) {
+    selectionStart = 0;
+    selectionEnd = buffer.size();
+    return;
   }
 
   if (IsKeyPressed(KEY_ENTER) && buffer.length() < 1024) {
@@ -178,23 +166,42 @@ void TextInputField::update(Vector2 mouse) {
     selectionStart = selectionEnd;
     cursorPos--;
     updateDimensions();
+    return;
   }
 
-  if (cursorPos < buffer.size() && (IsKeyPressed(KEY_DELETE) || IsKeyPressedRepeat(KEY_DELETE))) {
+  if ((IsKeyPressed(KEY_DELETE) || IsKeyPressedRepeat(KEY_DELETE))) {
     if (selectionStart != selectionEnd) {
       const auto [start, end] = getSelection();
       buffer.erase(start, end - start);
       cursorPos = start;
-    } else {
+    } else if (cursorPos < buffer.size()) {
       buffer.erase(buffer.begin() + cursorPos);
     }
     selectionStart = selectionEnd;
     updateDimensions();
+    return;
   }
 
-  if (cursorPos < buffer.length() && (IsKeyPressed(KEY_RIGHT) || IsKeyPressedRepeat(KEY_RIGHT))) { cursorPos++; }
+  if (cursorPos < buffer.length() && (IsKeyPressed(KEY_RIGHT) || IsKeyPressedRepeat(KEY_RIGHT))) {
+    cursorPos++;
+    return;
+  }
 
-  if (cursorPos > 0 && (IsKeyPressed(KEY_LEFT) || IsKeyPressedRepeat(KEY_LEFT))) { cursorPos--; }
+  if (cursorPos > 0 && (IsKeyPressed(KEY_LEFT) || IsKeyPressedRepeat(KEY_LEFT))) {
+    cursorPos--;
+    return;
+  }
+
+  int key = GetCharPressed();
+  while (key > 0) {
+    if (selectionEnd != selectionStart) deleteSelection();
+    if (IsInputAllowed(key, constraint) && buffer.length() < 1024) {
+      buffer.insert(buffer.begin() + cursorPos, static_cast<char>(key));
+      cursorPos++;
+      updateDimensions();
+    }
+    key = GetCharPressed();  // Check next character in the queue
+  }
 
   // Handle blinking cursor
   blinkCounter++;
@@ -206,14 +213,13 @@ void TextInputField::update(Vector2 mouse) {
 
 void TextInputField::onFocusGain(const Vector2 mouse) {
   //Position the cursor correct inside the text
-  if (!CheckCollisionPointRec(mouse, bounds)) return onFocusLoss() ;
+  if (!CheckCollisionPointRec(mouse, bounds)) return onFocusLoss();
   cursorPos = getIndexFromPos(mouse);
   selectionEnd = selectionStart;
   blinkCounter = 0;
   showCursor = true;
   isFocused = true;
 }
-
 void TextInputField::onFocusLoss() {
   showCursor = false;
   isFocused = false;
@@ -221,6 +227,7 @@ void TextInputField::onFocusLoss() {
 }
 
 void TextInputField::updateDimensions() {
+  wasUpdated = true;
   if (!growAutomatic) return;  // Dont grow if specified
   int lineCount = 0;
   int lineStart = 0;
@@ -248,8 +255,23 @@ void TextInputField::updateDimensions() {
   bounds.height = std::max(20, static_cast<uint16_t>(fs) * lineCount);
   bounds.width = longestLine + 3;
 }
+bool TextInputField::hasUpdate() {
+  if (wasUpdated) [[unlikely]] {
+    wasUpdated = false;
+    return true;
+  }
+  return false;
+}
 
-uint16_t TextInputField::getIndexFromPos(const Vector2 mouse) {
+void TextInputField::deleteSelection() {
+  if (selectionStart != selectionEnd) {
+    const auto [start, end] = getSelection();
+    buffer.erase(start, end - start);
+    cursorPos = start;
+    selectionStart = selectionEnd;
+  }
+}
+auto TextInputField::getIndexFromPos(const Vector2 mouse) -> uint16_t {
   const float relX = mouse.x - bounds.x;
   const float relY = mouse.y - bounds.y;
 
@@ -277,7 +299,6 @@ uint16_t TextInputField::getIndexFromPos(const Vector2 mouse) {
 
   return buffer.size();
 }
-
-Ints TextInputField::getSelection() const {
+auto TextInputField::getSelection() const -> Ints {
   return selectionStart < selectionEnd ? Ints{selectionStart, selectionEnd} : Ints{selectionEnd, selectionStart};
 }

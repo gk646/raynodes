@@ -32,6 +32,10 @@ UI::UI() {
   windows.push_back(new SettingsMenu(bounds, "Settings"));
   windows.push_back(new NodeCreator(bounds, "Node Creator"));
 }
+bool UI::loadUI(EditorContext& ec) {
+  getWindow<NodeCreator>(NODE_CREATOR)->searchField.font = &ec.display.editorFont;
+  return true;
+}
 
 int UI::DrawListMenu(EditorContext& ec, bool& open, const char* title, const char* listText, int& active) {
   if (ec.input.isKeyPressed(KEY_ESCAPE)) open = false;
@@ -46,7 +50,7 @@ int UI::DrawListMenu(EditorContext& ec, bool& open, const char* title, const cha
   GuiListView(ec.display.getFullyScaled(listBounds), listText, &scroll, &active);
   return active;
 }
-int UI::DrawButton(EditorContext& ec, Rectangle& r, const char* txt) {
+int UI::DrawButton(EditorContext& ec, const Rectangle& r, const char* txt) {
   const auto bounds = ec.display.getFullyScaled(r);
   const auto res = GuiButton(bounds, txt);
 
@@ -55,7 +59,7 @@ int UI::DrawButton(EditorContext& ec, Rectangle& r, const char* txt) {
   }
   return res;
 }
-int UI::DrawButton(EditorContext& ec, Vector2& pos, float w, float h, const char* txt) {
+int UI::DrawButton(EditorContext& ec, const Vector2& pos, float w, float h, const char* txt) {
   const auto bounds = ec.display.getFullyScaled({pos.x, pos.y, w, h});
   const auto res = GuiButton(bounds, txt);
 

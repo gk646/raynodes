@@ -46,6 +46,7 @@ bool NodeEditor::start() {
   c + context.core.loadCore(context);
   c + context.display.loadResources(context);
   c + context.plugin.loadPlugins(context);
+  c + context.ui.loadUI(context);
 
   // Only load file if path is given - automatically opens picker
   if (!context.persist.openedFilePath.empty()) { c + context.persist.loadFromFile(context); }

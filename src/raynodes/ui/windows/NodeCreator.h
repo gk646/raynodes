@@ -21,20 +21,28 @@
 #ifndef NODECREATOR_H
 #define NODECREATOR_H
 
+#include <cxstructs/StackVector.h>
+
 #include "ui/Window.h"
 #include "ui/elements/TextField.h"
 
-class NodeCreator final : public Window {
+struct NodeCreator final : Window {
+  cxstructs::StackVector<NodeInfo*, 50, uint8_t> sortBuffer;
   TextInputField searchField{150, 18};
   Node* activeNode = nullptr;
   int activeEntry = 0;
   bool showNamePopup = false;
 
- public:
-  NodeCreator(const Rectangle& r, const char* headerText) : Window(r, NODE_CREATOR, headerText) {}
+  NodeCreator(const Rectangle& r, const char* headerText);
   void drawContent(EditorContext& ec, const Rectangle& body) override;
 
- private:
+private:
+  void setNode(EditorContext&ec,const NodeTemplate& nTemplate);
+  void drawSearchField(EditorContext&ec, const Rectangle& body);
+  void drawNodeCreateSandbox(EditorContext& ec, Rectangle space, NodeTemplate* nTemplate);
+  static void stringSort(auto& userCreatedTemplates, const std::string& searchText, auto& sortedNodes);
+
 };
+
 
 #endif  //NODECREATOR_H
