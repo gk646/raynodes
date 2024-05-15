@@ -25,12 +25,19 @@
 
 #include "shared/fwd.h"
 
+template <int N>
+struct RegisterHelper {
+  static_assert(N - 1 < PLG_MAX_NAME_LEN, "Name is too long!");
+  static bool registerNode(const char (&id)[N], NodeRegister& nr);
+};
+
 // Special interfaces to capsulate the registration
-struct ComponentRegister {
+struct EXPORT ComponentRegister {
   // Register a component with just a name and the its type
   // IMPORTANT: Name has to be unique! - errors will be shown when plugin is loaded
-  template <class ComponentType>
-  bool registerComponent(const char* id) {
+  template <typename ComponentType, int N>
+  constexpr bool registerComponent(const char (&id)[N]) {
+    static_assert(N - 1 < PLG_MAX_NAME_LEN, "Name is too long!");
     return registerComponent(id, GetCreateFunc<ComponentType>());
   }
 
@@ -53,15 +60,20 @@ struct ComponentRegister {
   int errorCount;
 };
 
-struct NodeRegister {
+struct EXPORT NodeRegister {
   // Register a node with a "name" and the components specified directly - optional header color
-  bool registerNode(const char* id, const std::initializer_list<ComponentTemplate>& components,
-                    Color4 color = {0, 0, 0, 255});
+  template <int N>
+  bool registerNode(const char (&id)[N], const std::initializer_list<ComponentTemplate>& components,
+                    Color4 color = {0, 0, 0, 255}) {
+    static_assert(N - 1 < PLG_MAX_NAME_LEN, "Name is too long!");
+    return registerNode(CreateTemplate(id, components, color), GetDefaultCreateFunc());
+  }
 
   // Register a custom node by specifying its type
-  template <class CustomNodeType>
-  bool registerCustomNode(const char* id, const std::initializer_list<ComponentTemplate>& components,
+  template <class CustomNodeType, int N>
+  bool registerCustomNode(const char (&id)[N], const std::initializer_list<ComponentTemplate>& components,
                           Color4 color = {0, 0, 0, 255}) {
+    static_assert(N - 1 < PLG_MAX_NAME_LEN, "Name is too long!");
     return registerNode(CreateTemplate(id, components, color), GetCreateFunc<CustomNodeType>());
   }
 
@@ -78,6 +90,7 @@ struct NodeRegister {
       return new CustomNodeType(nt, pos, id);
     };
   }
+  static NodeCreateFunc GetDefaultCreateFunc();
   // Registers a node with name "name" with the components specified in the template
   bool registerNode(const NodeTemplate& nt, NodeCreateFunc nodeCreateFunc);
 

@@ -28,9 +28,11 @@
 
 struct NodeCreator final : Window {
   cxstructs::StackVector<NodeInfo*, 50, uint8_t> sortBuffer;
-  TextField searchField{150, 18};
-  TextField componentSearchField{150, 18};
-  TextField popupField{150, 18};
+  TextField searchField{150, 18, SINGLE_LINE};
+  TextField componentSearchField{150, 18, SINGLE_LINE};
+  TextField popupField{150, 18, SINGLE_LINE};
+  TextField componentName{150, 18, SINGLE_LINE};
+
   Node* activeNode = nullptr;
   int activeEntry = 0;
   bool showNamePopup = false;

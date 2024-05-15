@@ -27,10 +27,10 @@
 namespace {
 // Registers a plugin in one go
 void RegisterPlugin(EditorContext& ec, PluginContainer& pc) {
-  char nameBuff[Plugin::MAX_NAME_LEN];
+  char nameBuff[PLG_MAX_NAME_LEN];
 
   // Start
-  cxstructs::str_pad(nameBuff, Plugin::MAX_NAME_LEN, pc.name, '.', nullptr, ":");
+  cxstructs::str_pad(nameBuff, PLG_MAX_NAME_LEN, pc.name, '.', nullptr, ":");
   printf("    > %s ", nameBuff);  // Print the initial loading message
 
   // Nodes
@@ -66,7 +66,7 @@ bool Plugin::loadPlugins(EditorContext& ec) {
 #endif
   printf("Loading raynodes plugins:\n");
 
-  char nameBuff[MAX_NAME_LEN]{};
+  char nameBuff[PLG_MAX_NAME_LEN]{};
   for (const auto& entry : std::filesystem::directory_iterator(basePath)) {
     if (entry.path().extension() == filter) {
       std::string fileName = entry.path().stem().string();  // Get the filename without extension

@@ -21,26 +21,20 @@
 #ifndef RAYNODES_SRC_EDITOR_ELEMENTS_EDITORACTION_H_
 #define RAYNODES_SRC_EDITOR_ELEMENTS_EDITORACTION_H_
 
-#include <string>
-#include <unordered_map>
-#include <vector>
-
 #include "shared/fwd.h"
 
-enum ActionType : uint8_t {
-  NEW_CANVAS_ACTION,
-  MOVE_NODE,
-  TEXT_EDIT,
-  DELETE_NODE,
-  CREATE_NODE,
-  CONNECTION_DELETED
-};
+#include <vector>
+#include <string>
+#include <unordered_map>
+
+
+enum ActionType : uint8_t { NEW_CANVAS_ACTION, MOVE_NODE, TEXT_EDIT, DELETE_NODE, CREATE_NODE, CONNECTION_DELETED };
 
 //Action was already performed when created
 //-> Current state includes this performed action
 //Undo means reversing this action
 //Redo means performing this action again
-struct Action {
+struct EXPORT Action {
   ActionType type;
   explicit Action(const ActionType type) : type(type) {}
   virtual ~Action() noexcept = default;
@@ -73,7 +67,7 @@ struct NewCanvasAction final : Action {
   void redo(EditorContext& /**/) override {}
 };
 
-struct TextAction final : Action {
+struct EXPORT TextAction final : Action {
   std::string& targetText;  // Reference to the text being modified
   std::string beforeState;  // State of the text before the modification
   std::string afterState;   // State of the text after the modification
@@ -115,7 +109,7 @@ struct NodeMovedAction final : Action {
   explicit NodeMovedAction(int size);
   void undo(EditorContext& ec) override;
   void redo(EditorContext& ec) override;
-  float calculateDeltas( EditorContext& ec);
+  float calculateDeltas(EditorContext& ec);
 };
 
 struct ConnectionDeleteAction final : Action {

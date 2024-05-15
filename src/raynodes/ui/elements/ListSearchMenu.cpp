@@ -45,8 +45,8 @@ void stringSort(const auto& map, const std::string& searchText, SortVector& sort
   for (size_t i = 0; i < size - 1; ++i) {
     size_t minIndex = i;
     for (size_t j = i + 1; j < size; ++j) {
-      if (cxstructs::str_sort_levenshtein_prefix<Plugin::MAX_NAME_LEN>(sortVec[j], searchCStr)
-          < cxstructs::str_sort_levenshtein_prefix<Plugin::MAX_NAME_LEN>(sortVec[minIndex], searchCStr)) {
+      if (cxstructs::str_sort_levenshtein_prefix<PLG_MAX_NAME_LEN>(sortVec[j], searchCStr)
+          < cxstructs::str_sort_levenshtein_prefix<PLG_MAX_NAME_LEN>(sortVec[minIndex], searchCStr)) {
         minIndex = j;
       }
     }
@@ -76,10 +76,10 @@ const char* ListSearchMenu::Draw(EditorContext& ec, Vector2 pos, TextField& sear
   // Draw SearchBar
   searchBar.font = &ec.display.editorFont;
   searchBar.bounds = bounds;
-  searchBar.bounds.height = fs;
+  searchBar.bounds.height = entryHeight;
 
   if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) searchBar.onFocusGain(mouse);
-  searchBar.update(ec);
+  searchBar.update(ec, ec.logic.mouse);
   searchBar.draw();
   bounds.y += entryHeight;
 
@@ -97,13 +97,14 @@ const char* ListSearchMenu::Draw(EditorContext& ec, Vector2 pos, TextField& sear
       DrawRectangleRec(currentRect, UI::COLORS[UI_DARK]);
     }
 
-    constexpr auto text = UI::COLORS[UI_LIGHT];
-    DrawTextEx(font, str, {bounds.x + padding, bounds.y + padding / 2.0F}, fs, 0.0F, text);
+    constexpr auto color = UI::COLORS[UI_LIGHT];
+    DrawTextEx(font, str, {bounds.x + padding, bounds.y + padding / 2.0F}, fs, 1.0F, color);
     bounds.y += entryHeight;
   }
 
   return selected;
 }
+
 template const char* ListSearchMenu::Draw(
     EditorContext& ec, Vector2 pos, TextField& searchBar,
     const std::unordered_map<const char*, ComponentCreateFunc, cxstructs::Fnv1aHash, cxstructs::StrEqual>& map);

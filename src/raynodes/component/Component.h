@@ -50,7 +50,7 @@
 //    Otherwise correct persistence can not be guaranteed
 // .....................................................................
 
-struct Component {                                                   // Ordered after access pattern
+struct EXPORT Component {                                                   // Ordered after access pattern
   cxstructs::StackVector<OutputPin, OUTPUT_PINS, int8_t> outputs{};  // Current limit
   cxstructs::StackVector<InputPin, INPUT_PINS, int8_t> inputs{};     // Current limit
   float x = 0;                                                       // Internal state (don't change, only read)

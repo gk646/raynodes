@@ -57,9 +57,9 @@ class Vec3C final : public Component {
     width = startX - bounds.x;
   }
 
-  void update(EditorContext& ec, Node& parent) override {
+  void update(EditorContext& ec, Node& /**/) override {
     for (auto& f : textFields) {
-      f.update(ec);
+      f.update(ec, ec.logic.worldMouse);
     }
 
     Vec3 out{0.0F, 0.0F, 0.0F};
@@ -100,12 +100,12 @@ class Vec3C final : public Component {
     }
 
     // Correctly apply style
-    if (style == IN_AND_OUT) {
+    if constexpr (style == IN_AND_OUT) {
       addPinOutput(VECTOR_3);
       addPinInput(VECTOR_3);
-    } else if (style == INPUT_ONLY) {
+    } else if constexpr (style == INPUT_ONLY) {
       addPinInput(VECTOR_3);
-    } else if (style == OUTPUT_ONLY) {
+    } else if constexpr (style == OUTPUT_ONLY) {
       addPinOutput(VECTOR_3);
     }
   }

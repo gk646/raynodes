@@ -21,7 +21,7 @@
 #ifndef RAYNODES_SRC_APPLICATION_CONTEXTSTRING_H_
 #define RAYNODES_SRC_APPLICATION_CONTEXTSTRING_H_
 
-struct String {
+struct EXPORT String final {
   static constexpr int BUFFER_SIZE = 512;
   char buffer[BUFFER_SIZE];
 

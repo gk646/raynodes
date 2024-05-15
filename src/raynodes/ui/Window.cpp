@@ -91,7 +91,7 @@ void Window::update(EditorContext& ec) {
 
   if (CheckCollisionPointRec(mousePos, header)) {
     isHeaderHovered = true;
-    if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && !isDragged) {
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !isDragged) {
       ec.input.consumeMouse();
       dragOffset.x = mousePos.x;
       dragOffset.y = mousePos.y;

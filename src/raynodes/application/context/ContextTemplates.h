@@ -27,7 +27,7 @@ using Hash = cxstructs::Fnv1aHash;
 using ComponentMap = std::unordered_map<const char*, ComponentCreateFunc, Hash, Comp>;
 using NodeCreateMap = std::unordered_map<const char*, NodeInfo, Hash, Comp>;
 
-struct Template {
+struct EXPORT Template {
   ComponentMap componentFactory;
   NodeCreateMap registeredNodes;
   NodeCreateMap userDefinedNodes;

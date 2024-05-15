@@ -26,6 +26,7 @@
 #define OUTPUT_PINS 3       // Max output pins for each component
 #define NODE_OUTPUT_PINS 3  // Max output pins for each node  on the top level
 #define START_FPS 90
+#define PLG_MAX_NAME_LEN 17  //16 with terminator ('\0')
 
 // Defines for the plugin exports
 #ifdef _WIN32

@@ -22,11 +22,11 @@
 
 #include "components/DialogChoiceC.h"
 
-void MQQS::registerComponents(ComponentRegister& cr) {
+void QuestScript::registerComponents(ComponentRegister& cr) {
   cr.registerComponent<DialogChoiceC>("QST_DialogChoice");
 }
 
-void MQQS::registerNodes(NodeRegister& nr) {
+void QuestScript::registerNodes(NodeRegister& nr) {
   nr.registerNode("Dialog Choice", {{"NPCType", "BI_Text_In"},
                                     {"DisplayText", "BI_Text_In"},
                                     {"Choice1", "QST_DialogChoice"},
@@ -40,6 +40,8 @@ void MQQS::registerNodes(NodeRegister& nr) {
       "QuestHeader",
       {{"Name", "BI_Text_In"}, {"Description", "BI_Text_In"}, {"Zone", "BI_Text_In"}, {"Level", "BI_Number_In"}});
 
-  nr.registerNode("GOTO Player", {{"Zone", "BI_Text_In"}, {"Target", "BI_Vec2_In"}});
-  nr.registerNode("GOTO Player Proximity", {{"Zone", "BI_Text_In"}, {"Target", "BI_Vec2_In"},{"Distance","BI_Number_In"}});
+  nr.registerNode("GOTO Position", {{"NPCType", "BI_Text_In"}, {"Zone", "BI_Text_In"}, {"Target", "BI_Vec2_In"}});
+  nr.registerNode(
+      "GOTO Proximity",
+      {{"NPCType", "BI_Text_In"}, {"Zone", "BI_Text_In"}, {"Target", "BI_Vec2_In"}, {"Distance", "BI_Number_In"}});
 }

@@ -32,9 +32,8 @@ add_subdirectory(src/plugins)
 # Add the import header
 add_subdirectory(src/import)
 
-# Add all built targets here
-add_dependencies(raynodes QuestScript BuiltIns)
-
+# Add all the dependencies to the executable
+add_dependencies(raynodes BuiltIns QuestScript)
 
 if (RN_BUILD_TESTS)
     enable_testing()

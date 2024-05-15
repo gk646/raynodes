@@ -38,7 +38,7 @@
 
 namespace cxstructs {
 template <typename T, size_t N, typename size_type = uint32_t>
-class StackVector {
+class __declspec(dllexport) StackVector {
   alignas(T) std::byte data_[sizeof(T) * N];  // Stack-allocated array
   size_type size_ = 0;                        // Current number of elements in the array
 

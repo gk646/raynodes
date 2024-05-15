@@ -21,16 +21,18 @@
 #include "application/EditorContext.h"
 #include "plugin/PluginInterface.h"
 
-bool ComponentRegister::registerComponent(const char* name, const ComponentCreateFunc func) {
-  const auto res = ec.templates.registerComponent(name, func, pc);
+bool ComponentRegister::registerComponent(const char* id, const ComponentCreateFunc func) {
+  const auto res = ec.templates.registerComponent(id, func, pc);
   if (!res) errorCount++;
   return res;
 }
 
-bool NodeRegister::registerNode(const char* id, const std::initializer_list<ComponentTemplate>& components,
-                                Color4 color) {
-  return registerNode(CreateTemplate(id, components, color), GetCreateFunc<Node>());
+NodeCreateFunc NodeRegister::GetDefaultCreateFunc() {
+  return [](const NodeTemplate& nt, const Vec2 pos, const NodeID id) -> Node* {
+    return new Node(nt, pos, id);
+  };
 }
+
 NodeTemplate NodeRegister::CreateTemplate(const char* name, const ComponentDefinition& comps, Color4 c) {
   NodeTemplate nt;
   nt.label = name;
@@ -46,6 +48,7 @@ NodeTemplate NodeRegister::CreateTemplate(const char* name, const ComponentDefin
 
 bool NodeRegister::registerNode(const NodeTemplate& nt, NodeCreateFunc nodeCreateFunc) {
   const auto res = ec.templates.registerNode(nt, nodeCreateFunc, pc);
+
   if (res) {
     ec.ui.contextMenu.addNode(pc.name, nt.label);
   } else {

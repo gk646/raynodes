@@ -1,19 +1,20 @@
-# Collect all ".cpp" files (in an IDE this is just a reload)
+# Collect all ".cpp" files for the editor (excluding main.cpp)
 file(GLOB_RECURSE EDITOR_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
-# Exclude main
 list(FILTER EDITOR_FILES EXCLUDE REGEX "main.cpp")
-# Build the library
-add_library(editor STATIC ${EDITOR_FILES})
-# Set include dir for full paths
+
+# Build the core editor library
+add_library(editor SHARED ${EDITOR_FILES})
 target_include_directories(editor PRIVATE ${CMAKE_SOURCE_DIR}/src/raynodes)
-target_link_libraries(editor PRIVATE nativefiledialogs)
+target_link_libraries(editor PUBLIC raylib nativefiledialogs)
+set_target_properties(editor PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+
 # Define the main executable
 add_executable(raynodes main.cpp)
 target_include_directories(raynodes PRIVATE ${CMAKE_SOURCE_DIR}/src/raynodes)
-# This places the executable in the root of the build directory
 set_target_properties(raynodes PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-# Link raylib and the core editor
-target_link_libraries(raynodes PUBLIC raylib editor)
+target_link_libraries(raynodes PUBLIC editor)
+
 
 if (MSVC)
     target_sources(raynodes PRIVATE shared/app.rc) # Add the icon resource file

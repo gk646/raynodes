@@ -46,7 +46,7 @@ class NumberFieldC final : public Component {
   }
 
   void update(EditorContext& ec, Node& parent) override {
-    textField.update(ec);
+    textField.update(ec, ec.logic.worldMouse);
 
     if constexpr (style == IN_AND_OUT || style == INPUT_ONLY) {
       auto* input = inputs[0].getData<STRING>();
@@ -92,9 +92,7 @@ class NumberFieldC final : public Component {
     textField.font = &ec.display.editorFont;
     textField.fs = ec.display.fontSize;
 
-    if constexpr (style == IN_AND_OUT || style == INPUT_ONLY) {
-      addPinInput(STRING);
-    }
+    if constexpr (style == IN_AND_OUT || style == INPUT_ONLY) { addPinInput(STRING); }
     if constexpr (style == IN_AND_OUT || style == OUTPUT_ONLY) {
       addPinOutput(INTEGER);
       addPinOutput(FLOAT);

@@ -23,7 +23,7 @@
 
 #include "shared/fwd.h"
 
-struct Connection {
+struct EXPORT Connection final {
   //Source
   Node& fromNode;
   Component* from;  // NULL when connection from node to node

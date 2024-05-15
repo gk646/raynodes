@@ -23,12 +23,12 @@
 
 #include "shared/fwd.h"
 
-#include <string>
 #include <vector>
+#include <string>
 
 // This class is need as raygui controls dont work in worldspace -> raygui functions still use screen space mouse
 
-struct DropDown {
+struct EXPORT DropDown final {
   std::vector<std::string> items;
   float x, y, w, h;  // no <raylib> compatibility
   int selectedIndex = 0;

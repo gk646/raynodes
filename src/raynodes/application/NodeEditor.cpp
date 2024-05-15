@@ -20,6 +20,7 @@
 
 #include "NodeEditor.h"
 
+#define RAYGUI_IMPLEMENTATION
 #include <raygui.h>
 #include <cxstructs/Constraint.h>
 

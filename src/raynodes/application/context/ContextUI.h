@@ -47,7 +47,7 @@ struct ContextMenu {
 // The methods allow you to always us absolute coordinates and then transferthem to real screen space
 // Use display.smartScaling for elements that have a minimum height -> scaling will only be apl
 
-struct UI final {
+struct EXPORT UI final {
   static constexpr Color COLORS[INDEX_END] = {
       {45, 45, 45, 255},     // E_BACK_GROUND
       {27, 27, 27, 255},     // E_GRID
@@ -138,10 +138,10 @@ struct UI final {
   template <bool isBig = true>
   constexpr static Rectangle GetCenteredWindowBounds() {
     if constexpr (isBig) {
-      constexpr auto winX = 650.0F;
-      constexpr auto winW = 640.0F;
-      constexpr auto winY = 350.0F;
-      constexpr auto winH = 380.0F;
+      constexpr auto winX = 550.0F;
+      constexpr auto winW = 760.0F;
+      constexpr auto winY = 320.0F;
+      constexpr auto winH = 425.0F;
 
       return Rectangle{winX, winY, winW, winH};
     }

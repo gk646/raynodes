@@ -24,18 +24,19 @@
 #include "shared/fwd.h"
 
 #include <raylib.h>
+
+#pragma warning(push)
+#pragma warning(disable : 4251)  // Remove export warning
+
 #include <string>
 
-enum InputConstraint : uint8_t {
-  NONE,
-  NUMERIC,
-};
+enum InputConstraint : uint8_t { NONE, NUMERIC, SINGLE_LINE };
 
-struct TextField final {
+struct EXPORT TextField final {
   inline static uint8_t BLINK_DELAY = 45;
 
   std::string buffer;
-  Rectangle bounds;
+  Rectangle bounds{};
   const Font* font = nullptr;
   float fs = 15.0F;  // Font size
   uint16_t cursorPos = 0;
@@ -54,7 +55,7 @@ struct TextField final {
   explicit TextField(float w, float h, InputConstraint constraint = NONE)
       : bounds(0, 0, w, h), minWidth(static_cast<uint16_t>(w)), constraint(constraint) {}
   void draw(const char* emptyHint = "...");
-  void update(EditorContext& ec);
+  void update(EditorContext& ec, Vector2 mouse);  // Takes a mouse so we can pass both world space or screen space
   void onFocusGain(Vector2 mouse);
   void onFocusLoss();
   void updateDimensions();
@@ -65,5 +66,7 @@ struct TextField final {
   [[nodiscard]] Ints getSelection() const;
   [[nodiscard]] uint16_t getIndexFromPos(Vector2 mouse);
 };
+
+#pragma warning(pop)
 
 #endif  //TEXTFIELD_H

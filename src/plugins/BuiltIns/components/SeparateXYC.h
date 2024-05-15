@@ -21,20 +21,16 @@
 #ifndef SEPARATEXY_H
 #define SEPARATEXY_H
 
-#include "application/EditorContext.h"
-
 struct SeparateXYC final : Component {
   explicit SeparateXYC(const ComponentTemplate ct) : Component(ct, 100, 20) {}
   Component* clone() override { return new SeparateXYC(*this); }
 
   void draw(EditorContext& /**/, Node& /**/) override {}
-  void update(EditorContext& ec, Node& parent) override {
-    Vec2 outVec = inputs[0].getData<VECTOR_2>();
-
-    outputs[0].setData<FLOAT>(outVec.x);
-    outputs[1].setData<FLOAT>(outVec.y);
+  void update(EditorContext& /**/, Node& parent /**/) override {
+    const auto [x, y] = inputs[0].getData<VECTOR_2>();
+    outputs[0].setData<FLOAT>(x);
+    outputs[1].setData<FLOAT>(y);
   }
-
   void onCreate(EditorContext& ec, Node& parent) override {
     addPinInput(VECTOR_2);
 
@@ -43,4 +39,4 @@ struct SeparateXYC final : Component {
   }
 };
 
-#endif //SEPARATEXY_H
+#endif  //SEPARATEXY_H
