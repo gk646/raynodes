@@ -24,7 +24,7 @@
 #include "shared/defines.h"
 #include "shared/types.h"
 
-enum PinType : uint8_t;     // Datatype of connection pins
+enum  PinType : uint8_t;     // Datatype of connection pins
 enum MOperation : uint8_t;  // Type of math operation
 enum Direction : bool;      // Which directiont the pin is factin (in/out)
 enum NodeID : uint16_t;     // Unique NodeID counting up - Limits to 65536 nodes!

@@ -23,7 +23,6 @@
 
 #include "component/Component.h"
 #include "ui/elements/TextField.h"
-#include "application/elements/Action.h"
 
 class DialogChoiceC final : public Component {
   TextField textField;

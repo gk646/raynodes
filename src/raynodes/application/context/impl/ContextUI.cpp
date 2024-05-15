@@ -27,15 +27,17 @@
 #include "ui/windows/SettingsMenu.h"
 
 UI::UI() {
-  const auto bounds = GetCenteredWindowBounds<true>();
+  constexpr auto bounds = GetCenteredWindowBounds<true>();
   windows.push_back(new HelpMenu(bounds, "Help"));
   windows.push_back(new SettingsMenu(bounds, "Settings"));
   windows.push_back(new NodeCreator(bounds, "Node Creator"));
 }
 bool UI::loadUI(EditorContext& ec) {
+  //TODO this is annoying
   getWindow<NodeCreator>(NODE_CREATOR)->searchField.font = &ec.display.editorFont;
   getWindow<NodeCreator>(NODE_CREATOR)->componentSearchField.font = &ec.display.editorFont;
   getWindow<NodeCreator>(NODE_CREATOR)->popupField.font = &ec.display.editorFont;
+  getWindow<NodeCreator>(NODE_CREATOR)->componentName.font = &ec.display.editorFont;
   return true;
 }
 int UI::DrawListMenu(EditorContext& ec, bool& open, const char* title, const char* listText, int& active) {

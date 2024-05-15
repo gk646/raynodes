@@ -10,4 +10,4 @@ set_target_properties(QuestScript PROPERTIES
 )
 
 target_include_directories(QuestScript PRIVATE ${CMAKE_SOURCE_DIR}/src/raynodes)
-target_link_libraries(QuestScript PRIVATE raylib editor)
+target_link_libraries(QuestScript PRIVATE editor)

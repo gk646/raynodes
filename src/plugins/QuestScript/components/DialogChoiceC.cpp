@@ -35,7 +35,7 @@ void DialogChoiceC::draw(EditorContext& ec, Node& /**/) {
 void DialogChoiceC::update(EditorContext& ec, Node& parent) {
   outputs[0].setData<STRING>(textField.buffer.c_str());
 
-  textField.update(ec);
+  textField.update(ec,ec.logic.worldMouse);
 
   height = static_cast<uint16_t>(textField.bounds.height);
   width = static_cast<uint16_t>(textField.bounds.width);

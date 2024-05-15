@@ -21,7 +21,7 @@
 #ifndef RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
 #define RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
 
-struct Info {
+struct EXPORT Info final {
   static constexpr auto applicationName = "raynodes";
   static constexpr auto fileEnding = ".rn";
   static constexpr const char* fileFilter[1] = {"*.rn"};

@@ -59,7 +59,7 @@ class Vec2C final : public Component {
 
   void update(EditorContext& ec, Node& parent) override {
     for (auto& f : textFields) {
-      f.update(ec);
+      f.update(ec, ec.logic.worldMouse);
     }
 
     Vec2 out{0.0F, 0.0F};
@@ -99,12 +99,12 @@ class Vec2C final : public Component {
     }
 
     // Correctly apply style
-    if (style == IN_AND_OUT) {
+    if constexpr (style == IN_AND_OUT) {
       addPinOutput(VECTOR_2);
       addPinInput(VECTOR_2);
-    } else if (style == INPUT_ONLY) {
+    } else if constexpr (style == INPUT_ONLY) {
       addPinInput(VECTOR_2);
-    } else if (style == OUTPUT_ONLY) {
+    } else if constexpr (style == OUTPUT_ONLY) {
       addPinOutput(VECTOR_2);
     }
   }

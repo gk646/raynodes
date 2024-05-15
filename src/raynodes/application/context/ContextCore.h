@@ -21,7 +21,7 @@
 #ifndef RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTCORE_H_
 #define RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTCORE_H_
 
-struct Core {
+struct EXPORT Core final{
   static constexpr int TARGET_FPS = 100;
   static constexpr int MAX_ACTIONS = 25;
 

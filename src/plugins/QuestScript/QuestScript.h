@@ -23,14 +23,13 @@
 
 #include "plugin/PluginInterface.h"
 
-struct MQQS final : RaynodesPluginI {
-  void registerComponents(ComponentRegister& ec) override;
+struct QuestScript final : RaynodesPluginI {
+  void registerComponents(ComponentRegister& cr) override;
   void registerNodes(NodeRegister& nr) override;
 };
 
-
-extern "C" EXPORT  RaynodesPluginI* CreatePlugin() {
-  return new MQQS();
+extern "C" EXPORT RaynodesPluginI* CreatePlugin() {
+  return new QuestScript();
 }
 
 #endif  //MQQS_H

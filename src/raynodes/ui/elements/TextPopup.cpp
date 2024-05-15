@@ -45,7 +45,7 @@ const char* TextPopup::Draw(EditorContext& ec, Rectangle& r, TextField& input, V
   input.bounds.y = r.y + r.height / 5.0F;
 
   if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) { input.onFocusGain(ec.logic.mouse); }
-  input.update(ec);
+  input.update(ec, ec.logic.mouse);
   input.draw();
 
   const char* vRes = func(ec, input.buffer.c_str());
@@ -67,9 +67,7 @@ const char* TextPopup::Draw(EditorContext& ec, Rectangle& r, TextField& input, V
 
   if (!isValid) GuiSetState(STATE_DISABLED);
   if (UI::DrawButton(ec, leftButton, "Confirm") || IsKeyPressed(KEY_ENTER)) {
-    if (input.buffer.c_str() != nullptr && isValid) {
-      return input.buffer.c_str();
-    }
+    if (input.buffer.c_str() != nullptr && isValid) { return input.buffer.c_str(); }
   }
   GuiSetState(STATE_NORMAL);
 

@@ -67,11 +67,10 @@ void DrawCursor(const Font& f, char* buffer, int bufferLength, int cursorPos, fl
   float offset = MeasureTextUpTo(buffer + startIndex, cursorPos - startIndex, f, fs, 0.5F);
   DrawTextEx(f, "|", {x + offset, y + lineCount * fs}, fs, 0.5F, WHITE);
 }
-bool IsInputAllowed(const int key, InputConstraint constraint) {
+bool IsInputAllowed(const int key, const InputConstraint constraint) {
   if (constraint == NUMERIC) { return (key >= 48 && key <= 57) || key == 46 /* dot*/; }
-
   if (constraint == NONE) { return key >= 32 && key <= 125; }
-  return false;
+  return true;
 }
 }  // namespace
 
@@ -102,7 +101,7 @@ void TextField::draw(const char* emptyHint) {
   }
 }
 
-void TextField::update(EditorContext& ec) {
+void TextField::update(EditorContext& ec,Vector2 mouse) {
   if (!isFocused || ec.input.keyboardConsumed) [[likely]] { return; }  // This is actually the most likely case
 
   cursorPos = cxstructs::clamp(static_cast<int>(cursorPos), 0, static_cast<int>(buffer.size()));
@@ -113,7 +112,7 @@ void TextField::update(EditorContext& ec) {
 
   if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
     isDragging = true;
-    cursorPos = getIndexFromPos(ec.logic.mouse);
+    cursorPos = getIndexFromPos(mouse);
     selectionStart = cursorPos;
     selectionEnd = selectionStart;
     return;
@@ -125,7 +124,7 @@ void TextField::update(EditorContext& ec) {
   }
 
   if (isDragging) {
-    selectionEnd = getIndexFromPos(ec.logic.mouse);
+    selectionEnd = getIndexFromPos(mouse);
     const auto [start, end] = getSelection();
     cursorPos = end;
     return;
@@ -156,7 +155,7 @@ void TextField::update(EditorContext& ec) {
     return;
   }
 
-  if (IsKeyPressed(KEY_ENTER) && buffer.length() < 1024) {
+  if (constraint != SINGLE_LINE && IsKeyPressed(KEY_ENTER) && buffer.length() < 1024) {
     buffer.insert(buffer.begin() + cursorPos, '\n');
     cursorPos++;
     updateDimensions();
@@ -235,7 +234,6 @@ void TextField::onFocusLoss() {
   isFocused = false;
   selectionEnd = selectionStart;
 }
-
 void TextField::updateDimensions() {
   wasUpdated = true;
   if (!growAutomatic) return;  // Dont grow if specified
@@ -272,7 +270,6 @@ bool TextField::hasUpdate() {
   }
   return false;
 }
-
 void TextField::deleteSelection() {
   if (selectionStart != selectionEnd) {
     const auto [start, end] = getSelection();

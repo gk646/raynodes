@@ -11,4 +11,4 @@ set_target_properties(BuiltIns PROPERTIES
 
 
 target_include_directories(BuiltIns PRIVATE ${CMAKE_SOURCE_DIR}/src/raynodes)
-target_link_libraries(BuiltIns PRIVATE raylib editor)
+target_link_libraries(BuiltIns PRIVATE editor)

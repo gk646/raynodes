@@ -53,7 +53,7 @@ void NodeCreator::drawContent(EditorContext& ec, const Rectangle& body) {
     // Name validation func
     const auto vFunc = [](EditorContext& ec, const char* str) -> const char* {
       const int len = cxstructs::str_len(str);
-      if (len > Plugin::MAX_NAME_LEN) return "Name is too long!";
+      if (len > PLG_MAX_NAME_LEN) return "Name is too long!";
       if (len == 0) return "Name is too short";
       for (const auto& name : ec.templates.userDefinedNodes | std::ranges::views::keys) {
         if (strcmp(name, str) == 0) return "Name already exists!";
@@ -94,7 +94,7 @@ void NodeCreator::setNode(EditorContext& ec, const NodeTemplate& nTemplate) {
 void NodeCreator::drawSearchField(EditorContext& ec, const Rectangle& body) {
   if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) searchField.onFocusGain(ec.logic.mouse);
   searchField.bounds = ec.display.getFullyScaled({body.x, body.y + 1, 150, 20});
-  searchField.update(ec);
+  searchField.update(ec,ec.logic.mouse);
   searchField.draw("Search...");
 }
 
@@ -123,7 +123,7 @@ void NodeCreator::drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeT
 
     // Draw the entry
     UI::DrawRect(ec, entry, 2, border, background);
-    UI::DrawText(ec, {entry.x + UI::PAD, entry.y + UI::PAD / 2.0F}, nInfo->nTemplate.label, text, false);
+    UI::DrawText(ec, {entry.x + UI::PAD / 2.0F, entry.y + UI::PAD / 2.0F}, nInfo->nTemplate.label, text, false);
 
     entry.y += 50.0F;
     i++;
@@ -135,13 +135,14 @@ void NodeCreator::drawNodeCreateSandbox(EditorContext& ec, Rectangle space, Node
   // TODO possibly draw the grid aswell / should look like the node editor
   // Draw BackGround
   // DrawRectangleRec(ec.display.getFullyScaled(space), UI::COLORS[N_BACK_GROUND]);
-  auto nodePos = ec.display.getFullyScaled(Vector2{space.x + UI::PAD * 5, space.y + UI::PAD * 3});
+  const auto nodePos = ec.display.getFullyScaled(Vector2{space.x + UI::PAD * 5, space.y + UI::PAD * 3});
 
   activeNode->x = nodePos.x;
   activeNode->y = nodePos.y;
 
   Node::Update(ec, *activeNode);
 
+  // Min dimensions
   activeNode->width = std::max(activeNode->width, 200.0F);
   activeNode->height = std::max(activeNode->height, 50.0F);
 
@@ -159,16 +160,21 @@ void NodeCreator::drawNodeCreateSandbox(EditorContext& ec, Rectangle space, Node
       showComponentSearch = false;
     } else {
       showComponentSearch = false;
-      for (int i = 0; i < COMPS_PER_NODE; ++i) {
-        if (nTemplate->components[i].component == nullptr) {
-          nTemplate->components[i].label = cxstructs::str_dup("TextField");
-          nTemplate->components[i].component = cxstructs::str_dup(res);
+      for (auto& [label, component] : nTemplate->components) {
+        if (component == nullptr) {
+          label = cxstructs::str_dup(componentName.buffer.c_str());
+          component = cxstructs::str_dup(res);
           setNode(ec, *nTemplate);
           break;
         }
       }
     }
   }
+
+  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) { componentName.onFocusGain(ec.logic.mouse); }
+  componentName.bounds = ec.display.getFullyScaled({space.x + UI::PAD, space.y + UI::PAD, 150, 20});
+  componentName.draw("ComponentName...");
+  componentName.update(ec,ec.logic.mouse);
 
   if (UI::DrawButton(ec, {space.x + UI::PAD * 15, space.y + UI::PAD * 3}, 100, 25, "#128#Remove last")) {
     for (int i = COMPS_PER_NODE - 1; i > -1; --i) {
@@ -192,14 +198,14 @@ void NodeCreator::stringSort(auto& userCreatedTemplates, const std::string& sear
   }
 
   const char* searchCStr = searchText.c_str();
-  size_t size = sortedNodes.size();
+  const int size = sortedNodes.size();
   if (size == 0) return;
-  for (size_t i = 0; i < size - 1; ++i) {
-    size_t minIndex = i;
-    for (size_t j = i + 1; j < size; ++j) {
-      if (cxstructs::str_sort_levenshtein_prefix<Plugin::MAX_NAME_LEN>(sortedNodes[j]->nTemplate.label, searchCStr)
-          < cxstructs::str_sort_levenshtein_prefix<Plugin::MAX_NAME_LEN>(sortedNodes[minIndex]->nTemplate.label,
-                                                                         searchCStr)) {
+  for (uint8_t i = 0; i < size - 1; ++i) {
+    uint8_t minIndex = i;
+    for (uint8_t j = i + 1; j < size; ++j) {
+      if (cxstructs::str_sort_levenshtein_prefix<PLG_MAX_NAME_LEN>(sortedNodes[j]->nTemplate.label, searchCStr)
+          < cxstructs::str_sort_levenshtein_prefix<PLG_MAX_NAME_LEN>(sortedNodes[minIndex]->nTemplate.label,
+                                                                     searchCStr)) {
         minIndex = j;
       }
     }
