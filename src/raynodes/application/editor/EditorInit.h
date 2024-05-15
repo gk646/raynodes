@@ -88,6 +88,8 @@ inline void SetupDisplay(EditorContext& ec) {
   GuiSetStyle(DROPDOWNBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
   GuiSetStyle(LISTVIEW, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
   GuiSetStyle(STATUSBAR, TEXT_ALIGNMENT, TEXT_ALIGN_MIDDLE);
+
+  SetTextLineSpacing(0);  // No space in between
 }
 
 inline void SetupCamera(EditorContext& ec) {

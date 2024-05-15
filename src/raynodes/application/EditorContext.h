@@ -25,10 +25,14 @@
 
 #include <cstdio>
 #include <cmath>
-#include <string>
+
+#pragma warning(push)
+#pragma warning(disable : 4251)  // Remove export warning
+
 #include <deque>
 #include <unordered_map>
 #include <vector>
+#include <string>
 
 #include <raylib.h>
 #include <cxutil/cxstring.h>
@@ -51,7 +55,8 @@
 // So its always hot in cache
 // Sorted after access pattern and size - sadly cant use perf with cache misses on WSL
 
-struct EditorContext {
+
+struct EXPORT EditorContext {
   Input input{};
   Core core{};
   Logic logic{};
@@ -75,4 +80,7 @@ struct EditorContext {
     printf("raynodes - Version %s\n", Info::getVersion(*this));
   }
 };
+
+#pragma warning(pop)
+
 #endif  //RAYNODES_SRC_EDITOR_EDITORCONTEXT_H_

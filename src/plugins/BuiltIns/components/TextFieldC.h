@@ -44,7 +44,7 @@ class TextFieldC final : public Component {
   }
 
   void update(EditorContext& ec, Node& parent) override {
-    textField.update(ec);
+    textField.update(ec, ec.logic.worldMouse);
 
     if constexpr (style == IN_AND_OUT || style == INPUT_ONLY) {
       auto* input = inputs[0].getData<STRING>();

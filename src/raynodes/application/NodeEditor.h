@@ -23,12 +23,13 @@
 
 #include "EditorContext.h"
 
-class NodeEditor {
+class EXPORT NodeEditor final {
   EditorContext context;
 
  public:
-  explicit NodeEditor(int argc,char* argv[]);
+  explicit NodeEditor(int argc, char* argv[]);
   bool start();
   int run();
 };
+
 #endif  //RAYNODES_SRC_NODEEDITOR_H_

@@ -31,14 +31,14 @@
 static constexpr int MAX_UNIQUE_LABELS = 512;
 // One hot encoding the labels
 struct ComponentIndices {
-  char storage[Plugin::MAX_NAME_LEN * MAX_UNIQUE_LABELS] = {};
+  char storage[PLG_MAX_NAME_LEN * MAX_UNIQUE_LABELS] = {};
   uint16_t count = 0;
   int add(const char* name, int index = -1) {
     if (name == nullptr || count >= MAX_UNIQUE_LABELS || get(name) != -1) return -1;
     int addIndex = index == -1 ? count : index;
-    char* ptr = storage + addIndex * Plugin::MAX_NAME_LEN;
+    char* ptr = storage + addIndex * PLG_MAX_NAME_LEN;
     int added = 0;
-    while (added < Plugin::MAX_NAME_LEN && *(name + added) != '\0') {
+    while (added < PLG_MAX_NAME_LEN && *(name + added) != '\0') {
       *(ptr + added) = *(name + added);
       added++;
     }
@@ -48,13 +48,13 @@ struct ComponentIndices {
   int get(const char* name) const {
     if (name == nullptr) return -1;
     for (int i = 0; i < count; ++i) {
-      if (strncmp(storage + i * Plugin::MAX_NAME_LEN, name, Plugin::MAX_NAME_LEN) == 0) { return i; }
+      if (strncmp(storage + i * PLG_MAX_NAME_LEN, name, PLG_MAX_NAME_LEN) == 0) { return i; }
     }
     return -1;
   }
   [[nodiscard]] const char* getName(int index) const {
     if (index == -1 || index > count || index >= MAX_UNIQUE_LABELS) return nullptr;
-    return storage + index * Plugin::MAX_NAME_LEN;
+    return storage + index * PLG_MAX_NAME_LEN;
   }
   void reset() {
     std::memset(storage, 0, sizeof(storage));
@@ -115,9 +115,11 @@ void SaveTemplates(FILE* file, EditorContext& ec) {
   io_save_section(file, "Templates");
   io_save(file, (int)ec.templates.registeredNodes.size());
   io_save_newline(file);
+  char buffer[PLG_MAX_NAME_LEN];
   for (const auto& nt : ec.templates.registeredNodes | std::views::values) {
     io_save(file, compIndices.add(nt.nTemplate.label));  // The arbitrary id of the template
-    io_save(file, nt.nTemplate.label);                   // The node name
+    snprintf(buffer, sizeof(buffer), "%s", nt.nTemplate.label); // Cut of longer names
+    io_save(file, buffer);  // The node name
     for (const auto& [label, component] : nt.nTemplate.components) {
       io_save(file, label == nullptr ? "" : label);
     }
@@ -126,7 +128,6 @@ void SaveTemplates(FILE* file, EditorContext& ec) {
     io_save_newline(file);
   }
 }
-
 int SaveNodes(FILE* file, EditorContext& ec) {
   io_save_section(file, "Nodes");
   int count = 0;
@@ -170,22 +171,20 @@ void LoadEditorData(FILE* file, EditorContext& ec) {
   io_load(file, ec.ui.showGrid);
   io_load_newline(file);
 }
-
 void LoadTemplates(FILE* file, EditorContext& ec) {
   io_load_newline(file, false);
   int amount = 0;
   io_load(file, amount);
   io_load_newline(file, true);
-  char buff[Plugin::MAX_NAME_LEN];
+  char buff[PLG_MAX_NAME_LEN];
   for (int i = 0; i < amount; ++i) {
     int index;
     io_load(file, index);
-    io_load(file, buff, Plugin::MAX_NAME_LEN);
+    io_load(file, buff, PLG_MAX_NAME_LEN);
     compIndices.add(buff, index);
     io_load_newline(file, true);
   }
 }
-
 int LoadNodes(FILE* file, EditorContext& ec) {
   int count = 0;
   while (io_load_inside_section(file, "Nodes")) {

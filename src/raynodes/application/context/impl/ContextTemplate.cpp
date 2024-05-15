@@ -36,6 +36,7 @@ bool Template::registerNode(const NodeTemplate& nt, NodeCreateFunc func, const P
     fprintf(stderr, format, pc.name, nt.label);
     return false;
   }
+
   // Deep copy the template
   NodeTemplate newTemplate;
   newTemplate.color = nt.color;
@@ -81,7 +82,7 @@ Node* Template::createNode(EditorContext& ec, const char* name, Vec2 pos, NodeID
   return node;
 }
 
-bool Template::registerUserNode(EditorContext& ec, const NodeTemplate& nt, NodeCreateFunc func) {
+bool Template::registerUserNode(EditorContext& /**/, const NodeTemplate& nt, NodeCreateFunc func) {
 
   userDefinedNodes.insert({nt.label, {nt, func}});
   return true;

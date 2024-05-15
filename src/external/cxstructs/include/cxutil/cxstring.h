@@ -48,7 +48,7 @@ inline void str_pad(char* buff, const int size, const char* arg, const char padS
   buff[size - 1] = '\0';
 }
 // Measure the length of the given string "arg" using a while loop
-inline int str_len(const char* arg) {
+constexpr int str_len(const char* arg) {
   int len = 0;
   while (*arg) {
     arg++;

@@ -18,10 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <raylib.h>
 
-#include "application/EditorContext.h"
 #include "DisplayC.h"
+#include "application/EditorContext.h"
 
 void DisplayC::draw(EditorContext& ec, Node& /**/) {
   const auto bounds = getBounds();
