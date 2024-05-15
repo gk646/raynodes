@@ -26,7 +26,7 @@
 #include "application/elements/Action.h"
 
 class DialogChoiceC final : public Component {
-  TextInputField textField;
+  TextField textField;
   TextAction* currentAction = nullptr;
 
  public:

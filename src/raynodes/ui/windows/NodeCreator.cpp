@@ -22,69 +22,67 @@
 
 #include "NodeCreator.h"
 #include "application/EditorContext.h"
+#include "ui/elements/ListSearchMenu.h"
+#include "ui/elements/TextPopup.h"
 
 NodeCreator::NodeCreator(const Rectangle& r, const char* headerText) : Window(r, NODE_CREATOR, headerText) {
   searchField.growAutomatic = false;
+  componentSearchField.growAutomatic = false;
+  popupField.growAutomatic = false;
 }
 
 void NodeCreator::drawContent(EditorContext& ec, const Rectangle& body) {
-  // Cache
-  const auto mouse = ec.logic.mouse;
+  // Draw search field
+  drawSearchField(ec, body);
 
-  // Draw Border
+  // Draw border
   const auto borderBounds = Rectangle{body.x, body.y, 150, body.height};
   UI::DrawRect(ec, borderBounds, 2, UI::COLORS[UI_DARK], BLANK);
 
-  drawSearchField(ec, body);
-
   // Draw Create Button
-  auto listBounds = Rectangle{body.x + UI::PAD * 7.0F, body.y, 150, 50};
-  if (UI::DrawButton(ec, listBounds, "Create a custom node")) { showNamePopup = true; }
+  const auto listBounds = Rectangle{body.x + UI::PAD * 6.0F, body.y, 50, 20};
+  if (UI::DrawButton(ec, listBounds, "#227#Add")) { showNamePopup = true; }
+
+  NodeTemplate* activeTemplate = nullptr;
+  if (searchField.hasUpdate()) { stringSort(ec.templates.userDefinedNodes, searchField.buffer, sortBuffer); }
+
+  Rectangle entry = {body.x, body.y + UI::PAD, 150, 50};
+  drawCreatedNodeList(ec, entry, activeTemplate);
 
   if (showNamePopup) {
-    const auto smallWindow = UI::GetCenteredWindowBounds<false>();
-    auto name = UI::DrawTextPopUp(ec, smallWindow, "Choose a name for your node:", showNamePopup);
-    if (name != nullptr) {
+    // Name validation func
+    const auto vFunc = [](EditorContext& ec, const char* str) -> const char* {
+      const int len = cxstructs::str_len(str);
+      if (len > Plugin::MAX_NAME_LEN) return "Name is too long!";
+      if (len == 0) return "Name is too short";
+      for (const auto& name : ec.templates.userDefinedNodes | std::ranges::views::keys) {
+        if (strcmp(name, str) == 0) return "Name already exists!";
+      }
+      return nullptr;
+    };
+
+    auto popUp = UI::GetSubRect(body);
+    constexpr auto* header = "Choose the node name";
+    const auto* name = TextPopup::Draw(ec, popUp, popupField, vFunc, header);
+
+    if (name == nullptr) [[likely]] { return; }
+    if (strcmp(name, UI::DUMMY_STRING) == 0) showNamePopup = false;
+    else {
       NodeTemplate nTemplate;
-      nTemplate.label = cxstructs::str_dup(name);  // Need a allocated copy
-      const auto createFunc = [](const NodeTemplate& nt, Vec2 pos, NodeID id) {
+      nTemplate.label = cxstructs::str_dup(name);  // Need an allocated copy
+      const auto createFunc = [](const NodeTemplate& nt, const Vec2 pos, const NodeID id) {
         return new Node(nt, pos, id);
       };
       ec.templates.registerUserNode(ec, nTemplate, createFunc);
       searchField.buffer = name;
+      popupField.buffer.clear();
       activeEntry = 0;
+      showNamePopup = false;
       stringSort(ec.templates.userDefinedNodes, searchField.buffer, sortBuffer);
       setNode(ec, nTemplate);
     }
   }
-
-  Rectangle entry = {body.x, body.y + UI::PAD, 150, 50};
-  Rectangle space = {body.x + 150.0F, body.y, body.width - 150.0F, body.height};
-  NodeTemplate* activeTemplate = nullptr;
-
-  if (searchField.hasUpdate()) { stringSort(ec.templates.userDefinedNodes, searchField.buffer, sortBuffer); }
-
-  int i = 0;
-  for (auto& nInfo : sortBuffer) {
-    const bool selected = i == activeEntry;
-    const auto text = selected ? UI::COLORS[UI_MEDIUM] : UI::COLORS[UI_LIGHT];
-    const auto background = selected ? UI::COLORS[UI_LIGHT] : UI::COLORS[UI_MEDIUM];
-    const auto border = UI::COLORS[UI_DARK];
-
-    if (selected) activeTemplate = &nInfo->nTemplate;
-
-    UI::DrawRect(ec, entry, 2, border, background);
-    UI::DrawText(ec, {entry.x, entry.y + UI::PAD}, nInfo->nTemplate.label, text, false);
-
-    const auto entryBounds = ec.display.getFullyScaled(entry);
-    if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(mouse, entryBounds)) {
-      if (activeEntry != i) { setNode(ec, nInfo->nTemplate); }
-      activeEntry = i;
-    }
-    entry.y += 50.0F;
-    i++;
-  }
-
+  const Rectangle space = {body.x + 150.0F, body.y, body.width - 150.0F, body.height};
   drawNodeCreateSandbox(ec, space, activeTemplate);
 }
 
@@ -95,9 +93,41 @@ void NodeCreator::setNode(EditorContext& ec, const NodeTemplate& nTemplate) {
 
 void NodeCreator::drawSearchField(EditorContext& ec, const Rectangle& body) {
   if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) searchField.onFocusGain(ec.logic.mouse);
-  searchField.bounds = ec.display.getFullyScaled({body.x + UI::PAD, body.y, 150, 20});
-  searchField.update(ec.logic.mouse);
-  searchField.draw();
+  searchField.bounds = ec.display.getFullyScaled({body.x, body.y + 1, 150, 20});
+  searchField.update(ec);
+  searchField.draw("Search...");
+}
+
+void NodeCreator::drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeTemplate*& activeTemplate) {
+  int i = 0;
+  for (const auto& nInfo : sortBuffer) {
+    const bool selected = i == activeEntry;
+    const Vector2 mouse = GetMousePosition();
+    const Rectangle entryBounds = ec.display.getFullyScaled(entry);
+
+    Color text = selected ? UI::COLORS[UI_MEDIUM] : UI::COLORS[UI_LIGHT];
+    Color background = selected ? UI::Darken(UI::COLORS[UI_LIGHT], 25) : UI::COLORS[UI_MEDIUM];
+    Color border = UI::COLORS[UI_DARK];
+
+    // Handle mouse click
+    if (CheckCollisionPointRec(mouse, entryBounds)) {
+      background = selected ? UI::Lighten(UI::COLORS[UI_LIGHT]) : UI::Lighten(UI::COLORS[UI_MEDIUM]);
+      border = UI::Darken(UI::COLORS[UI_DARK]);
+      if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        if (activeEntry != i) { setNode(ec, nInfo->nTemplate); }
+        activeEntry = i;
+      }
+    }
+
+    if (selected) activeTemplate = &nInfo->nTemplate;
+
+    // Draw the entry
+    UI::DrawRect(ec, entry, 2, border, background);
+    UI::DrawText(ec, {entry.x + UI::PAD, entry.y + UI::PAD / 2.0F}, nInfo->nTemplate.label, text, false);
+
+    entry.y += 50.0F;
+    i++;
+  }
 }
 
 void NodeCreator::drawNodeCreateSandbox(EditorContext& ec, Rectangle space, NodeTemplate* nTemplate) {
@@ -105,25 +135,42 @@ void NodeCreator::drawNodeCreateSandbox(EditorContext& ec, Rectangle space, Node
   // TODO possibly draw the grid aswell / should look like the node editor
   // Draw BackGround
   // DrawRectangleRec(ec.display.getFullyScaled(space), UI::COLORS[N_BACK_GROUND]);
-  auto nodePos = ec.display.getFullyScaled(Vector2{space.x + UI::PAD * 7, space.y + UI::PAD * 3});
+  auto nodePos = ec.display.getFullyScaled(Vector2{space.x + UI::PAD * 5, space.y + UI::PAD * 3});
 
   activeNode->x = nodePos.x;
   activeNode->y = nodePos.y;
+
   Node::Update(ec, *activeNode);
+
+  activeNode->width = std::max(activeNode->width, 200.0F);
+  activeNode->height = std::max(activeNode->height, 50.0F);
+
   Node::Draw(ec, *activeNode);
 
   if (UI::DrawButton(ec, {space.x + UI::PAD * 2, space.y + UI::PAD * 3}, 25, 25, "#112#")) {
-    for (int i = 0; i < COMPS_PER_NODE; ++i) {
-      if (nTemplate->components[i].component == nullptr) {
-        nTemplate->components[i].label = cxstructs::str_dup("TextField");
-        nTemplate->components[i].component = cxstructs::str_dup("BI_Text");
-        setNode(ec, *nTemplate);
-        break;
+    showComponentSearch = true;
+  }
+
+  if (showComponentSearch) {
+    const auto bound = Vector2{space.x + UI::PAD * 2, space.y + UI::PAD * 3};
+    const auto res = ListSearchMenu::Draw(ec, bound, componentSearchField, ec.templates.componentFactory);
+    if (res == nullptr) return;
+    if (strcmp(res, UI::DUMMY_STRING) == 0) {
+      showComponentSearch = false;
+    } else {
+      showComponentSearch = false;
+      for (int i = 0; i < COMPS_PER_NODE; ++i) {
+        if (nTemplate->components[i].component == nullptr) {
+          nTemplate->components[i].label = cxstructs::str_dup("TextField");
+          nTemplate->components[i].component = cxstructs::str_dup(res);
+          setNode(ec, *nTemplate);
+          break;
+        }
       }
     }
   }
 
-  if (UI::DrawButton(ec, {space.x + UI::PAD * 12, space.y + UI::PAD * 3}, 25, 25, "#128#")) {
+  if (UI::DrawButton(ec, {space.x + UI::PAD * 15, space.y + UI::PAD * 3}, 100, 25, "#128#Remove last")) {
     for (int i = COMPS_PER_NODE - 1; i > -1; --i) {
       if (nTemplate->components[i].component != nullptr) {
         delete nTemplate->components[i].label;
@@ -139,13 +186,14 @@ void NodeCreator::drawNodeCreateSandbox(EditorContext& ec, Rectangle space, Node
 
 void NodeCreator::stringSort(auto& userCreatedTemplates, const std::string& searchText, auto& sortedNodes) {
   sortedNodes.clear();
+
   for (auto& value : userCreatedTemplates | std::ranges::views::values) {
     sortedNodes.push_back(&value);
   }
 
   const char* searchCStr = searchText.c_str();
   size_t size = sortedNodes.size();
-
+  if (size == 0) return;
   for (size_t i = 0; i < size - 1; ++i) {
     size_t minIndex = i;
     for (size_t j = i + 1; j < size; ++j) {

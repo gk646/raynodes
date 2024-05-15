@@ -31,7 +31,7 @@ enum InputConstraint : uint8_t {
   NUMERIC,
 };
 
-struct TextInputField final {
+struct TextField final {
   inline static uint8_t BLINK_DELAY = 45;
 
   std::string buffer;
@@ -50,11 +50,11 @@ struct TextInputField final {
   uint8_t blinkCounter = 0;
   const InputConstraint constraint = NONE;
 
-  TextInputField() = default;
-  explicit TextInputField(float w, float h, InputConstraint constraint = NONE)
+  TextField() = default;
+  explicit TextField(float w, float h, InputConstraint constraint = NONE)
       : bounds(0, 0, w, h), minWidth(static_cast<uint16_t>(w)), constraint(constraint) {}
-  void draw();
-  void update(Vector2 mouse);
+  void draw(const char* emptyHint = "...");
+  void update(EditorContext& ec);
   void onFocusGain(Vector2 mouse);
   void onFocusLoss();
   void updateDimensions();

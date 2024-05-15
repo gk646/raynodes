@@ -18,22 +18,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
-#define RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
+#ifndef LISTSEARCHMENU_H
+#define LISTSEARCHMENU_H
 
-struct Info {
-  static constexpr auto applicationName = "raynodes";
-  static constexpr auto fileEnding = ".rn";
-  static constexpr const char* fileFilter[1] = {"*.rn"};
-  static constexpr auto fileDescription = "raynodes save (.rn)";
-  static constexpr auto wikiLink = "https://github.com/gk646/raynodes/wiki";
-  static constexpr auto github = "https://github.com/gk646/raynodes";
-  static constexpr auto about = "Copyright #226# 2024 gk646. MIT License";
-  static constexpr int majorVersion = 1;
-  static constexpr int minorVersion = 0;
-  static constexpr int patch = 3;
+// Draw a list menu with a search bar
 
-  static const char* getVersion(EditorContext& ec);
+#include "shared/fwd.h"
+#include <unordered_map>
+
+struct ListSearchMenu {
+
+  template <typename V, typename Hash, typename Comp>
+  static const char* Draw(EditorContext& ec, Vector2 pos, TextField& searchBar,
+                          const std::unordered_map<const char*, V, Hash, Comp>& map);
 };
 
-#endif  //RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
+
+#endif  //LISTSEARCHMENU_H

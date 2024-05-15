@@ -296,21 +296,22 @@ inline void DrawUnsavedChanges(EditorContext& ec) {
   const char* infoText = ec.string.formatText("%s has unsaved changes", fileName);
   if (UI::DrawWindow(ec, windowRect, infoText)) { ec.ui.showUnsavedChanges = false; }
 
+  constexpr float buttonHeight = 50.0F;
   windowRect.y = windowRect.y + 30;
-  windowRect.height = 50.0F;
+  windowRect.height = buttonHeight;
 
   if (UI::DrawButton(ec, windowRect, "#002#Save")) {
     ec.persist.saveToFile(ec);
     ec.ui.showUnsavedChanges = false;
     //TODO respect user intent and execute next action -> need to save how user got here
   }
-  windowRect.y += 30.0F;
+  windowRect.y += buttonHeight;
   if (UI::DrawButton(ec, windowRect, "#159#Don't Save")) {
     ec.ui.showUnsavedChanges = false;
     ec.core.hasUnsavedChanges = false;
     if (ec.core.requestedClose) ec.core.closeApplication = true;
   }
-  windowRect.y += 30.0F;
+  windowRect.y += buttonHeight;
   if (UI::DrawButton(ec, windowRect, "#072#Cancel")) { ec.ui.showUnsavedChanges = false; }
 }
 inline void DrawSideBar(EditorContext& ec) {
