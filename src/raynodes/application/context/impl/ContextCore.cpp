@@ -139,7 +139,7 @@ void Core::open(EditorContext& ec) {
     auto* res = tinyfd_openFileDialog("Open File", nullptr, 1, Info::fileFilter, Info::fileDescription, 0);
     if (res != nullptr) {
       ec.persist.openedFilePath = res;
-      ec.persist.loadFromFile(ec);
+      ec.persist.importProject(ec);
       ec.input.consumeKeyboard();
     }
   }

@@ -41,11 +41,35 @@ struct ContextMenu {
     cat.nodes.push_back(name);
     categories.push_back(cat);
   }
+
+  void removeNode(const char* category, const char* name) {
+    for (auto catIt = categories.begin(); catIt != categories.end();) {
+      if (cxstructs::str_cmp(catIt->name, category)) {
+        bool erased = false;
+        for (auto nodeIt = catIt->nodes.begin(); nodeIt != catIt->nodes.end();) {
+          if (cxstructs::str_cmp(*nodeIt, name)) {
+            nodeIt = catIt->nodes.erase(nodeIt);
+            erased = true;
+          } else {
+            ++nodeIt;
+          }
+        }
+
+        if (catIt->nodes.empty()) {
+          catIt = categories.erase(catIt);
+        } else {
+          ++catIt;
+        }
+        if (erased) return;
+      }
+      ++catIt;
+    }
+  }
 };
 
 // All the UI is made to be normed to 1920x1080 so FullHD
-// The methods allow you to always us absolute coordinates and then transferthem to real screen space
-// Use display.smartScaling for elements that have a minimum height -> scaling will only be apl
+// The methods allow you to always use absolute coordinates and then transform them to real screen space
+// Use Display::smartScaling for elements that have a minimum height -> scaling will only make the bigger
 
 struct EXPORT UI final {
   static constexpr Color COLORS[INDEX_END] = {
@@ -138,10 +162,10 @@ struct EXPORT UI final {
   template <bool isBig = true>
   constexpr static Rectangle GetCenteredWindowBounds() {
     if constexpr (isBig) {
-      constexpr auto winX = 550.0F;
-      constexpr auto winW = 760.0F;
-      constexpr auto winY = 320.0F;
-      constexpr auto winH = 425.0F;
+      constexpr auto winX = 500.0F;
+      constexpr auto winW = 860.0F;
+      constexpr auto winY = 300.0F;
+      constexpr auto winH = 465.0F;
 
       return Rectangle{winX, winY, winW, winH};
     }

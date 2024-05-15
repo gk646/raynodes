@@ -29,6 +29,8 @@ struct EXPORT Info final {
   static constexpr auto wikiLink = "https://github.com/gk646/raynodes/wiki";
   static constexpr auto github = "https://github.com/gk646/raynodes";
   static constexpr auto about = "Copyright #226# 2024 gk646. MIT License";
+  static constexpr auto configFile = "res/Config.txt";
+  static constexpr auto userTemplates = "res/Templates.txt";
   static constexpr int majorVersion = 1;
   static constexpr int minorVersion = 0;
   static constexpr int patch = 3;

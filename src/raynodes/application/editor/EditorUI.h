@@ -301,7 +301,7 @@ inline void DrawUnsavedChanges(EditorContext& ec) {
   windowRect.height = buttonHeight;
 
   if (UI::DrawButton(ec, windowRect, "#002#Save")) {
-    ec.persist.saveToFile(ec);
+    ec.persist.saveProject(ec);
     ec.ui.showUnsavedChanges = false;
     //TODO respect user intent and execute next action -> need to save how user got here
   }

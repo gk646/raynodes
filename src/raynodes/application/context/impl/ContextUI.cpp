@@ -94,8 +94,8 @@ void UI::DrawText(EditorContext& ec, Vector2 pos, const char* txt, Color c, bool
         if (p != start) {
           ec.string.formatText("%s", start);
           ec.string.buffer[p - start] = '\0';
-          DrawTextEx(font, ec.string.buffer, pos, fs, 1.0F, c);
-          pos.x += MeasureTextEx(font, ec.string.buffer, fs, 1.0F).x;
+          DrawTextEx(font, ec.string.buffer, pos, fs, 0.0F, c);
+          pos.x += MeasureTextEx(font, ec.string.buffer, fs, 0.0F).x;
         }
         p++;
         int iconID = cxstructs::str_parse_int(p);
@@ -107,9 +107,9 @@ void UI::DrawText(EditorContext& ec, Vector2 pos, const char* txt, Color c, bool
         p++;
       }
     }
-    if (*start) { DrawTextEx(font, start, pos, fs, 1.0F, c); }
+    if (*start) { DrawTextEx(font, start, pos, fs, 0.0F, c); }
   } else {
-    DrawTextEx(font, txt, pos, fs, 1.0F, c);
+    DrawTextEx(font, txt, pos, fs, 0.0F, c);
   }
 }
 void UI::DrawRect(EditorContext& ec, Rectangle rec, int borderWidth, Color borderColor, Color color) {
@@ -145,8 +145,8 @@ void UI::invokeFileMenu(EditorContext& ec, int i) {
   if (i == -1 || i == 0) return;
   if (i == 1) ec.core.newFile(ec);
   if (i == 2) ec.core.open(ec);
-  if (i == 3) ec.persist.saveToFile(ec, false);
-  if (i == 4) ec.persist.saveToFile(ec, true);
+  if (i == 3) ec.persist.saveProject(ec, false);
+  if (i == 4) ec.persist.saveProject(ec, true);
   if (i == 5) ec.core.closeApplication = true;
 }
 void UI::invokeEditMenu(EditorContext& ec, int i) {

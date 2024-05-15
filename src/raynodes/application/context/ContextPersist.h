@@ -24,9 +24,11 @@
 struct Persist {
   std::string openedFilePath;  // This is a string cause it can be reassigned often
   const char* fileName = nullptr;
-  bool loadWorkingDirectory(EditorContext& ec);
-  bool loadFromFile(EditorContext& ec);
-  bool saveToFile(EditorContext& ec, bool saveAsMode = false);
+  bool loadUserFiles(EditorContext& ec);
+
+  bool importProject(EditorContext& ec);
+  bool saveProject(EditorContext& ec, bool saveAsMode = false);
+  bool saveUserTemplates(EditorContext& ec);
 };
 
 #endif  //RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTPERSIST_H_
