@@ -319,17 +319,15 @@ bool Persist::importProject(EditorContext& ec) {
 namespace {
 template <typename PersistFunc>
 bool LoadFromFile(const char* fileName, PersistFunc func) {
-
+  return true;
 }
 
 bool LoadUserTemplates(FILE* file, EditorContext& ec) {
-  io_load_newline(file,true);
+  io_load_newline(file, true);
   int size;
-  io_load(file,size);
-  io_load_newline(file,true);
-  for (int i = 0; i < size; ++i) {
-
-  }
+  io_load(file, size);
+  io_load_newline(file, true);
+  for (int i = 0; i < size; ++i) {}
 }
 bool SaveUserTemplates(EditorContext& ec, FILE* file) {
   io_save_section(file, "Templates");
@@ -347,6 +345,8 @@ bool SaveUserTemplates(EditorContext& ec, FILE* file) {
     io_save(file, ColorToInt({r, g, b, a}));
     io_save_newline(file);
   }
+
+  return true;
 }
 }  // namespace
 
