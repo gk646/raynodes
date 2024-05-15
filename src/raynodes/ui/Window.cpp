@@ -11,7 +11,15 @@ void Window::draw(EditorContext& ec) {
   const Rectangle body = ec.display.getFullyScaled(bodyRect);
   const Rectangle header = ec.display.getFullyScaled(headerRect);
 
-  Color headerColor = isDragged || isHeaderHovered ? UI::COLORS[UI_DARK] : UI::COLORS[UI_MEDIUM];
+  Color headerColor;
+
+  if (isDragged) {
+    headerColor = UI::COLORS[UI_DARK];
+  } else if (isHeaderHovered) {
+    headerColor = UI::Darken(UI::COLORS[UI_MEDIUM]);
+  } else {
+    headerColor = UI::COLORS[UI_MEDIUM];
+  }
 
   // Body and header
   DrawRectangleRec(body, UI::COLORS[UI_MEDIUM]);
@@ -22,18 +30,19 @@ void Window::draw(EditorContext& ec) {
 
   // Close button
   {
+    const auto closeColor = isHeaderHovered || isDragged ? UI::COLORS[UI_LIGHT] : UI::COLORS[UI_DARK];
     const float closeSize = header.height * 0.8f;
     const float closePadding = (header.height - closeSize) / 2;
     const Rectangle cBounds = {header.x + header.width - closeSize - closePadding, header.y + closePadding,
                                closeSize, closeSize};
-    DrawRectangleLinesEx(cBounds, 1, UI::COLORS[UI_DARK]);
+    DrawRectangleLinesEx(cBounds, 1, closeColor);
 
-    Vector2 closeTopLeft = {cBounds.x, cBounds.y};
-    Vector2 closeBottomRight = {cBounds.x + cBounds.width, cBounds.y + cBounds.height};
-    DrawLineEx(closeTopLeft, closeBottomRight, 1, UI::COLORS[UI_DARK]);
-    Vector2 closeTopRight = {cBounds.x + cBounds.width, cBounds.y};
-    Vector2 closeBottomLeft = {cBounds.x, cBounds.y + cBounds.height};
-    DrawLineEx(closeTopRight, closeBottomLeft, 1, UI::COLORS[UI_DARK]);
+    const Vector2 closeTopLeft = {cBounds.x, cBounds.y};
+    const Vector2 closeBottomRight = {cBounds.x + cBounds.width, cBounds.y + cBounds.height};
+    DrawLineEx(closeTopLeft, closeBottomRight, 1, closeColor);
+    const Vector2 closeTopRight = {cBounds.x + cBounds.width, cBounds.y};
+    const Vector2 closeBottomLeft = {cBounds.x, cBounds.y + cBounds.height};
+    DrawLineEx(closeTopRight, closeBottomLeft, 1, closeColor);
 
     if (CheckCollisionPointRec(ec.logic.mouse, cBounds) && ec.input.isMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
       closeWindow();
@@ -42,7 +51,7 @@ void Window::draw(EditorContext& ec) {
 
   const auto& font = ec.display.editorFont;
   const auto fs = ec.display.fontSize;
-  const auto textPos = Vector2{body.x + body.width / 2, body.y + header.height / 4.0F};
+  const auto textPos = Vector2{body.x + body.width / 2, body.y + header.height / 5.0F};
   const auto textColor = isHeaderHovered || isDragged ? UI::COLORS[UI_LIGHT] : UI::COLORS[UI_DARK];
   DrawCenteredText(font, headerText, textPos, fs, 1.0F, textColor);
 
@@ -56,8 +65,8 @@ void Window::update(EditorContext& ec) {
   const auto mousePos = ec.logic.mouse;
 
   // Calculate scaling factors based on the UI design resolution
-  float scaleX = 1920.0f / GetScreenWidth();
-  float scaleY = 1080.0f / GetScreenHeight();
+  const float scaleX = UI::UI_SPACE_W / ec.display.screenSize.x;
+  const float scaleY = UI::UI_SPACE_H / ec.display.screenSize.y;
 
   if (isDragged && IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
     isHeaderHovered = true;
@@ -91,7 +100,7 @@ void Window::update(EditorContext& ec) {
   } else {
     isHeaderHovered = false;
   }
-  if (ec.input.isKeyPressed(KEY_ESCAPE)) closeWindow();
+  if (ec.input.isKeyReleased(KEY_ESCAPE)) closeWindow();
 }
 
 void Window::openWindow() noexcept {
@@ -107,5 +116,3 @@ void Window::closeWindow() noexcept {
   isDragged = false;
   onClose();
 }
-
-//-----------HELPER-----------//

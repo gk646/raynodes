@@ -28,15 +28,13 @@ struct Input {
     return !mouseConsumed && IsMouseButtonPressed(button);
   }
   [[nodiscard]] bool isMouseButtonReleased(const int button) const {
-    return mouseConsumed || IsMouseButtonReleased(button);
+    return IsMouseButtonReleased(button);  // Dont lock release
   }
   [[nodiscard]] bool isMouseButtonDown(const int button) const {
     return !mouseConsumed && IsMouseButtonDown(button);
   }
   [[nodiscard]] bool isKeyPressed(const int key) const { return !keyboardConsumed && IsKeyPressed(key); }
-  [[nodiscard]] bool isKeyPressedRepeat(const int key) const {
-    return !keyboardConsumed && IsKeyPressedRepeat(key);
-  }
+  [[nodiscard]] bool isKeyPressedRepeat(const int key) const { return !keyboardConsumed && IsKeyPressedRepeat(key); }
   [[nodiscard]] bool isKeyReleased(const int key) const { return !keyboardConsumed && IsKeyReleased(key); }
   [[nodiscard]] bool isKeyDown(const int key) const { return !keyboardConsumed && IsKeyDown(key); }
   void consumeMouse() { mouseConsumed = true; }

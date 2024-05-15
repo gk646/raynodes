@@ -66,9 +66,7 @@ inline void UpdateTick(EditorContext& ec) {
     Node::Update(ec, **it);
   }
 
-  if (ec.logic.isSelecting) {
-    FormatSelectRectangle(ec);
-  }
+  if (ec.logic.isSelecting) { FormatSelectRectangle(ec); }
 }
 inline void StartUpdateTick(EditorContext& ec) {
   auto& camera = ec.display.camera;
@@ -78,7 +76,7 @@ inline void StartUpdateTick(EditorContext& ec) {
 
   if (ec.display.screenSize.x != currScreenWidth || ec.display.screenSize.y != currScreenHeight) {
     UnloadRenderTexture(ec.display.uiTexture);
-    ec.display.uiTexture = LoadRenderTexture((int)currScreenWidth, (int)currScreenHeight);
+    ec.display.uiTexture = LoadRenderTexture(static_cast<int>(currScreenWidth), static_cast<int>(currScreenHeight));
   }
   ec.display.screenSize.x = currScreenWidth;
   ec.display.screenSize.y = currScreenHeight;

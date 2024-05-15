@@ -43,7 +43,7 @@ struct ContextMenu {
   }
 };
 
-// All the ui is made to be normed to 1920x1080 so FullHD
+// All the UI is made to be normed to 1920x1080 so FullHD
 // The methods allow you to always us absolute coordinates and then transferthem to real screen space
 // Use display.smartScaling for elements that have a minimum height -> scaling will only be apl
 
@@ -79,6 +79,7 @@ struct UI final {
                                         "#107#Zoom to Fit;"
                                         "#097#Grid";
 
+  static constexpr auto* DUMMY_STRING = "__";
   static constexpr float CONTEXT_MENU_THRESHOLD = 15.0F;
   static constexpr float UI_SPACE_W = 1920.0F;  // UI space width
   static constexpr float UI_SPACE_H = 1080.0F;  // UI space height
@@ -111,7 +112,6 @@ struct UI final {
   static int DrawButton(EditorContext& ec, const Rectangle& r, const char* txt);
   static int DrawButton(EditorContext& ec, const Vector2& pos, float w, float h, const char* txt);
   static int DrawWindow(EditorContext& ec, const Rectangle& r, const char* txt);
-  static const char* DrawTextPopUp(EditorContext& ec, const Rectangle& r, const char* text, bool& visible);
   // If icns is set it will look for icons in the string
   static void DrawText(EditorContext& ec, Vector2 p, const char* txt, Color c = COLORS[UI_LIGHT], bool icns = false);
   static void DrawRect(EditorContext& ec, Rectangle rec, int borderWidth, Color borderColor, Color color);
@@ -154,7 +154,18 @@ struct UI final {
     return Rectangle{winX, winY, winW, winH};
   }
 
-  // Menu functions
+  // UI helpers
+  static Rectangle GetSubRect(const Rectangle& r);
+  static Color Darken(const Color c, const int v = 10) {
+    return Color{static_cast<unsigned char>(c.r - v), static_cast<unsigned char>(c.g - v),
+                 static_cast<unsigned char>(c.b - v), c.a};
+  }
+  static Color Lighten(const Color c, const int v = 10) {
+    return Color{static_cast<unsigned char>(c.r + v), static_cast<unsigned char>(c.g + v),
+                 static_cast<unsigned char>(c.b + v), c.a};
+  }
+
+  // Menu functions -> will be moved to dropdown class eventualls
   static void invokeFileMenu(EditorContext& ec, int i);
   static void invokeEditMenu(EditorContext& ec, int i);
   static void invokeViewMenu(EditorContext& ec, int i);

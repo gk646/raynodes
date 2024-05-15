@@ -28,21 +28,30 @@
 
 struct NodeCreator final : Window {
   cxstructs::StackVector<NodeInfo*, 50, uint8_t> sortBuffer;
-  TextInputField searchField{150, 18};
+  TextField searchField{150, 18};
+  TextField componentSearchField{150, 18};
+  TextField popupField{150, 18};
   Node* activeNode = nullptr;
   int activeEntry = 0;
   bool showNamePopup = false;
+  bool showComponentSearch = false;
 
   NodeCreator(const Rectangle& r, const char* headerText);
   void drawContent(EditorContext& ec, const Rectangle& body) override;
+  void onClose() override {
+    showNamePopup = false;
+    searchField.isFocused = false;
+    componentSearchField.isFocused = false;
+    popupField.isFocused = false;
+    showComponentSearch = false;
+  }
 
-private:
-  void setNode(EditorContext&ec,const NodeTemplate& nTemplate);
-  void drawSearchField(EditorContext&ec, const Rectangle& body);
+ private:
+  void setNode(EditorContext& ec, const NodeTemplate& nTemplate);
+  void drawSearchField(EditorContext& ec, const Rectangle& body);
+  void drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeTemplate*& nTemplate);
   void drawNodeCreateSandbox(EditorContext& ec, Rectangle space, NodeTemplate* nTemplate);
   static void stringSort(auto& userCreatedTemplates, const std::string& searchText, auto& sortedNodes);
-
 };
-
 
 #endif  //NODECREATOR_H

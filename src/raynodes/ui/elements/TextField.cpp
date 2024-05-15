@@ -75,14 +75,21 @@ bool IsInputAllowed(const int key, InputConstraint constraint) {
 }
 }  // namespace
 
-void TextInputField::draw() {
+void TextField::draw(const char* emptyHint) {
   //Safety measure
   cursorPos = cxstructs::clamp(static_cast<int>(cursorPos), 0, static_cast<int>(buffer.size()));
 
   //Main field
   DrawRectangleRec(bounds, isFocused ? UI::COLORS[UI_DARK] : UI::COLORS[UI_MEDIUM]);
+  DrawRectangleLinesEx(bounds, 1, isFocused ? UI::COLORS[UI_LIGHT] : UI::COLORS[UI_DARK]);
+
   //Draw the text
-  DrawTextEx(*font, buffer.c_str(), {bounds.x + 3, bounds.y}, fs, 0.5F, UI::COLORS[UI_LIGHT]);
+  if (buffer.empty() && !isFocused) {
+    DrawTextEx(*font, emptyHint, {bounds.x + 3, bounds.y}, fs, 0.5F, LIGHTGRAY);
+  } else {
+    DrawTextEx(*font, buffer.c_str(), {bounds.x + 3, bounds.y}, fs, 0.5F, UI::COLORS[UI_LIGHT]);
+  }
+
   //Draw cursor
   if (showCursor) {
     DrawCursor(*font, buffer.data(), static_cast<int>(buffer.size()), cursorPos, bounds.x, bounds.y, fs);
@@ -95,14 +102,18 @@ void TextInputField::draw() {
   }
 }
 
-void TextInputField::update(Vector2 mouse) {
-  if (!isFocused) return;
+void TextField::update(EditorContext& ec) {
+  if (!isFocused || ec.input.keyboardConsumed) [[likely]] { return; }  // This is actually the most likely case
 
   cursorPos = cxstructs::clamp(static_cast<int>(cursorPos), 0, static_cast<int>(buffer.size()));
 
+  // In here we consume upfront and use raw getters
+  // But return after any action for this tick
+  ec.input.consumeKeyboard();
+
   if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
     isDragging = true;
-    cursorPos = getIndexFromPos(mouse);
+    cursorPos = getIndexFromPos(ec.logic.mouse);
     selectionStart = cursorPos;
     selectionEnd = selectionStart;
     return;
@@ -114,7 +125,7 @@ void TextInputField::update(Vector2 mouse) {
   }
 
   if (isDragging) {
-    selectionEnd = getIndexFromPos(mouse);
+    selectionEnd = getIndexFromPos(ec.logic.mouse);
     const auto [start, end] = getSelection();
     cursorPos = end;
     return;
@@ -146,11 +157,10 @@ void TextInputField::update(Vector2 mouse) {
   }
 
   if (IsKeyPressed(KEY_ENTER) && buffer.length() < 1024) {
-    // Safety measure - i could produce some crashes here
-    cursorPos = cxstructs::clamp(static_cast<int>(cursorPos), 0, static_cast<int>(buffer.size()));
     buffer.insert(buffer.begin() + cursorPos, '\n');
     cursorPos++;
     updateDimensions();
+    return;
   }
 
   if (cursorPos > 0 && (IsKeyPressed(KEY_BACKSPACE) || IsKeyPressedRepeat(KEY_BACKSPACE))) {
@@ -169,7 +179,7 @@ void TextInputField::update(Vector2 mouse) {
     return;
   }
 
-  if ((IsKeyPressed(KEY_DELETE) || IsKeyPressedRepeat(KEY_DELETE))) {
+  if (IsKeyPressed(KEY_DELETE) || IsKeyPressedRepeat(KEY_DELETE)) {
     if (selectionStart != selectionEnd) {
       const auto [start, end] = getSelection();
       buffer.erase(start, end - start);
@@ -211,7 +221,7 @@ void TextInputField::update(Vector2 mouse) {
   }
 }
 
-void TextInputField::onFocusGain(const Vector2 mouse) {
+void TextField::onFocusGain(const Vector2 mouse) {
   //Position the cursor correct inside the text
   if (!CheckCollisionPointRec(mouse, bounds)) return onFocusLoss();
   cursorPos = getIndexFromPos(mouse);
@@ -220,13 +230,13 @@ void TextInputField::onFocusGain(const Vector2 mouse) {
   showCursor = true;
   isFocused = true;
 }
-void TextInputField::onFocusLoss() {
+void TextField::onFocusLoss() {
   showCursor = false;
   isFocused = false;
   selectionEnd = selectionStart;
 }
 
-void TextInputField::updateDimensions() {
+void TextField::updateDimensions() {
   wasUpdated = true;
   if (!growAutomatic) return;  // Dont grow if specified
   int lineCount = 0;
@@ -255,7 +265,7 @@ void TextInputField::updateDimensions() {
   bounds.height = std::max(20, static_cast<uint16_t>(fs) * lineCount);
   bounds.width = longestLine + 3;
 }
-bool TextInputField::hasUpdate() {
+bool TextField::hasUpdate() {
   if (wasUpdated) [[unlikely]] {
     wasUpdated = false;
     return true;
@@ -263,7 +273,7 @@ bool TextInputField::hasUpdate() {
   return false;
 }
 
-void TextInputField::deleteSelection() {
+void TextField::deleteSelection() {
   if (selectionStart != selectionEnd) {
     const auto [start, end] = getSelection();
     buffer.erase(start, end - start);
@@ -271,7 +281,7 @@ void TextInputField::deleteSelection() {
     selectionStart = selectionEnd;
   }
 }
-auto TextInputField::getIndexFromPos(const Vector2 mouse) -> uint16_t {
+auto TextField::getIndexFromPos(const Vector2 mouse) -> uint16_t {
   const float relX = mouse.x - bounds.x;
   const float relY = mouse.y - bounds.y;
 
@@ -299,6 +309,6 @@ auto TextInputField::getIndexFromPos(const Vector2 mouse) -> uint16_t {
 
   return buffer.size();
 }
-auto TextInputField::getSelection() const -> Ints {
+auto TextField::getSelection() const -> Ints {
   return selectionStart < selectionEnd ? Ints{selectionStart, selectionEnd} : Ints{selectionEnd, selectionStart};
 }
