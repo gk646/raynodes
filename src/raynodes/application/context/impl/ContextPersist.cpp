@@ -25,6 +25,7 @@
 #include <cxstructs/Constraint.h>
 #include <tinyfiledialogs.h>
 
+using PersistFunc = bool (*)(EditorContext&, FILE*);
 //TODO make save format that combines both saving and loading
 //-> should be easy as its symmetric - function wrapper and boolean for loading-saving
 
@@ -66,6 +67,7 @@ struct ComponentIndices {
 // Pure file size optimization the rest of the program doesnt know about
 static ComponentIndices compIndices{};
 
+//-----------PROJECT_FILES-----------//
 using namespace cxstructs;  // using the namespace here
 namespace {
 bool IsValidConnection(int maxNodeID, int fromNode, int from, int out, int toNode, int to, int in) {
@@ -101,14 +103,12 @@ void CreateNewConnection(EditorContext& ec, int fromID, int fromI, int outI, int
   ec.core.addConnection(new Connection(fromNode, from, *out, toNode, to, *in));
 }
 void SaveEditorData(FILE* file, EditorContext& ec) {
-  //TODO save more data
   io_save_section(file, "EditorData");
   io_save(file, static_cast<int>(ec.core.nodes.size()));        // Total nodes
   io_save(file, static_cast<int>(ec.core.connections.size()));  // Total connections
   io_save(file, ec.display.camera.target.x);
   io_save(file, ec.display.camera.target.y);
   io_save(file, ec.display.camera.zoom);
-  io_save(file, ec.ui.showGrid);
   io_save_newline(file);
 }
 void SaveTemplates(FILE* file, EditorContext& ec) {
@@ -117,9 +117,9 @@ void SaveTemplates(FILE* file, EditorContext& ec) {
   io_save_newline(file);
   char buffer[PLG_MAX_NAME_LEN];
   for (const auto& nt : ec.templates.registeredNodes | std::views::values) {
-    io_save(file, compIndices.add(nt.nTemplate.label));  // The arbitrary id of the template
-    snprintf(buffer, sizeof(buffer), "%s", nt.nTemplate.label); // Cut of longer names
-    io_save(file, buffer);  // The node name
+    io_save(file, compIndices.add(nt.nTemplate.label));          // The arbitrary id of the template
+    snprintf(buffer, sizeof(buffer), "%s", nt.nTemplate.label);  // Cut of longer names
+    io_save(file, buffer);                                       // The node name
     for (const auto& [label, component] : nt.nTemplate.components) {
       io_save(file, label == nullptr ? "" : label);
     }
@@ -168,7 +168,6 @@ void LoadEditorData(FILE* file, EditorContext& ec) {
   io_load(file, ec.display.camera.target.x);
   io_load(file, ec.display.camera.target.y);
   io_load(file, ec.display.camera.zoom);
-  io_load(file, ec.ui.showGrid);
   io_load_newline(file);
 }
 void LoadTemplates(FILE* file, EditorContext& ec) {
@@ -233,7 +232,7 @@ int LoadConnections(FILE* file, EditorContext& ec) {
 }
 }  // namespace
 
-bool Persist::saveToFile(EditorContext& ec, bool saveAsMode) {
+bool Persist::saveProject(EditorContext& ec, bool saveAsMode) {
   // Strictly enforce this to limit saving -> Actions need to be accurate
   if (!ec.core.hasUnsavedChanges && !saveAsMode) return true;
 
@@ -273,8 +272,7 @@ bool Persist::saveToFile(EditorContext& ec, bool saveAsMode) {
   //printf("Saved %s connections\n", ec.string.getPaddedNum(connections));
   return true;
 }
-
-bool Persist::loadFromFile(EditorContext& ec) {
+bool Persist::importProject(EditorContext& ec) {
   FILE* file;
 
   if (openedFilePath.empty()) {
@@ -316,10 +314,62 @@ bool Persist::loadFromFile(EditorContext& ec) {
   return true;
 }
 
-bool Persist::loadWorkingDirectory(EditorContext& /**/) {
+//-----------USER_FILES-----------//
+
+namespace {
+template <typename PersistFunc>
+bool LoadFromFile(const char* fileName, PersistFunc func) {
+
+}
+
+bool LoadUserTemplates(FILE* file, EditorContext& ec) {
+  io_load_newline(file,true);
+  int size;
+  io_load(file,size);
+  io_load_newline(file,true);
+  for (int i = 0; i < size; ++i) {
+
+  }
+}
+bool SaveUserTemplates(EditorContext& ec, FILE* file) {
+  io_save_section(file, "Templates");
+  io_save(file, (int)ec.templates.userDefinedNodes.size());
+  io_save_newline(file);
+  char buffer[PLG_MAX_NAME_LEN];
+  for (const auto& nt : ec.templates.userDefinedNodes | std::views::values) {
+    io_save(file, compIndices.add(nt.nTemplate.label));          // The arbitrary id of the template
+    snprintf(buffer, sizeof(buffer), "%s", nt.nTemplate.label);  // Cut of longer names
+    io_save(file, buffer);                                       // The node name
+    for (const auto& [label, component] : nt.nTemplate.components) {
+      io_save(file, label == nullptr ? "" : label);
+    }
+    const auto [r, g, b, a] = nt.nTemplate.color;
+    io_save(file, ColorToInt({r, g, b, a}));
+    io_save_newline(file);
+  }
+}
+}  // namespace
+
+bool Persist::loadUserFiles(EditorContext& /**/) {
   Constraint<true> c;
 
   c + ChangeDirectory(GetApplicationDirectory());
+  c + LoadFromFile(Info::userTemplates, [](EditorContext& ec, FILE* file) { return true; });
 
   return c.holds();
+}
+
+bool Persist::saveUserTemplates(EditorContext& ec) {
+  constexpr int sizePerTemplate = 250;
+  const int size = static_cast<int>(ec.templates.userDefinedNodes.size()) * sizePerTemplate;
+
+  const auto res =
+      io_save_buffered_write(Info::userTemplates, size, [&](FILE* file) { SaveUserTemplates(ec, file); });
+
+  if (!res) {
+    fprintf(stderr, "Error saving to %s", Info::userTemplates);
+    return false;
+  }
+
+  return true;
 }

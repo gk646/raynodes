@@ -32,21 +32,23 @@ NodeCreator::NodeCreator(const Rectangle& r, const char* headerText) : Window(r,
 }
 
 void NodeCreator::drawContent(EditorContext& ec, const Rectangle& body) {
+  constexpr auto listWidth = 200.0F;
+
   // Draw search field
-  drawSearchField(ec, body);
+  drawSearchField(ec, body, listWidth);
 
   // Draw border
-  const auto borderBounds = Rectangle{body.x, body.y, 150, body.height};
+  const auto borderBounds = Rectangle{body.x, body.y, listWidth, body.height};
   UI::DrawRect(ec, borderBounds, 2, UI::COLORS[UI_DARK], BLANK);
 
   // Draw Create Button
-  const auto listBounds = Rectangle{body.x + UI::PAD * 6.0F, body.y, 50, 20};
+  const auto listBounds = Rectangle{body.x + listWidth, body.y, 50, 20};
   if (UI::DrawButton(ec, listBounds, "#227#Add")) { showNamePopup = true; }
 
   NodeTemplate* activeTemplate = nullptr;
   if (searchField.hasUpdate()) { stringSort(ec.templates.userDefinedNodes, searchField.buffer, sortBuffer); }
 
-  Rectangle entry = {body.x, body.y + UI::PAD, 150, 50};
+  Rectangle entry = {body.x, body.y + UI::PAD, listWidth, 45};
   drawCreatedNodeList(ec, entry, activeTemplate);
 
   if (showNamePopup) {
@@ -79,10 +81,11 @@ void NodeCreator::drawContent(EditorContext& ec, const Rectangle& body) {
       activeEntry = 0;
       showNamePopup = false;
       stringSort(ec.templates.userDefinedNodes, searchField.buffer, sortBuffer);
+      ec.ui.contextMenu.addNode("User Created",  nTemplate.label);
       setNode(ec, nTemplate);
     }
   }
-  const Rectangle space = {body.x + 150.0F, body.y, body.width - 150.0F, body.height};
+  const Rectangle space = {body.x + listWidth, body.y, body.width - listWidth, body.height};
   drawNodeCreateSandbox(ec, space, activeTemplate);
 }
 
@@ -91,21 +94,21 @@ void NodeCreator::setNode(EditorContext& ec, const NodeTemplate& nTemplate) {
   activeNode = ec.templates.createNode(ec, nTemplate.label, {0, 0}, NodeID(0));
 }
 
-void NodeCreator::drawSearchField(EditorContext& ec, const Rectangle& body) {
+void NodeCreator::drawSearchField(EditorContext& ec, const Rectangle& body, float width) {
   if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) searchField.onFocusGain(ec.logic.mouse);
-  searchField.bounds = ec.display.getFullyScaled({body.x, body.y + 1, 150, 20});
-  searchField.update(ec,ec.logic.mouse);
+  searchField.bounds = ec.display.getFullyScaled({body.x, body.y + 1, width, 20});
+  searchField.update(ec, ec.logic.mouse);
   searchField.draw("Search...");
 }
 
 void NodeCreator::drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeTemplate*& activeTemplate) {
   int i = 0;
-  for (const auto& nInfo : sortBuffer) {
+  for (const auto nInfo : sortBuffer) {
     const bool selected = i == activeEntry;
     const Vector2 mouse = GetMousePosition();
     const Rectangle entryBounds = ec.display.getFullyScaled(entry);
 
-    Color text = selected ? UI::COLORS[UI_MEDIUM] : UI::COLORS[UI_LIGHT];
+    const Color text = selected ? UI::COLORS[UI_MEDIUM] : UI::COLORS[UI_LIGHT];
     Color background = selected ? UI::Darken(UI::COLORS[UI_LIGHT], 25) : UI::COLORS[UI_MEDIUM];
     Color border = UI::COLORS[UI_DARK];
 
@@ -125,7 +128,28 @@ void NodeCreator::drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeT
     UI::DrawRect(ec, entry, 2, border, background);
     UI::DrawText(ec, {entry.x + UI::PAD / 2.0F, entry.y + UI::PAD / 2.0F}, nInfo->nTemplate.label, text, false);
 
-    entry.y += 50.0F;
+    // Draw action buttons
+    constexpr auto buttonSize = 18.0F;
+    const auto buttonY = entry.y + (entry.height - buttonSize) / 2.0F;
+    const auto edit = Vector2{entry.x + entry.width - buttonSize * 3, buttonY};
+    const auto remove = Vector2{entry.x + entry.width - buttonSize * 1.8F, buttonY};
+
+    if (UI::DrawButton(ec, edit, buttonSize, buttonSize, "#022#")) { showRenameField = true; }
+    if (UI::DrawButton(ec, remove, buttonSize, buttonSize, "#143#")) {
+      if (ec.templates.userDefinedNodes.contains(nInfo->nTemplate.label)) {
+        auto& eraseInfo = ec.templates.userDefinedNodes[nInfo->nTemplate.label];
+        ec.ui.contextMenu.removeNode("User Created", eraseInfo.nTemplate.label);
+        for (auto& [label, component] : eraseInfo.nTemplate.components) {
+          delete component;
+          delete label;
+        }
+        ec.templates.userDefinedNodes.erase(nInfo->nTemplate.label);
+        delete eraseInfo.nTemplate.label;
+        stringSort(ec.templates.userDefinedNodes, searchField.buffer, sortBuffer);
+      }
+    }
+
+    entry.y += 45.0F;
     i++;
   }
 }
@@ -174,7 +198,7 @@ void NodeCreator::drawNodeCreateSandbox(EditorContext& ec, Rectangle space, Node
   if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) { componentName.onFocusGain(ec.logic.mouse); }
   componentName.bounds = ec.display.getFullyScaled({space.x + UI::PAD, space.y + UI::PAD, 150, 20});
   componentName.draw("ComponentName...");
-  componentName.update(ec,ec.logic.mouse);
+  componentName.update(ec, ec.logic.mouse);
 
   if (UI::DrawButton(ec, {space.x + UI::PAD * 15, space.y + UI::PAD * 3}, 100, 25, "#128#Remove last")) {
     for (int i = COMPS_PER_NODE - 1; i > -1; --i) {

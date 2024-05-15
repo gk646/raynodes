@@ -38,12 +38,12 @@ TEST_CASE("Test correct saving and loading", "[Persist]") {
 
   ec.persist.openedFilePath = testPath;
   ec.core.hasUnsavedChanges = true;
-  ec.persist.saveToFile(ec);
+  ec.persist.saveProject(ec);
 
   REQUIRE(ec.core.nodes.size() == testSize);
   REQUIRE(std::filesystem::exists(testPath) == true);
 
-  ec.persist.loadFromFile(ec);
+  ec.persist.importProject(ec);
 
   REQUIRE(ec.core.nodes.size() == testSize);
   REQUIRE(std::filesystem::exists(testPath) == true);
@@ -66,11 +66,11 @@ TEST_CASE("Benchmark saving and loading", "[Persist]") {
   ec.core.hasUnsavedChanges = true;
 
   BENCHMARK("Save") {
-    return ec.persist.saveToFile(ec);
+    return ec.persist.saveProject(ec);
   };
 
   BENCHMARK("Load") {
-    return ec.persist.loadFromFile(ec);
+    return ec.persist.importProject(ec);
   };
 
   REQUIRE(ec.core.nodes.size() == testSize);
