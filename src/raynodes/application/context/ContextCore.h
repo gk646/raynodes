@@ -23,7 +23,7 @@
 
 struct Core {
   static constexpr int TARGET_FPS = 100;
-  static constexpr int MAX_ACTIONS = 5;
+  static constexpr int MAX_ACTIONS = 25;
 
   std::unordered_map<NodeID, Node*> selectedNodes;
   std::unordered_map<NodeID, Node*> nodeMap;

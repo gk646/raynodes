@@ -30,7 +30,7 @@
 
 template <ComponentStyle style = IN_AND_OUT>
 class TextFieldC final : public Component {
-  TextInputField textField;
+  TextField textField;
   TextAction* currentAction = nullptr;
 
  public:
@@ -44,7 +44,7 @@ class TextFieldC final : public Component {
   }
 
   void update(EditorContext& ec, Node& parent) override {
-    textField.update(ec.logic.worldMouse);
+    textField.update(ec);
 
     if constexpr (style == IN_AND_OUT || style == INPUT_ONLY) {
       auto* input = inputs[0].getData<STRING>();

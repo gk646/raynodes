@@ -30,7 +30,7 @@
 template <ComponentStyle style = IN_AND_OUT>
 class Vec2C final : public Component {
   static constexpr int FLOAT_FIELDS = 2;
-  TextInputField textFields[FLOAT_FIELDS]{};
+  TextField textFields[FLOAT_FIELDS]{};
 
  public:
   explicit Vec2C(const ComponentTemplate ct) : Component(ct, 200, 20) {}
@@ -59,7 +59,7 @@ class Vec2C final : public Component {
 
   void update(EditorContext& ec, Node& parent) override {
     for (auto& f : textFields) {
-      f.update(ec.logic.worldMouse);
+      f.update(ec);
     }
 
     Vec2 out{0.0F, 0.0F};

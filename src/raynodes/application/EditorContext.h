@@ -47,17 +47,21 @@
 #include "context/ContextTemplates.h"
 #include "context/ContextPlugin.h"
 
+// We actually wanna keep this as small as possible
+// So its always hot in cache
+// Sorted after access pattern and size - sadly cant use perf with cache misses on WSL
+
 struct EditorContext {
+  Input input{};
   Core core{};
-  Display display{};
   Logic logic{};
-  Template templates{};
   UI ui{};
+  Display display{};
+  String string{};
+  Template templates{};
   Plugin plugin{};
   Persist persist{};
-  Input input{};
   Info info{};
-  String string{};
 
   explicit EditorContext(int argc, char* argv[]) {
     if (argc == 2) {

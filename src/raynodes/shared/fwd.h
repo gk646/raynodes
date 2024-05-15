@@ -45,6 +45,7 @@ struct NodeRegister;        // Interface that encaspulate registering nodes
 struct EditorContext;       // Central backend data holder
 struct PluginContainer;     // Holds the dll instance and the plugin instance
 class Window;              // UI class
+struct TextField;              // UI class
 
 using ComponentCreateFunc = Component* (*)(ComponentTemplate);  // Takes a name and returns a new Component
 using NodeCreateFunc = Node* (*)(const NodeTemplate&, Vec2, NodeID);  // Creates a new node

@@ -18,22 +18,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
-#define RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
+#ifndef TEXTPOPUP_H
+#define TEXTPOPUP_H
 
-struct Info {
-  static constexpr auto applicationName = "raynodes";
-  static constexpr auto fileEnding = ".rn";
-  static constexpr const char* fileFilter[1] = {"*.rn"};
-  static constexpr auto fileDescription = "raynodes save (.rn)";
-  static constexpr auto wikiLink = "https://github.com/gk646/raynodes/wiki";
-  static constexpr auto github = "https://github.com/gk646/raynodes";
-  static constexpr auto about = "Copyright #226# 2024 gk646. MIT License";
-  static constexpr int majorVersion = 1;
-  static constexpr int minorVersion = 0;
-  static constexpr int patch = 3;
+#include "shared/fwd.h"
 
-  static const char* getVersion(EditorContext& ec);
+// Return nullptr for a valid str else the fail reason
+using ValidationFunc = const char* (*)(EditorContext&, const char*);
+
+struct TextPopup {
+  static const char* Draw(EditorContext& ec, Rectangle& r, TextField& input, ValidationFunc func, const char* txt);
 };
 
-#endif  //RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTINFO_H_
+#endif  //TEXTPOPUP_H
