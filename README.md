@@ -49,7 +49,7 @@ To build the project locally you just need to do 4 simple steps:
 4. Build the project from inside the build directory with `make ..`
 
 All external dependencies are included in the source!
-This model is chose based on their combined low size (only **14mb**) and the provided simplicity for sharing and integrated testing.
+This model is chosen based on their combined low size (only **14mb**) and the provided simplicity for sharing and integrated testing.
 
 ## Editor Features:
 
@@ -74,9 +74,10 @@ the [shortcuts](https://github.com/gk646/raynodes/wiki/Controls) page in the wik
 The user interface takes inspiration from other editors like paint.net. For a comprehensive list checkout
 the [user-interface](https://github.com/gk646/raynodes/wiki/User-Interface) page of the wiki!
 
-### User Defined Templates *(soon)*
+### User Defined Templates 
 
-...
+`raynodes` gives you the ability to create your own nodes without even interacting with the source code!
+Open the `Node Creator` window via the button on the left and add a new node by clicking `+Add`. For more in-depth information check out the [User-Created-Nodes](https://github.com/gk646/raynodes/wiki/User-Created-Nodes) page of the wiki!
 
 ## Custom Components!
 

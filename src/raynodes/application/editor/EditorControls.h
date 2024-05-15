@@ -122,7 +122,7 @@ inline void PollControls(EditorContext& ec) {
       ec.core.paste(ec);
     } else if (ec.input.isKeyPressed(KEY_S)) {
       const bool saveAs = ec.input.isKeyDown(KEY_LEFT_SHIFT);
-      ec.persist.saveToFile(ec, saveAs);
+      ec.persist.saveProject(ec, saveAs);
     } else if (ec.input.isKeyPressed(KEY_SLASH)) {  // -, _
       ec.display.zoomOut();
     } else if (ec.input.isKeyPressed(KEY_RIGHT_BRACKET)) {  // +, *, ~

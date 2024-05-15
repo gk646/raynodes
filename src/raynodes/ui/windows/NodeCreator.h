@@ -37,6 +37,7 @@ struct NodeCreator final : Window {
   int activeEntry = 0;
   bool showNamePopup = false;
   bool showComponentSearch = false;
+  bool showRenameField = false;
 
   NodeCreator(const Rectangle& r, const char* headerText);
   void drawContent(EditorContext& ec, const Rectangle& body) override;
@@ -50,7 +51,7 @@ struct NodeCreator final : Window {
 
  private:
   void setNode(EditorContext& ec, const NodeTemplate& nTemplate);
-  void drawSearchField(EditorContext& ec, const Rectangle& body);
+  void drawSearchField(EditorContext& ec, const Rectangle& body, float width);
   void drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeTemplate*& nTemplate);
   void drawNodeCreateSandbox(EditorContext& ec, Rectangle space, NodeTemplate* nTemplate);
   static void stringSort(auto& userCreatedTemplates, const std::string& searchText, auto& sortedNodes);

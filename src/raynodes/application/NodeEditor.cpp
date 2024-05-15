@@ -43,14 +43,14 @@ NodeEditor::NodeEditor(const int argc, char* argv[]) : context(argc, argv) {
 bool NodeEditor::start() {
   cxstructs::Constraint<true> c;
 
-  c + context.persist.loadWorkingDirectory(context);
+  c + context.persist.loadUserFiles(context);
   c + context.core.loadCore(context);
   c + context.display.loadResources(context);
   c + context.plugin.loadPlugins(context);
   c + context.ui.loadUI(context);
 
   // Only load file if path is given - automatically opens picker
-  if (!context.persist.openedFilePath.empty()) { c + context.persist.loadFromFile(context); }
+  if (!context.persist.openedFilePath.empty()) { c + context.persist.importProject(context); }
 
   return c.holds();
 }
