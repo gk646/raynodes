@@ -22,6 +22,7 @@
 #define TEXTINPUTC_H
 
 #include <string>
+#include <cxutil/cxio.h>
 
 #include "application/EditorContext.h"
 #include "component/Component.h"
@@ -29,7 +30,7 @@
 #include "ui/elements/TextField.h"
 
 template <ComponentStyle style = IN_AND_OUT>
-struct TextFieldC final : public Component {
+struct TextFieldC final : Component {
   TextField textField;
   TextAction* currentAction = nullptr;
 

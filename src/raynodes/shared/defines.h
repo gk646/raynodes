@@ -21,12 +21,13 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
-#define COMPS_PER_NODE 6
+#define COMPS_PER_NODE 6    // Max components per node
 #define INPUT_PINS 3        // Max input pins for each component
 #define OUTPUT_PINS 3       // Max output pins for each component
 #define NODE_OUTPUT_PINS 3  // Max output pins for each node  on the top level
 #define START_FPS 90
 #define PLG_MAX_NAME_LEN 17  //16 with terminator ('\0')
+#define NEW_LINE_SUB '\034'
 
 // Defines for the plugin exports
 #ifdef _WIN32

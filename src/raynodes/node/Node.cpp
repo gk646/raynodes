@@ -33,6 +33,8 @@
 static constexpr float PADDING = 3;
 static constexpr float OFFSET_Y = 20;  // Node name header offset
 static Vector2 DRAG_OFFSET;            // Drag anchor point
+static constexpr float MIN_WIDTH = 50;
+static constexpr float MIN_HEIGHT = 50;
 
 // Helper functions
 namespace {
@@ -284,12 +286,12 @@ void Node::Draw(EditorContext& ec, Node& n) {
 
   // Iterate over components and draw them
   const float initialY = startY;
-  for (const auto& component : n.components) {
+  for (const auto component : n.components) {
     DrawComponent(ec, n, *component, n.x, startY, n.width);
   }
 
   n.contentHeight = static_cast<uint16_t>(startY - initialY);
-  n.height = startY - n.y + Pin::PIN_SIZE + PADDING;
+  n.height = std::max(startY - n.y + Pin::PIN_SIZE + PADDING, MIN_HEIGHT);
 
   n.draw(ec);  // Call event func last
 }
@@ -309,12 +311,13 @@ void Node::Update(EditorContext& ec, Node& n) {
     if (c->getWidth() > biggestWidth) { biggestWidth = static_cast<float>(c->width); }
   }
 
-  n.width = biggestWidth + PADDING * 4.0F;  // Components are drawn with 2 * PADDING inset (both sides)
+  // Components are drawn with 2 * PADDING inset (both sides)
+  n.width = std::max(biggestWidth + PADDING * 4.0F, MIN_WIDTH);
 
   n.update(ec);  // Call event func after components
 
   //User is selecting -> no dragging
-  if (ec.logic.isSelecting) { return HandleSelection(n, ec, bounds, selectedNodes); }
+  if (ec.logic.isSelecting) [[unlikely]] { return HandleSelection(n, ec, bounds, selectedNodes); }
 
   //Another node is dragged no point in updating this one
   if (!n.isDragged && ec.logic.isAnyNodeDragged) {
@@ -342,7 +345,7 @@ void Node::SaveState(FILE* file, const Node& n) {
   // Save components first for faster access time when importing
   for (const auto c : n.components) {
     c->save(file);
-    fprintf(file, "$");  // Save where the component ends
+    fputc('\035', file);  // Save where the component ends - Group Separator ASCII
   }
 
   n.saveState(file);

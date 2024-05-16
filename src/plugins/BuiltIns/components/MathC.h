@@ -21,6 +21,10 @@
 #ifndef RAYNODES_SRC_COMPONENT_COMPONENTS_MATHC_H_
 #define RAYNODES_SRC_COMPONENT_COMPONENTS_MATHC_H_
 
+#include <cmath>
+#include <cxutil/cxio.h>
+
+#include "application/EditorContext.h"
 #include "component/Component.h"
 #include "ui/elements/DropDown.h"
 
@@ -46,21 +50,6 @@ enum MOperation : uint8_t {
   Exp,       // Exponential function (e^x)
   Abs,       // Absolute value
   END,
-};
-
-struct MathC final : Component {
-  int selectedMode = 0;
-  DropDown dropDown{};
-  explicit MathC(const ComponentTemplate ct) : Component(ct, 100, 20) {}
-  Component* clone() override { return new MathC(*this); }
-  void draw(EditorContext& ec, Node& parent) override;
-  void update(EditorContext& ec, Node& parent) override;
-  void save(FILE* file) override;
-  void load(FILE* file) override;
-  void onCreate(EditorContext& ec, Node& parent) override;
-
- private:
-  static double performOperation(double x, double y, MOperation op);
 };
 
 inline const char* MOperationToString(const MOperation op) {
@@ -109,5 +98,98 @@ inline const char* MOperationToString(const MOperation op) {
       return "Unknown Operation";
   }
 }
+
+struct MathC final : Component {
+  int selectedMode = 0;
+  DropDown dropDown{};
+  explicit MathC(const ComponentTemplate ct) : Component(ct, 100, 20) {}
+  Component* clone() override { return new MathC(*this); }
+
+  void draw(EditorContext& ec, Node& /**/) override {
+    const auto bounds = getBounds();
+    dropDown.draw(ec, bounds.x, bounds.y);
+  }
+
+  void update(EditorContext& ec, Node& /**/) override {
+    selectedMode = dropDown.update(ec);
+    double a = inputs[0].getData<FLOAT>();
+    double b = inputs[1].getData<FLOAT>();
+
+    const auto res = performOperation(a, b, static_cast<MOperation>(selectedMode));
+    outputs[0].setData<FLOAT>(res);
+  }
+
+  void onCreate(EditorContext& /**/, Node& /**/) override {
+    internalLabel = false;  //We don't want to draw our label
+
+    addPinInput(FLOAT);
+    addPinInput(FLOAT);
+
+    addPinOutput(FLOAT);
+
+    dropDown.items.reserve(END + 1);
+    for (int i = 0; i < END; i++) {
+      dropDown.items.emplace_back(MOperationToString(static_cast<MOperation>(i)));
+    }
+
+    dropDown.w = width;
+    dropDown.h = height;
+  }
+
+  void save(FILE* file) override { cxstructs::io_save(file, selectedMode); }
+
+  void load(FILE* file) override {
+    cxstructs::io_load(file, selectedMode);
+    dropDown.selectedIndex = selectedMode;
+  }
+
+  static double performOperation(double x, double y, MOperation op) {
+    switch (op) {
+      case ADD:
+        return x + y;
+      case Subtract:
+        return x - y;
+      case Multiply:
+        return x * y;
+      case Divide:
+        return y != 0 ? x / y : std::numeric_limits<double>::infinity();  // Guard against division by zero
+      case Power:
+        return std::pow(x, y);
+      case Sqrt:
+        return std::sqrt(x);  // Note: sqrt typically takes one parameter
+      case Log:
+        return std::log10(x);
+      case Ln:
+        return std::log(x);
+      case Sin:
+        return std::sin(x);
+      case Cos:
+        return std::cos(x);
+      case Tan:
+        return std::tan(x);
+      case ASin:
+        return std::asin(x);
+      case ACos:
+        return std::acos(x);
+      case ATan:
+        return std::atan(x);
+      case Sinh:
+        return std::sinh(x);
+      case Cosh:
+        return std::cosh(x);
+      case Tanh:
+        return std::tanh(x);
+      case Exp:
+        return std::exp(x);
+      case Abs:
+        return std::abs(x);
+      case Modulo:
+        if (y != 0) return static_cast<int>(x) % static_cast<int>(y);
+      case END:
+        break;
+    }
+    return 0;
+  }
+};
 
 #endif  //RAYNODES_SRC_COMPONENT_COMPONENTS_MATHC_H_

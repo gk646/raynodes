@@ -20,6 +20,9 @@
 
 #include "BuiltIns.h"
 
+#include <string>  // So we get the std::string loading function
+#include <cxutil/cxio.h>
+
 #include "components/MathC.h"
 #include "components/DisplayC.h"
 #include "components/NumberFieldC.h"
