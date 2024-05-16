@@ -32,8 +32,8 @@ void registerNodes(EditorContext& ec) {
   PluginContainer pc{nullptr, "_Dummy_", nullptr};
   NodeRegister nr{ec, pc};
   ComponentRegister cr{ec, pc};
-  cr.registerComponent<TextFieldC<IN_AND_OUT>>("TextOut");
-  nr.registerNode("DummyN", {{"DummyC", "TextOut"}});
+  cr.registerComponent<TextFieldC<>>("TextField");
+  nr.registerNode("DummyN", {{"DummyC", "TextField"}});
 }
 
 }  // namespace

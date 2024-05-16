@@ -21,11 +21,11 @@
 #ifndef RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTPERSIST_H_
 #define RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTPERSIST_H_
 
-struct Persist {
+struct EXPORT Persist {
   std::string openedFilePath;  // This is a string cause it can be reassigned often
   const char* fileName = nullptr;
-  bool loadUserFiles(EditorContext& ec);
 
+  bool loadUserFiles(EditorContext& ec);
   bool importProject(EditorContext& ec);
   bool saveProject(EditorContext& ec, bool saveAsMode = false);
   bool saveUserTemplates(EditorContext& ec);

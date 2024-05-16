@@ -24,6 +24,8 @@
 namespace Editor {
 inline bool ExitEditor(EditorContext& ec) {
 
+  ec.persist.saveUserTemplates(ec);
+
   ec.core.resetEditor(ec);
 
   for (auto& dll : ec.plugin.plugins) {

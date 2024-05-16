@@ -45,7 +45,7 @@ void Window::draw(EditorContext& ec) {
     DrawLineEx(closeTopRight, closeBottomLeft, 1, closeColor);
 
     if (CheckCollisionPointRec(ec.logic.mouse, cBounds) && ec.input.isMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-      closeWindow();
+      closeWindow(ec);
     }
   }
 
@@ -100,19 +100,19 @@ void Window::update(EditorContext& ec) {
   } else {
     isHeaderHovered = false;
   }
-  if (ec.input.isKeyReleased(KEY_ESCAPE)) closeWindow();
+  if (ec.input.isKeyReleased(KEY_ESCAPE)) closeWindow(ec);
 }
 
-void Window::openWindow() noexcept {
+void Window::openWindow(EditorContext& ec) noexcept {
   if (isWindowOpen) return;
   isWindowOpen = true;
   isDragged = false;
-  onOpen();
+  onOpen(ec);
 }
 
-void Window::closeWindow() noexcept {
+void Window::closeWindow(EditorContext& ec) noexcept {
   if (!isWindowOpen) return;
   isWindowOpen = false;
   isDragged = false;
-  onClose();
+  onClose(ec);
 }
