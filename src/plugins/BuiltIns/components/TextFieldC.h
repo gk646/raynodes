@@ -29,11 +29,10 @@
 #include "ui/elements/TextField.h"
 
 template <ComponentStyle style = IN_AND_OUT>
-class TextFieldC final : public Component {
+struct TextFieldC final : public Component {
   TextField textField;
   TextAction* currentAction = nullptr;
 
- public:
   explicit TextFieldC(const ComponentTemplate ct) : Component(ct, 200, 20), textField(200, 20, NONE) {}
   Component* clone() override { return new TextFieldC(*this); }
   void draw(EditorContext& ec, Node& /**/) override {

@@ -31,7 +31,7 @@ TEST_CASE("Test correct saving and loading", "[Persist]") {
 
   for (int i = 0; i < testSize; ++i) {
     auto node = ec.core.createNode(ec, "DummyN", {0, 0});
-    auto* comp = node->getComponent<TextFieldC<IN_AND_OUT>>("TextField");
+    node->getComponent<TextFieldC<>>("DummyC")->textField.buffer.append("helloo").append(std::to_string(i));
   }
 
   REQUIRE(ec.core.nodes.size() == testSize);
@@ -46,6 +46,13 @@ TEST_CASE("Test correct saving and loading", "[Persist]") {
   ec.persist.importProject(ec);
 
   REQUIRE(ec.core.nodes.size() == testSize);
+
+  for (int i = 0; i < testSize; ++i) {
+    auto str = ec.core.getNode(NodeID(i))->getComponent<TextFieldC<>>("DummyC")->textField.buffer;
+    auto correct = std::string("helloo").append(std::to_string(i));
+    REQUIRE(str == correct);
+  }
+
   REQUIRE(std::filesystem::exists(testPath) == true);
 }
 

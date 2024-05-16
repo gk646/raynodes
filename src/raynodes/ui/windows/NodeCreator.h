@@ -21,6 +21,8 @@
 #ifndef NODECREATOR_H
 #define NODECREATOR_H
 
+#include "application/EditorContext.h"
+
 #include <cxstructs/StackVector.h>
 
 #include "ui/Window.h"
@@ -41,12 +43,15 @@ struct NodeCreator final : Window {
 
   NodeCreator(const Rectangle& r, const char* headerText);
   void drawContent(EditorContext& ec, const Rectangle& body) override;
-  void onClose() override {
+  void onClose(EditorContext& ec)  override  {
     showNamePopup = false;
     searchField.isFocused = false;
     componentSearchField.isFocused = false;
     popupField.isFocused = false;
     showComponentSearch = false;
+  }
+  void onOpen(EditorContext& ec) override {
+    stringSort(ec.templates.userDefinedNodes, searchField.buffer, sortBuffer);
   }
 
  private:
