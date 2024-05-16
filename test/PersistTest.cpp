@@ -23,17 +23,15 @@
 
 #include "TestUtil.h"
 
-TEST_CASE("Test correct saving and loading", "[Persist]") {
+TEST_CASE("Test correct file creation and count", "[Persist]") {
   TestUtil::SetupCWD();
   auto* testPath = "./res/__GEN1__.rn";
   auto ec = TestUtil::getBasicContext();
   constexpr int testSize = 10;
 
   for (int i = 0; i < testSize; ++i) {
-    auto node = ec.core.createNode(ec, "DummyN", {0, 0});
-    node->getComponent<TextFieldC<>>("DummyC")->textField.buffer.append("helloo").append(std::to_string(i));
+    ec.core.createNode(ec, "Text", {0, 0});
   }
-
   REQUIRE(ec.core.nodes.size() == testSize);
 
   ec.persist.openedFilePath = testPath;
@@ -44,16 +42,32 @@ TEST_CASE("Test correct saving and loading", "[Persist]") {
   REQUIRE(std::filesystem::exists(testPath) == true);
 
   ec.persist.importProject(ec);
-
   REQUIRE(ec.core.nodes.size() == testSize);
+  REQUIRE(std::filesystem::exists(testPath) == true);
+}
 
-  for (int i = 0; i < testSize; ++i) {
-    auto str = ec.core.getNode(NodeID(i))->getComponent<TextFieldC<>>("DummyC")->textField.buffer;
-    auto correct = std::string("helloo").append(std::to_string(i));
-    REQUIRE(str == correct);
+TEST_CASE("Teset correct data persistence", "[Persist]") {
+  TestUtil::SetupCWD();
+  auto* testPath = "./res/__GEN1__.rn";
+  auto ec = TestUtil::getBasicContext();
+  ec.persist.openedFilePath = testPath;
+
+  constexpr int testInt = 5;
+  constexpr const char* testString = "Test";
+
+  // Create nodes
+  {
+    ec.core.createNode(ec, "Text", {})->getComponent<TextFieldC<>>("Text")->textField.buffer = testString;
+    ec.core.createNode(ec, "Int", {})->getComponent<MathC>("Int")->selectedMode = testInt;
   }
 
-  REQUIRE(std::filesystem::exists(testPath) == true);
+  // Persist cycle
+  ec.core.hasUnsavedChanges = true;
+  ec.persist.saveProject(ec);
+  ec.persist.importProject(ec);
+
+  REQUIRE(ec.core.getNode(NodeID(0))->getComponent<TextFieldC<>>("Text")->textField.buffer == testString);
+  REQUIRE(ec.core.getNode(NodeID(1))->getComponent<MathC>("Int")->selectedMode == testInt);
 }
 
 TEST_CASE("Benchmark saving and loading", "[Persist]") {
@@ -64,7 +78,7 @@ TEST_CASE("Benchmark saving and loading", "[Persist]") {
   constexpr int testSize = 1000;
 
   for (int i = 0; i < testSize; ++i) {
-    ec.core.createNode(ec, "DummyN", {0, 0});
+    ec.core.createNode(ec, "Text", {0, 0});
   }
 
   REQUIRE(ec.core.nodes.size() == testSize);

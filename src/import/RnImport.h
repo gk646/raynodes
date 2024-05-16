@@ -51,10 +51,16 @@ struct RnImport;
 // "path" can be relative (to the current CWD) or absolute
 RnImport importRN(const char* path);
 
-#define COMPS_PER_NODE 6         // Max components per node
-#define USED_LINE_SEPARATOR '|'  // Set this to the linesep used by cxio (default '|')
-#define COMPONENT_SEPARATOR '$'  // The separator between component data (default '$')
-#define RN_MAX_NAME_LEN 16       // Max length of any component or node identifiers
+// Returns a buil import of a ".rn" file as generate from raynodes
+// fileData has to be the allocated data of a ".rn" file and fileSize its size
+// Failure: Returns a empty import struct with all values either nullptr and 0
+RnImport importRNFromMemory(char* fileData, uint32_t fileSize);
+
+#define COMPS_PER_NODE 6            // Max components per node
+#define SEPARATOR '\037'            // Set this to the linesep used by cxio (default '\037'  - Unit Separator)
+#define COMPONENT_SEPARATOR '\035'  // The separator between component data (default '\035' - Group Separator)
+#define LINE_FEED_SUB '\036'        // Replaces new line ('\n') in the file ( default '\036' - Record Separator)
+#define RN_MAX_NAME_LEN 16          // Max length of any component or node identifiers
 
 using ByteIndex = uint32_t;      // Limits fileSize to 4GB
 using NodeID = uint16_t;         // Limits to 65536 nodes per project
@@ -70,16 +76,19 @@ struct Vec2 {
 // Enables sharing of unallocated string data
 // The hashing functions allow to creat switch statements based on hashed node names
 // This allows for fast conditional node handling based on its type
+// IMPORTANT: new line '\n' is substituted in the file - if you dont use these getters you MUST handle this yourself
 struct StringView {
-  const char* start = nullptr;
-  uint16_t length = 0;
-  [[nodiscard]] std::string getString() const {
-    if (start == nullptr || length == 0) [[unlikely]] { return {}; }
-    return {start, length};
-  }
+  const char* start = nullptr;  // Where the view begins
+  uint16_t length = 0;          // How long the view is valid
+
+  // Returns a allocated char* of this view
+  // Failure: if the start is nullptr or length is 0 returns nullptr
+  [[nodiscard("Allocated a ptr")]] char* getAllocatedString() const;
+  // Returns a std::string of the view
+  [[nodiscard]] std::string getString() const;
   // Generates a hash without allocating the string
   // Failure: if "start" is null or "length" is 0 will return UINT32_MAX
-  [[nodiscard]] uint32_t getHash() const;
+  [[nodiscard]] constexpr uint32_t getHash() const;
   // Generates a with the same function as "getHash"
   // Failure: if the string is empty will return UINT32_MAX
   constexpr static uint32_t Hash(const std::string& s);
@@ -340,21 +349,21 @@ namespace raynodes {
 template <DataType dt>
 auto NodeData::getData(char* fileData, const ComponentIndex id, const int index) const {
   char* workPtr = fileData + startByte;
-  _str_skip_char(workPtr, USED_LINE_SEPARATOR, 1);      // Skip the node id
-  _str_skip_char(workPtr, COMPONENT_SEPARATOR, id);     // Skipped if component is 0
-  _str_skip_char(workPtr, USED_LINE_SEPARATOR, index);  // Skipped if index is 0
+  _str_skip_char(workPtr, SEPARATOR, 1);             // Skip the node id
+  _str_skip_char(workPtr, COMPONENT_SEPARATOR, id);  // Skipped if component is 0
+  _str_skip_char(workPtr, SEPARATOR, index);         // Skipped if index is 0
 
   if constexpr (dt == BOOLEAN) {
     return std::strtol(workPtr, nullptr, 10) == 1;
   } else if constexpr (dt == STRING) {
     const char* start = workPtr;
     int count = 0;
-    while (*(start + count) != USED_LINE_SEPARATOR && *(start + count) != '\0') {
+    while (*(start + count) != SEPARATOR && *(start + count) != '\0') {
       count++;
     }
     return std::string{start, (size_t)count};  // Rely on RVO for efficient return
   } else if constexpr (dt == STRING_VIEW) {
-    return StringView{workPtr, (uint16_t)_str_count_chars_until(workPtr, USED_LINE_SEPARATOR, RN_MAX_NAME_LEN)};
+    return StringView{workPtr, (uint16_t)_str_count_chars_until(workPtr, SEPARATOR, RN_MAX_NAME_LEN)};
   } else if constexpr (dt == INTEGER) {
     return std::strtoll(workPtr, nullptr, 10);
   } else if constexpr (dt == FLOAT) {
@@ -367,27 +376,41 @@ auto NodeData::getData(char* fileData, const ComponentIndex id, const int index)
     static_assert(dt == STRING, "Wont be supported... How?");
   }
 }
+
 inline ComponentIndex NodeTemplate::getCompIndex(char* fileData, const char* label) const {
   char* workPtr = fileData + startByte;
-  _str_skip_char(workPtr, USED_LINE_SEPARATOR, 1);
+  _str_skip_char(workPtr, SEPARATOR, 1);
   for (uint8_t i = 0; i < COMPS_PER_NODE; ++i) {
     if (workPtr[0] == '\n') return UINT8_MAX;  // Dummy value
-    if (_str_cmp_stop_at(label, workPtr, RN_MAX_NAME_LEN, USED_LINE_SEPARATOR)) return i;
-    _str_skip_char(workPtr, USED_LINE_SEPARATOR, 1);
+    if (_str_cmp_stop_at(label, workPtr, RN_MAX_NAME_LEN, SEPARATOR)) return i;
+    _str_skip_char(workPtr, SEPARATOR, 1);
   }
   return UINT8_MAX;  // Dummy value
 }
 
 inline bool NodeTemplate::isNodeName(const char* fileData, const char* nodeName) const {
-  return _str_cmp_stop_at(nodeName, fileData + startByte, RN_MAX_NAME_LEN, USED_LINE_SEPARATOR);
+  return _str_cmp_stop_at(nodeName, fileData + startByte, RN_MAX_NAME_LEN, SEPARATOR);
 }
+
 inline StringView NodeTemplate::getName(const char* fileData) const {
-  uint16_t len = _str_count_chars_until(fileData + startByte, USED_LINE_SEPARATOR, RN_MAX_NAME_LEN);
+  uint16_t len = _str_count_chars_until(fileData + startByte, SEPARATOR, RN_MAX_NAME_LEN);
   return {fileData + startByte, len};
 }
 
-inline uint32_t StringView::getHash() const {
-  if (start == nullptr) [[unlikely]] { return UINT32_MAX; }
+inline char* StringView::getAllocatedString() const {
+  auto* ret = new char[length + 1];  // +1 for the null terminator
+  std::memcpy(ret, start, length);
+  ret[length] = '\0';  // Null terminate the string
+  return ret;
+}
+
+inline std::string StringView::getString() const {
+  if (start == nullptr || length == 0) [[unlikely]] { return {}; }
+  return {start, length};
+}
+
+constexpr uint32_t StringView::getHash() const {
+  if (start == nullptr || length == 0) [[unlikely]] { return UINT32_MAX; }
   return _fnv1a_32(start, length);
 }
 
@@ -421,6 +444,7 @@ inline RnImport importRN(const char* path) {
   long fileSize = ftell(file);
   if (fileSize == -1) {
     perror("Failed to determine file size");
+    fileSize = 0;
     fclose(file);
   }
 
@@ -454,6 +478,12 @@ inline RnImport importRN(const char* path) {
   // Return the result
   return {buffer, static_cast<ByteIndex>(size)};
 }
+
+inline RnImport importRNFromMemory(char* fileData, uint32_t fileSize) {
+  if (fileData == nullptr || fileSize == 0) return {nullptr, 0};
+  return {fileData, fileSize};
+}
+
 inline RnImport::RnImport(char* fileData, ByteIndex size) : fileData(fileData), size(size) {
   if (fileData == nullptr) return;
   auto* indexPtr = fileData;
@@ -467,7 +497,7 @@ inline RnImport::RnImport(char* fileData, ByteIndex size) : fileData(fileData), 
 
     _str_skip_char(indexPtr, '\n', 1);
     nodeCnt = _str_parse_int(indexPtr);
-    _str_skip_char(indexPtr, USED_LINE_SEPARATOR, 1);
+    _str_skip_char(indexPtr, SEPARATOR, 1);
     connCnt = _str_parse_int(indexPtr);
     _str_skip_char(indexPtr, '\n', 2);
     templateCnt = _str_parse_int(indexPtr);
@@ -481,7 +511,7 @@ inline RnImport::RnImport(char* fileData, ByteIndex size) : fileData(fileData), 
     _str_skip_char(indexPtr, '\n', 1);  // Skip the template count
     for (int i = 0; i < templateCnt; ++i) {
       const int index = _str_parse_int(indexPtr);
-      _str_skip_char(indexPtr, USED_LINE_SEPARATOR, 1);
+      _str_skip_char(indexPtr, SEPARATOR, 1);
       NodeTemplate nt{static_cast<uint16_t>(indexPtr - fileData)};
       memcpy(templates + index, &nt, sizeof(NodeTemplate));
       _str_skip_char(indexPtr, '\n', 1);  // Copy cause of const
@@ -492,7 +522,7 @@ inline RnImport::RnImport(char* fileData, ByteIndex size) : fileData(fileData), 
     _str_skip_char(indexPtr, '\n', 1);  // Skip nodes section
     for (int i = 0; i < nodeCnt; ++i) {
       const int templateNum = _str_parse_int(indexPtr);
-      _str_skip_char(indexPtr, USED_LINE_SEPARATOR, 1);
+      _str_skip_char(indexPtr, SEPARATOR, 1);
       const int nodeID = _str_parse_int(indexPtr);
       NodeData nd{static_cast<ByteIndex>(indexPtr - fileData), (NodeID)nodeID, (TemplateID)templateNum};
       memcpy(nodes + i, &nd, sizeof(NodeData));  // Copy cause of const
@@ -504,15 +534,15 @@ inline RnImport::RnImport(char* fileData, ByteIndex size) : fileData(fileData), 
     _str_skip_char(indexPtr, '\n', 1);  // Skip connection section
     for (int i = 0; i < connCnt; ++i) {
       const int fromNode = _str_parse_int(indexPtr);
-      _str_skip_char(indexPtr, USED_LINE_SEPARATOR, 1);
+      _str_skip_char(indexPtr, SEPARATOR, 1);
       const int from = _str_parse_int(indexPtr);
-      _str_skip_char(indexPtr, USED_LINE_SEPARATOR, 1);
+      _str_skip_char(indexPtr, SEPARATOR, 1);
       const int out = _str_parse_int(indexPtr);
-      _str_skip_char(indexPtr, USED_LINE_SEPARATOR, 1);
+      _str_skip_char(indexPtr, SEPARATOR, 1);
       const int toNode = _str_parse_int(indexPtr);
-      _str_skip_char(indexPtr, USED_LINE_SEPARATOR, 1);
+      _str_skip_char(indexPtr, SEPARATOR, 1);
       const int to = _str_parse_int(indexPtr);
-      _str_skip_char(indexPtr, USED_LINE_SEPARATOR, 1);
+      _str_skip_char(indexPtr, SEPARATOR, 1);
       const int in = _str_parse_int(indexPtr);
       connections[i] = {(NodeID)fromNode, (int8_t)from, (uint8_t)out, (NodeID)toNode, (int8_t)to, (uint8_t)in};
       _str_skip_char(indexPtr, '\n', 1);
