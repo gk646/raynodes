@@ -22,12 +22,12 @@ class Window {
   virtual ~Window() = default;
   void draw(EditorContext& ec);
   // Opens the window
-  void openWindow() noexcept;
+  void openWindow(EditorContext& ec) noexcept;
   // Opens the window
-  void closeWindow() noexcept;
-  void toggleWindow() noexcept {
-    if (isWindowOpen) closeWindow();
-    else openWindow();
+  void closeWindow(EditorContext& ec) noexcept;
+  void toggleWindow(EditorContext& ec) noexcept {
+    if (isWindowOpen) closeWindow(ec);
+    else openWindow(ec);
   }
 
   // Getters
@@ -36,8 +36,8 @@ class Window {
 
  protected:
   // Events methods
-  virtual void onOpen() {}
-  virtual void onClose() {}
+  virtual void onOpen(EditorContext&ec) {}
+  virtual void onClose(EditorContext&ec) {}
   virtual void drawContent(EditorContext& ec, const Rectangle& body) = 0;
 
  private:

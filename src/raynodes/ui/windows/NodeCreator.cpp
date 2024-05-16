@@ -81,7 +81,7 @@ void NodeCreator::drawContent(EditorContext& ec, const Rectangle& body) {
       activeEntry = 0;
       showNamePopup = false;
       stringSort(ec.templates.userDefinedNodes, searchField.buffer, sortBuffer);
-      ec.ui.contextMenu.addNode("User Created",  nTemplate.label);
+      ec.ui.contextMenu.addNode(UI::USER_CATEGORY, nTemplate.label);
       setNode(ec, nTemplate);
     }
   }
@@ -138,7 +138,7 @@ void NodeCreator::drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeT
     if (UI::DrawButton(ec, remove, buttonSize, buttonSize, "#143#")) {
       if (ec.templates.userDefinedNodes.contains(nInfo->nTemplate.label)) {
         auto& eraseInfo = ec.templates.userDefinedNodes[nInfo->nTemplate.label];
-        ec.ui.contextMenu.removeNode("User Created", eraseInfo.nTemplate.label);
+        ec.ui.contextMenu.removeNode(UI::USER_CATEGORY, eraseInfo.nTemplate.label);
         for (auto& [label, component] : eraseInfo.nTemplate.components) {
           delete component;
           delete label;

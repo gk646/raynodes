@@ -115,11 +115,9 @@ void SaveTemplates(FILE* file, EditorContext& ec) {
   io_save_section(file, "Templates");
   io_save(file, (int)ec.templates.registeredNodes.size());
   io_save_newline(file);
-  char buffer[PLG_MAX_NAME_LEN];
   for (const auto& nt : ec.templates.registeredNodes | std::views::values) {
-    io_save(file, compIndices.add(nt.nTemplate.label));          // The arbitrary id of the template
-    snprintf(buffer, sizeof(buffer), "%s", nt.nTemplate.label);  // Cut of longer names
-    io_save(file, buffer);                                       // The node name
+    io_save(file, compIndices.add(nt.nTemplate.label));  // The arbitrary id of the template
+    io_save(file, nt.nTemplate.label);                   // The node name
     for (const auto& [label, component] : nt.nTemplate.components) {
       io_save(file, label == nullptr ? "" : label);
     }
@@ -273,8 +271,6 @@ bool Persist::saveProject(EditorContext& ec, bool saveAsMode) {
   return true;
 }
 bool Persist::importProject(EditorContext& ec) {
-  FILE* file;
-
   if (openedFilePath.empty()) {
     //TODO save and reuse default path
     auto* res = tinyfd_openFileDialog("Open File", nullptr, 1, Info::fileFilter, Info::fileDescription, 0);
@@ -283,7 +279,7 @@ bool Persist::importProject(EditorContext& ec) {
 
   const auto* path = openedFilePath.c_str();
 
-  file = fopen(path, "rb");
+  FILE* file = fopen(path, "rb");
 
   if (file == nullptr) {
     fprintf(stderr, "Unable to open file %s\n", path);
@@ -317,54 +313,89 @@ bool Persist::importProject(EditorContext& ec) {
 //-----------USER_FILES-----------//
 
 namespace {
-template <typename PersistFunc>
-bool LoadFromFile(const char* fileName, PersistFunc func) {
+bool LoadFromFile(EditorContext& ec, const char* path, PersistFunc func) {
+  FILE* file = fopen(path, "rb");
+
+  if (file == nullptr) {
+    fprintf(stderr, "Unable to open file %s\n", path);
+    return true;
+  }
+
+  auto res = func(ec, file);
+  if (!res) return false;
+
+  if (fclose(file) != 0) return false;
+
   return true;
 }
 
-bool LoadUserTemplates(FILE* file, EditorContext& ec) {
+bool LoadUserTemplates(EditorContext& ec, FILE* file) {
   io_load_newline(file, true);
   int size;
   io_load(file, size);
   io_load_newline(file, true);
-  for (int i = 0; i < size; ++i) {}
+  char buffer[PLG_MAX_NAME_LEN]{};
+  for (int i = 0; i < size; ++i) {
+    NodeTemplate temp;
+    auto written = io_load(file, buffer, PLG_MAX_NAME_LEN);
+    if (written > 0) temp.label = str_dup(buffer);
+    else {
+      io_load_newline(file, true);
+      continue;
+    }
+    for (int j = 0; j < COMPS_PER_NODE; ++j) {
+      written = io_load(file, buffer, PLG_MAX_NAME_LEN);
+      if (written > 0) temp.components[i].label = str_dup(buffer);
+      written = io_load(file, buffer, PLG_MAX_NAME_LEN);
+      if (written > 0) temp.components[i].component = str_dup(buffer);
+    }
+
+    const auto createFunc = [](const NodeTemplate& nt, Vec2 p, NodeID id) {
+      return new Node(nt, p, id);
+    };
+    ec.templates.userDefinedNodes.insert({temp.label, {temp, createFunc}});
+    ec.ui.contextMenu.addNode(UI::USER_CATEGORY, temp.label);
+    io_load_newline(file,true);
+  }
+  return true;
 }
-bool SaveUserTemplates(EditorContext& ec, FILE* file) {
+
+bool SaveUserTemplatesImpl(EditorContext& ec, FILE* file) {
   io_save_section(file, "Templates");
-  io_save(file, (int)ec.templates.userDefinedNodes.size());
+  io_save(file, static_cast<int>(ec.templates.userDefinedNodes.size()));
   io_save_newline(file);
-  char buffer[PLG_MAX_NAME_LEN];
   for (const auto& nt : ec.templates.userDefinedNodes | std::views::values) {
-    io_save(file, compIndices.add(nt.nTemplate.label));          // The arbitrary id of the template
-    snprintf(buffer, sizeof(buffer), "%s", nt.nTemplate.label);  // Cut of longer names
-    io_save(file, buffer);                                       // The node name
+    io_save(file, nt.nTemplate.label);  // The node name
     for (const auto& [label, component] : nt.nTemplate.components) {
       io_save(file, label == nullptr ? "" : label);
+      io_save(file, component == nullptr ? "" : component);
     }
     const auto [r, g, b, a] = nt.nTemplate.color;
     io_save(file, ColorToInt({r, g, b, a}));
     io_save_newline(file);
   }
-
   return true;
 }
+
 }  // namespace
 
-bool Persist::loadUserFiles(EditorContext& /**/) {
+bool Persist::loadUserFiles(EditorContext& ec) {
   Constraint<true> c;
 
   c + ChangeDirectory(GetApplicationDirectory());
-  c + LoadFromFile(Info::userTemplates, [](EditorContext& ec, FILE* file) { return true; });
+  c + LoadFromFile(ec, Info::userTemplates, [](EditorContext& ec, FILE* file) {
+    return LoadUserTemplates(ec, file);
+  });
 
   return c.holds();
 }
 
 bool Persist::saveUserTemplates(EditorContext& ec) {
   constexpr int sizePerTemplate = 250;
-  const int size = static_cast<int>(ec.templates.userDefinedNodes.size()) * sizePerTemplate;
+  const int size = std::max(static_cast<int>(ec.templates.userDefinedNodes.size()),1) * sizePerTemplate;
 
   const auto res =
-      io_save_buffered_write(Info::userTemplates, size, [&](FILE* file) { SaveUserTemplates(ec, file); });
+      io_save_buffered_write(Info::userTemplates, size, [&](FILE* file) { SaveUserTemplatesImpl(ec, file); });
 
   if (!res) {
     fprintf(stderr, "Error saving to %s", Info::userTemplates);

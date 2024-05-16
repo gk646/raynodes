@@ -103,14 +103,12 @@ bool io_save_buffered_write(const char* fileName, const int memoryBufferBytes, S
 
 #  ifdef _WIN32
   FILE* file;
-  fopen_s(&file,"NUL", "wb");
+  fopen_s(&file, "NUL", "wb");
 #  else
   FILE* file = fopen("/dev/null", "wb");
 #  endif
   // Write to in memory buffer
-  if (file == nullptr) {
-    return false;
-  }
+  if (file == nullptr) { return false; }
 
   auto* buffer = new char[memoryBufferBytes];
   std::memset(buffer, 0, memoryBufferBytes);
@@ -132,9 +130,9 @@ bool io_save_buffered_write(const char* fileName, const int memoryBufferBytes, S
   // When successful, open the actual save file and save the data
   const int dataSize = (int)strlen(buffer);
 #  ifdef _WIN32
-  fopen_s(&file,fileName, "wb");
+  fopen_s(&file, fileName, "wb");
 #  else
-   file = fopen(fileName, "wb");
+  file = fopen(fileName, "wb");
 #  endif
   if (file == nullptr) {
     delete[] buffer;
@@ -151,9 +149,7 @@ bool io_save_buffered_write(const char* fileName, const int memoryBufferBytes, S
 
   delete[] buffer;
 
-  if (fclose(file) != 0) {
-    return false;
-  }
+  if (fclose(file) != 0) { return false; }
 
   return true;
 }
@@ -202,23 +198,26 @@ inline bool io_load_inside_section(FILE* file, const char* section) {
   return true;  // Still inside same section
 }
 // include <string> to use
-#  if defined( _STRING_) || defined(_GLIBCXX_STRING)
-inline void io_load(FILE* file, std::string& s, int reserve_amount = 15) {
-  s.reserve(reserve_amount);
+#  if defined(_STRING_) || defined(_GLIBCXX_STRING)
+inline void io_load(FILE* file, std::string& s) {
+  //s.reserve(reserve_amount); // Dont need to reserve - string shouldnt allocate below 15 characters
   char ch;
   while (fread(&ch, 1, 1, file) == 1 && ch != '|') {
     s.push_back(ch);
   }
+  while (ch != '|' && fread(&ch, 1, 1, file) == 1) {}
 }
 #  endif
-// Load a string property into a user-supplied buffer
-inline void io_load(FILE* file, char* buffer, size_t buffer_size) {
-  size_t count = 0;
+// Load a string property into a user-supplied buffer - return bytes written - reads until linesep is found
+inline int io_load(FILE* file, char* buffer, size_t buffer_size) {
+  int count = 0;
   char ch;
   while (count < buffer_size - 1 && fread(&ch, 1, 1, file) == 1 && ch != '|') {
     buffer[count++] = ch;
   }
   buffer[count] = '\0';
+  while ( ch != '|' && fread(&ch, 1, 1, file) == 1 ) {}
+  return count;
 }
 // Directly load an integer property from the file
 inline void io_load(FILE* file, int& i) {
