@@ -21,13 +21,44 @@
 #ifndef RAYNODES_SRC_COMPONENT_COMPONENTS_DISPLAYC_H_
 #define RAYNODES_SRC_COMPONENT_COMPONENTS_DISPLAYC_H_
 
+#include <raylib.h>
 #include "component/Component.h"
+#include "application/EditorContext.h"
 
 struct DisplayC final : Component {
   explicit DisplayC(const ComponentTemplate ct) : Component(ct, 200, 20) {}
   Component* clone() override { return new DisplayC(*this); };
-  void draw(EditorContext& ec, Node& parent) override;
-  void update(EditorContext& ec, Node& parent) override;
-  void onCreate(EditorContext& ec, Node& parent) override;
+  void draw(EditorContext& ec, Node& /**/) override {
+    const auto bounds = getBounds();
+    DrawRectangleRec(bounds, GRAY);
+
+    const char* txt;
+    if (inputs[0].isConnected()) {
+      txt = inputs[0].getData<STRING>();
+      DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
+    } else if (inputs[1].isConnected()) {
+      txt = ec.string.formatText("%f", inputs[1].getData<FLOAT>());
+      DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
+    } else if (inputs[2].isConnected()) {
+      txt = ec.string.formatText("%lld", inputs[2].getData<INTEGER>());
+      DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
+    }
+  }
+
+  void update(EditorContext& ec, Node& /**/) override {
+    outputs[0].setData<STRING>(inputs[0].getData<STRING>());
+    outputs[1].setData<FLOAT>(inputs[1].getData<FLOAT>());
+    outputs[2].setData<INTEGER>(inputs[2].getData<INTEGER>());
+  }
+
+  void onCreate(EditorContext& ec, Node& /**/) override {
+    addPinInput(STRING);
+    addPinInput(FLOAT);
+    addPinInput(INTEGER);
+
+    addPinOutput(STRING);
+    addPinOutput(FLOAT);
+    addPinOutput(INTEGER);
+  }
 };
 #endif  //RAYNODES_SRC_COMPONENT_COMPONENTS_DISPLAYC_H_

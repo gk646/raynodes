@@ -25,9 +25,17 @@
 #include <cxstructs/Constraint.h>
 #include <tinyfiledialogs.h>
 
-using PersistFunc = bool (*)(EditorContext&, FILE*);
 //TODO make save format that combines both saving and loading
 //-> should be easy as its symmetric - function wrapper and boolean for loading-saving
+// Errors that we should detect:
+// - Non Unique Node labels when loading templates (DONE)
+// - Symbol name is too long (component or node) (DONE)
+// - Non Unique Component Labels when loading templates (per node)
+// - Missing definitions for loaded node (not present in factory maps)
+// - Missing definitions for loaded component (not present in factory maps)
+
+
+using PersistFunc = bool (*)(EditorContext&, FILE*);
 
 static constexpr int MAX_UNIQUE_LABELS = 512;
 // One hot encoding the labels
@@ -161,8 +169,8 @@ int SaveConnections(FILE* file, EditorContext& ec) {
 }
 void LoadEditorData(FILE* file, EditorContext& ec) {
   io_load_newline(file, true);  //Skip the Editor section
-  io_load_newline(file);        // Node count
-  io_load_newline(file);        // Connection count
+  io_load_skip_separator(file);        // Node count
+  io_load_skip_separator(file);        // Connection count
   io_load(file, ec.display.camera.target.x);
   io_load(file, ec.display.camera.target.y);
   io_load(file, ec.display.camera.zoom);
@@ -181,6 +189,7 @@ void LoadTemplates(FILE* file, EditorContext& ec) {
     compIndices.add(buff, index);
     io_load_newline(file, true);
   }
+
 }
 int LoadNodes(FILE* file, EditorContext& ec) {
   int count = 0;
@@ -343,6 +352,7 @@ bool LoadUserTemplates(EditorContext& ec, FILE* file) {
       io_load_newline(file, true);
       continue;
     }
+
     for (int j = 0; j < COMPS_PER_NODE; ++j) {
       written = io_load(file, buffer, PLG_MAX_NAME_LEN);
       if (written > 0) temp.components[i].label = str_dup(buffer);
@@ -350,12 +360,14 @@ bool LoadUserTemplates(EditorContext& ec, FILE* file) {
       if (written > 0) temp.components[i].component = str_dup(buffer);
     }
 
+    // Node create func
     const auto createFunc = [](const NodeTemplate& nt, Vec2 p, NodeID id) {
       return new Node(nt, p, id);
     };
+
     ec.templates.userDefinedNodes.insert({temp.label, {temp, createFunc}});
     ec.ui.contextMenu.addNode(UI::USER_CATEGORY, temp.label);
-    io_load_newline(file,true);
+    io_load_newline(file, true);
   }
   return true;
 }
@@ -392,7 +404,7 @@ bool Persist::loadUserFiles(EditorContext& ec) {
 
 bool Persist::saveUserTemplates(EditorContext& ec) {
   constexpr int sizePerTemplate = 250;
-  const int size = std::max(static_cast<int>(ec.templates.userDefinedNodes.size()),1) * sizePerTemplate;
+  const int size = std::max(static_cast<int>(ec.templates.userDefinedNodes.size()), 1) * sizePerTemplate;
 
   const auto res =
       io_save_buffered_write(Info::userTemplates, size, [&](FILE* file) { SaveUserTemplatesImpl(ec, file); });

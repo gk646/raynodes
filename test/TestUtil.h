@@ -22,18 +22,21 @@
 #define REGISTERNODES_H
 
 #include "shared/fwd.h"
+
 #include "application/EditorContext.h"
 #include "plugin/RegisterInterface.h"
-#include <cxutil/cxio.h>
-#include "../plugins/BuiltIns/components/TextFieldC.h"
+#include "BuiltIns/components/TextFieldC.h"
+#include "BuiltIns/components/MathC.h"
 
 namespace {
 void registerNodes(EditorContext& ec) {
   PluginContainer pc{nullptr, "_Dummy_", nullptr};
   NodeRegister nr{ec, pc};
   ComponentRegister cr{ec, pc};
-  cr.registerComponent<TextFieldC<>>("TextField");
-  nr.registerNode("DummyN", {{"DummyC", "TextField"}});
+  cr.registerComponent<TextFieldC<>>("Text");
+  cr.registerComponent<MathC>("Int");
+  nr.registerNode("Text", {{"Text", "Text"}});
+  nr.registerNode("Int", {{"Int", "Int"}});
 }
 
 }  // namespace
@@ -49,9 +52,7 @@ inline EditorContext getBasicContext() {
 inline void SetupCWD() {
   char buff[256];
   snprintf(buff, 256, "%s/../test", GetWorkingDirectory());
-  if (!ChangeDirectory(buff)) {
-    fprintf(stderr, "Failed to change CWD\n");
-  }
+  if (!ChangeDirectory(buff)) { fprintf(stderr, "Failed to change CWD\n"); }
 }
 }  // namespace TestUtil
 #endif  //REGISTERNODES_H

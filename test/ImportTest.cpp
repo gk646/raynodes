@@ -69,9 +69,10 @@ TEST_CASE("Test getComponentData", "[Import]") {
     auto str = rn.getComponentData<raynodes::STRING>(5, "DisplayText");
     auto* staticStr = "Display";  // Component Data String
     REQUIRE(str == view.getString());
+    REQUIRE(str == view.getAllocatedString());
     REQUIRE(raynodes::StringView::Hash(str) == view.getHash());
-    auto hash = raynodes::StringView::Hash(staticStr);
-    REQUIRE(hash == view.getHash());
+    REQUIRE(raynodes::StringView::Hash(view.getAllocatedString()) == view.getHash());
+    REQUIRE(raynodes::StringView::Hash(staticStr) == view.getHash());
   }
 
   // Vec3

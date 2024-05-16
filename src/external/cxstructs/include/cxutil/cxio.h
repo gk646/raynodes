@@ -21,16 +21,17 @@
 #ifndef CXSTRUCTS_SRC_CXIO_H_
 #  define CXSTRUCTS_SRC_CXIO_H_
 
-#  include "../cxconfig.h"
+#include "../cxconfig.h"
 #  include <cstring>
 
 // Simple, readable and fast *symmetric* serialization structure with loading
-// and saving. Each line is a concatenated list of values and delimiter '|'
-// (might be changeable in the future) 13|3.145|This is a string|56|
+// and saving. Each line is a concatenated list of values and separator SEPARATOR
+// 13|3.145|This is a string|56|
 
 // Using the CXX23 std::print() is about 10% slower
+
 namespace cxstructs {
-// inline static constexpr char DELIMITER = '|'; //Not used yet
+
 static constexpr int MAX_SECTION_SIZE = 16;
 
 //-----------SHARED-----------//
@@ -75,26 +76,32 @@ inline void io_save_section(FILE* file, const char* value) {
 inline void io_save_newline(FILE* file) {
   fputc('\n', file);
 }
+
 // Writes a string value to file
 inline void io_save(FILE* file, const char* value) {
-  fprintf(file, "%s|", value);
+  fprintf(file, "%s\037", value);
 }
+
 // Writes an integer or enum property to the file
 inline void io_save(FILE* file, const int value) {
-  fprintf(file, "%d|", value);
+  fprintf(file, "%d\037", value);
 }
-// Writes an boolean to the file
+
+// Writes a boolean to the file
 inline void io_save(FILE* file, const bool value) {
-  fprintf(file, "%d|", value ? 1 : 0);
+  fprintf(file, "%d\037", value ? 1 : 0);
 }
+
 // Writes a float to the file
 inline void io_save(FILE* file, const float value) {
-  fprintf(file, "%.3f|", value);
+  fprintf(file, "%.3f\037", value);
 }
-// Writes a three floats to the file
+
+// Writes three floats to the file
 inline void io_save(FILE* file, const float value, const float value2, const float value3) {
-  fprintf(file, "%.3f|%.3f|%.3F|", value, value2, value3);
+  fprintf(file, "%.3f\037%.3f\037%.3f\037", value, value2, value3);
 }
+
 // Buffers the given SaveFunc to memory so the file is only written if it
 // executes successfully. Returns false on error
 template <typename SaveFunc>  // SaveFunc(FILE* file)
@@ -154,12 +161,18 @@ bool io_save_buffered_write(const char* fileName, const int memoryBufferBytes, S
   return true;
 }
 //-----------LOADING-----------//
-// Searches for the next new line but stops at the delimiter if not forced
+// Searches for the next new line but stops at the separator if not forced
 inline void io_load_newline(FILE* file, bool force = false) {
   char ch;
   while (fread(&ch, 1, 1, file) == 1) {
-    if (!force && ch == '|') return;
+    if (!force && ch == '\037') return;
     if (ch == '\n') return;
+  }
+}
+inline void io_load_skip_separator(FILE* file) {
+  char ch;
+  while (fread(&ch, 1, 1, file) == 1) {
+    if (ch == '\037') return;
   }
 }
 inline bool io_load_inside_section(FILE* file, const char* section) {
@@ -188,10 +201,10 @@ inline bool io_load_inside_section(FILE* file, const char* section) {
     if (manual_strncmp(buffer, section, sectionLength) == 0) {
       io_load_newline(file, false);
       return true;  // Found same section
-    } else {
-      io_load_newline(file, false);
-      return false;  // Found new section
     }
+
+    io_load_newline(file, false);
+    return false;  // Found new section
   }
 
   fseek(file, currentPos, SEEK_SET);
@@ -202,42 +215,44 @@ inline bool io_load_inside_section(FILE* file, const char* section) {
 inline void io_load(FILE* file, std::string& s) {
   //s.reserve(reserve_amount); // Dont need to reserve - string shouldnt allocate below 15 characters
   char ch;
-  while (fread(&ch, 1, 1, file) == 1 && ch != '|') {
+  while (fread(&ch, 1, 1, file) == 1 && ch != '\037') {
     s.push_back(ch);
   }
-  while (ch != '|' && fread(&ch, 1, 1, file) == 1) {}
+  while (ch != '\37' && fread(&ch, 1, 1, file) == 1) {}
 }
 #  endif
 // Load a string property into a user-supplied buffer - return bytes written - reads until linesep is found
 inline int io_load(FILE* file, char* buffer, size_t buffer_size) {
   int count = 0;
   char ch;
-  while (count < buffer_size - 1 && fread(&ch, 1, 1, file) == 1 && ch != '|') {
+  while (count < buffer_size - 1 && fread(&ch, 1, 1, file) == 1 && ch != '\037') {
     buffer[count++] = ch;
   }
   buffer[count] = '\0';
-  while ( ch != '|' && fread(&ch, 1, 1, file) == 1 ) {}
+  while (ch != '\037' && fread(&ch, 1, 1, file) == 1) {}
   return count;
 }
 // Directly load an integer property from the file
 inline void io_load(FILE* file, int& i) {
-  fscanf(file, "%d|", &i);
-}
-// Directly load a boolean to the file
-inline void io_load(FILE* file, bool& value) {
-  int num = 0;
-  fscanf(file, "%d|", &num);
-  value = num == 1;
-}
-// Directly load a float from the file
-inline void io_load(FILE* file, float& f) {
-  fscanf(file, "%f|", &f);
-}
-// Directly load a three floats from the file
-inline void io_load(FILE* file, float& f, float& f2, float& f3) {
-  fscanf(file, "%f|%f|%f|", &f, &f2, &f3);
+  fscanf(file, "%d\037", &i);
 }
 
+// Directly load a boolean from the file
+inline void io_load(FILE* file, bool& value) {
+  int num = 0;
+  fscanf(file, "%d\037", &num);
+  value = num == 1;
+}
+
+// Directly load a float from the file
+inline void io_load(FILE* file, float& f) {
+  fscanf(file, "%f\037", &f);
+}
+
+// Directly load three floats from the file
+inline void io_load(FILE* file, float& f, float& f2, float& f3) {
+  fscanf(file, "%f\037%f\037%f\037", &f, &f2, &f3);
+}
 }  // namespace cxstructs
 
 #  ifdef CX_INCLUDE_TESTS
