@@ -1,5 +1,5 @@
 --EditorData--
-66-75.000-180.0001.0001
+76-43.048-42.0951.050
 --Templates--
 14
 0Vector2Vec2255
@@ -9,20 +9,21 @@
 4Vector3Vec3255
 5SeparateXYSeparator255
 6SeparateXYZSeparator255
-7TextFieldText255  
+7TextFieldText255
 8NumberFieldNumber255
 9Dialog ChoiceNPCTypeDisplayTextChoice1Choice2Choice3Choice4255
 10DialogNPCTypeDisplayText255
 11QuestHeaderNameDescriptionZoneLevel255
-12GOTO PlayerZoneTarget255
-13GOTO Player ProximityZoneTargetDistance255
+12GOTO PositionNPCTypeZoneTarget255
+13GOTO ProximityNPCTypeZoneTargetDistance255
 --Nodes--
 70Test1-694-201
 71Test2-327-539
-822.33-290-118
-431.11.221.333-52742
+822.33-270-120
+431.110000;1.222000;1.333300-52742
 1417515
 95DisplayC1C2C3C4313-524
+061.110000;1.222000-242190
 --Connections--
 0-101-10
 3-104-10

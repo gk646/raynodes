@@ -28,16 +28,15 @@
 #include "ui/elements/TextField.h"
 
 template <ComponentStyle style = IN_AND_OUT>
-class Vec2C final : public Component {
+struct Vec2C final : Component {
   static constexpr int FLOAT_FIELDS = 2;
   TextField textFields[FLOAT_FIELDS]{};
 
- public:
   explicit Vec2C(const ComponentTemplate ct) : Component(ct, 200, 20) {}
   Component* clone() override { return new Vec2C(*this); }
 
   void draw(EditorContext& ec, Node& /**/) override {
-    auto bounds = getBounds();
+    const auto bounds = getBounds();
 
     constexpr std::array labels = {"X:", "Y:"};
     const auto& font = ec.display.editorFont;
@@ -110,14 +109,19 @@ class Vec2C final : public Component {
   }
 
   void save(FILE* file) override {
-    for (auto& f : textFields) {
-      cxstructs::io_save(file, f.buffer.c_str());
+    float floats[FLOAT_FIELDS];
+    for (int i = 0; i < FLOAT_FIELDS; ++i) {
+      floats[i] = cxstructs::str_parse_float(textFields[i].buffer.c_str());
     }
+    cxstructs::io_save(file, floats[0], floats[1]);
   }
 
   void load(FILE* file) override {
-    for (auto& f : textFields) {
-      cxstructs::io_load(file, f.buffer);
+    // This is done to make the low level saving and loading more straightforward and independent of our handling
+    float floats[FLOAT_FIELDS];
+    cxstructs::io_load(file, floats[0], floats[1]);
+    for (int i = 0; i < FLOAT_FIELDS; ++i) {
+      cxstructs::str_embed_num(textFields[i].buffer, floats[i]);
     }
   }
 };
