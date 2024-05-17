@@ -1,7 +1,6 @@
 #ifndef ORGATEC_H
 #define ORGATEC_H
 
-
 #include "component/Component.h"
 #include "application/EditorContext.h"
 

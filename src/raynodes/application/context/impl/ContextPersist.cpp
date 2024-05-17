@@ -34,7 +34,6 @@
 // - Missing definitions for loaded node (not present in factory maps)
 // - Missing definitions for loaded component (not present in factory maps)
 
-
 using PersistFunc = bool (*)(EditorContext&, FILE*);
 
 static constexpr int MAX_UNIQUE_LABELS = 512;
@@ -121,10 +120,13 @@ void SaveEditorData(FILE* file, EditorContext& ec) {
 }
 
 void SaveTemplates(FILE* file, EditorContext& ec) {
+  // TODO only save used templates
   io_save_section(file, "Templates");
-  io_save(file, static_cast<int>(ec.templates.registeredNodes.size()));
+  io_save(file, static_cast<int>(ec.templates.registeredNodes.size() + ec.templates.userDefinedNodes.size()));
   io_save_newline(file);
-  for (const auto& nt : ec.templates.registeredNodes | std::views::values) {
+
+  // Save func
+  constexpr auto saveTemplate = [](EditorContext& ec, FILE* file, const NodeInfo& nt) {
     io_save(file, compIndices.add(nt.nTemplate.label));  // The arbitrary id of the template
     io_save(file, nt.nTemplate.label);                   // The node name
     for (const auto& [label, component] : nt.nTemplate.components) {
@@ -133,7 +135,15 @@ void SaveTemplates(FILE* file, EditorContext& ec) {
     const auto [r, g, b, a] = nt.nTemplate.color;
     io_save(file, ColorToInt({r, g, b, a}));
     io_save_newline(file);
+  };
+
+  for (const auto& nt : ec.templates.registeredNodes | std::views::values) {
+    saveTemplate(ec, file, nt);
   }
+  for (const auto& nt : ec.templates.userDefinedNodes | std::views::values) {
+    saveTemplate(ec, file, nt);
+  }
+
 }
 int SaveNodes(FILE* file, EditorContext& ec) {
   io_save_section(file, "Nodes");
@@ -146,6 +156,7 @@ int SaveNodes(FILE* file, EditorContext& ec) {
   }
   return count;
 }
+
 int SaveConnections(FILE* file, EditorContext& ec) {
   io_save_section(file, "Connections");
   int count = 0;
@@ -168,10 +179,11 @@ int SaveConnections(FILE* file, EditorContext& ec) {
   }
   return count;
 }
+
 void LoadEditorData(FILE* file, EditorContext& ec) {
-  io_load_newline(file, true);  //Skip the Editor section
-  io_load_skip_separator(file);        // Node count
-  io_load_skip_separator(file);        // Connection count
+  io_load_newline(file, true);   //Skip the Editor section
+  io_load_skip_separator(file);  // Node count
+  io_load_skip_separator(file);  // Connection count
   io_load(file, ec.display.camera.target.x);
   io_load(file, ec.display.camera.target.y);
   io_load(file, ec.display.camera.zoom);
@@ -190,7 +202,6 @@ void LoadTemplates(FILE* file, EditorContext& ec) {
     compIndices.add(buff, index);
     io_load_newline(file, true);
   }
-
 }
 int LoadNodes(FILE* file, EditorContext& ec) {
   int count = 0;
