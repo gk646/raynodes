@@ -5,6 +5,9 @@
 
 #include <raylib.h>
 
+#pragma warning(push)
+#pragma warning(disable : 4100)  // unreferenced formal parameter
+
 class Window {
   inline static Vector2 dragOffset = {0.0f, 0.0f};
   Rectangle bodyRect;
@@ -36,12 +39,14 @@ class Window {
 
  protected:
   // Events methods
-  virtual void onOpen(EditorContext&ec) {}
-  virtual void onClose(EditorContext&ec) {}
+  virtual void onOpen(EditorContext& ec) {}
+  virtual void onClose(EditorContext& ec) {}
   virtual void drawContent(EditorContext& ec, const Rectangle& body) = 0;
 
  private:
   void update(EditorContext& ec);
 };
+
+#pragma warning(pop)
 
 #endif  //MAGEQUEST_SRC_UI_COMPONENTS_GAMEWINDOW_H_

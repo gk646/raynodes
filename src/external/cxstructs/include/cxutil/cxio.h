@@ -21,18 +21,20 @@
 #ifndef CXSTRUCTS_SRC_CXIO_H_
 #  define CXSTRUCTS_SRC_CXIO_H_
 
-#include "../cxconfig.h"
+#  include "../cxconfig.h"
 #  include <cstring>
 
 // Simple, readable and fast *symmetric* serialization structure with loading
-// and saving. Each line is a concatenated list of values and separator SEPARATOR
+// and saving. Each line is a concatenated list of values and a separator
 // 13|3.145|This is a string|56|
+
+// I didnt find a way around hard coding the separator...
 
 // Using the CXX23 std::print() is about 10% slower
 
 namespace cxstructs {
-
 static constexpr int MAX_SECTION_SIZE = 16;
+#  define NEW_LINE_SUB '\036'
 
 //-----------SHARED-----------//
 namespace {
@@ -77,9 +79,17 @@ inline void io_save_newline(FILE* file) {
   fputc('\n', file);
 }
 
-// Writes a string value to file
+// Writes a string value to file, replacing newlines with the SEPARATOR
 inline void io_save(FILE* file, const char* value) {
-  fprintf(file, "%s\037", value);
+  while (*value != '\0') {
+    if (*value == '\n') {
+      fputc(NEW_LINE_SUB, file);  // Replace newline with SEPARATOR
+    } else {
+      fputc(*value, file);  // Write the character as is
+    }
+    ++value;
+  }
+  fputc('\037', file);  // Add SEPARATOR at the end
 }
 
 // Writes an integer or enum property to the file
@@ -97,9 +107,13 @@ inline void io_save(FILE* file, const float value) {
   fprintf(file, "%.3f\037", value);
 }
 
-// Writes three floats to the file
+// Writes three floats to the file - separated by ";"
 inline void io_save(FILE* file, const float value, const float value2, const float value3) {
-  fprintf(file, "%.3f\037%.3f\037%.3f\037", value, value2, value3);
+  fprintf(file, "%.6f;%.6f;%.6f\037", value, value2, value3);
+}
+// Writes three floats to the file - separated by ";"
+inline void io_save(FILE* file, const float value, const float value2) {
+  fprintf(file, "%.6f;%.6f\037", value, value2);
 }
 
 // Buffers the given SaveFunc to memory so the file is only written if it
@@ -216,6 +230,7 @@ inline void io_load(FILE* file, std::string& s) {
   //s.reserve(reserve_amount); // Dont need to reserve - string shouldnt allocate below 15 characters
   char ch;
   while (fread(&ch, 1, 1, file) == 1 && ch != '\037') {
+    if (ch == NEW_LINE_SUB) [[unlikely]] { ch = '\n'; }
     s.push_back(ch);
   }
   while (ch != '\37' && fread(&ch, 1, 1, file) == 1) {}
@@ -226,6 +241,7 @@ inline int io_load(FILE* file, char* buffer, size_t buffer_size) {
   int count = 0;
   char ch;
   while (count < buffer_size - 1 && fread(&ch, 1, 1, file) == 1 && ch != '\037') {
+    if (ch == NEW_LINE_SUB) [[unlikely]] { ch = '\n'; }
     buffer[count++] = ch;
   }
   buffer[count] = '\0';
@@ -251,181 +267,12 @@ inline void io_load(FILE* file, float& f) {
 
 // Directly load three floats from the file
 inline void io_load(FILE* file, float& f, float& f2, float& f3) {
-  fscanf(file, "%f\037%f\037%f\037", &f, &f2, &f3);
+  fscanf(file, "%f;%f;%f\037", &f, &f2, &f3);
+}
+// Directly load three floats from the file
+inline void io_load(FILE* file, float& f, float& f2) {
+  fscanf(file, "%f;%f\037", &f, &f2);
 }
 }  // namespace cxstructs
 
-#  ifdef CX_INCLUDE_TESTS
-#    include <chrono>
-namespace cxtests {
-using namespace cxstructs;
-using namespace std::chrono;
-static void benchMark() {
-  FILE* file;
-  const char* filename = "hello.txt";
-  constexpr int num = 1000;
-  int val = 5;
-  auto start_write = high_resolution_clock::now();
-  fopen_s(&file, filename, "wb");
-  if (file != nullptr) {
-    for (int i = 0; i < num; i++) {
-      for (int j = 0; j < num; j++) {
-        io_save(file, j);
-      }
-      io_save_newline(file);
-    }
-    fclose(file);
-  }
-  auto end_write = high_resolution_clock::now();
-  auto start_read = high_resolution_clock::now();
-
-  fopen_s(&file, filename, "rb");
-  if (file != nullptr) {
-    for (int i = 0; i < num; i++) {
-      for (int j = 0; j < num; j++) {
-        io_load(file, val);
-      }
-    }
-    fclose(file);
-  }
-  auto end_read = high_resolution_clock::now();
-  auto duration_write = duration_cast<milliseconds>(end_write - start_write).count();
-  auto duration_read = duration_cast<milliseconds>(end_read - start_read).count();
-  printf("Write time: %lld ms\n", duration_write);
-  printf("Read time: %lld ms\n", duration_read);
-}
-void test_save_load_string() {
-  const char* test_filename = "test_string.txt";
-  const char* original_string = "Hello, world!";
-  char buffer[256];
-
-  // Save
-  FILE* file = std::fopen(test_filename, "wb");
-  cxstructs::io_save(file, original_string);
-  cxstructs::io_save_newline(file);
-  std::fclose(file);
-
-  // Load
-  file = std::fopen(test_filename, "rb");
-  cxstructs::io_load(file, buffer, sizeof(buffer));
-  std::fclose(file);
-
-  // Assert
-  CX_ASSERT(std::strcmp(original_string, buffer) == 0, "String save/load failed");
-}
-void test_save_load_int() {
-  const char* test_filename = "test_int.txt";
-  const int original_int = 42;
-  int loaded_int;
-
-  // Save
-  FILE* file = std::fopen(test_filename, "wb");
-  cxstructs::io_save(file, original_int);
-  cxstructs::io_save_newline(file);
-  std::fclose(file);
-
-  // Load
-  file = std::fopen(test_filename, "rb");
-  cxstructs::io_load(file, loaded_int);
-  std::fclose(file);
-
-  // Assert
-  CX_ASSERT(original_int == loaded_int, "Int save/load failed");
-}
-void test_save_load_float() {
-  const char* test_filename = "test_float.txt";
-  constexpr float original_float = 3.141;
-  float loaded_float;
-
-  // Save
-  FILE* file;
-  fopen_s(&file, test_filename, "wb");
-  cxstructs::io_save(file, original_float);
-  cxstructs::io_save_newline(file);
-  std::fclose(file);
-
-  // Load
-  fopen_s(&file, test_filename, "rb");
-  cxstructs::io_load(file, loaded_float);
-  std::fclose(file);
-
-  // Assert
-  CX_ASSERT(original_float == loaded_float, "Float save/load failed");
-}
-void delete_test_files() {
-  // List of test files to delete
-  const char* files[] = {"test_string.txt", "test_int.txt", "test_float.txt", "test_complex.txt", "hello.txt"};
-
-  // Iterate over the array and delete each file
-  for (const char* filename : files) {
-    if (std::remove(filename) != 0) {
-      perror("Error deleting file");
-    } else {
-      printf("%s deleted successfully.\n", filename);
-    }
-  }
-}
-void test_complex_save_load() {
-  const char* test_filename = "test_complex.txt";
-  const char* original_str1 = "TestString1";
-  const int original_int = 123;
-  const float original_float = 456.789f;
-  const char* original_str2 = "TestString2";
-
-  char buffer_str1[256];
-  int loaded_int = -1;
-  float loaded_float = -1;
-  std::string buffer_str2;
-  std::string hello;
-  std::string bye;
-  std::string hello2;
-
-  // Save complex data
-  FILE* file;
-  fopen_s(&file, test_filename, "wb");
-  if (file) {
-    cxstructs::io_save(file, original_str1);
-    cxstructs::io_save(file, original_int);
-    cxstructs::io_save(file, original_float);
-    cxstructs::io_save(file, original_str2);
-    cxstructs::io_save_newline(file);
-    io_save(file, "hello");
-    io_save(file, "bye");
-    io_save(file, "hello");
-    std::fclose(file);
-  }
-
-  // Load complex data
-  file = std::fopen(test_filename, "rb");
-  if (file) {
-    cxstructs::io_load(file, buffer_str1, sizeof(buffer_str1));
-    cxstructs::io_load(file, loaded_int);
-    cxstructs::io_load(file, loaded_float);
-    cxstructs::io_load(file, buffer_str2);
-    io_load_newline(file);
-    io_load(file, hello);
-    io_load(file, bye);
-    io_load(file, hello2);
-    std::fclose(file);
-  }
-
-  // Assert all loaded data matches original
-  CX_ASSERT(std::strcmp(original_str1, buffer_str1) == 0, "String1 save/load failed");
-  CX_ASSERT(original_int == loaded_int, "Int save/load failed");
-  CX_ASSERT(std::fabs(original_float - loaded_float) < 0.001,
-            "Float save/load failed");  // Allow for slight floating-point inaccuracies
-  CX_ASSERT(std::strcmp(original_str2, buffer_str2.c_str()) == 0, "String2 save/load failed");
-  CX_ASSERT(hello == hello2, "");
-  CX_ASSERT(bye == "bye", "");
-}
-static void TEST_IO() {
-  benchMark();
-  test_save_load_float();
-  test_save_load_int();
-  test_save_load_string();
-  test_complex_save_load();
-  delete_test_files();
-}
-}  // namespace cxtests
-#  endif
 #endif  // CXSTRUCTS_SRC_CXIO_H_

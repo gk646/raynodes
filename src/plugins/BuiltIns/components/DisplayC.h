@@ -44,13 +44,11 @@ struct DisplayC final : Component {
       DrawTextEx(ec.display.editorFont, txt, {x, y}, ec.display.fontSize, 1.0F, WHITE);
     }
   }
-
   void update(EditorContext& ec, Node& /**/) override {
     outputs[0].setData<STRING>(inputs[0].getData<STRING>());
     outputs[1].setData<FLOAT>(inputs[1].getData<FLOAT>());
     outputs[2].setData<INTEGER>(inputs[2].getData<INTEGER>());
   }
-
   void onCreate(EditorContext& ec, Node& /**/) override {
     addPinInput(STRING);
     addPinInput(FLOAT);

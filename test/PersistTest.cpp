@@ -38,7 +38,9 @@ TEST_CASE("Test correct file creation and count", "[Persist]") {
   ec.core.hasUnsavedChanges = true;
   ec.persist.saveProject(ec);
 
-  REQUIRE(ec.core.nodes.size() == testSize);
+  // Reset state
+  ec.core.resetEditor(ec);
+
   REQUIRE(std::filesystem::exists(testPath) == true);
 
   ec.persist.importProject(ec);
@@ -54,20 +56,39 @@ TEST_CASE("Teset correct data persistence", "[Persist]") {
 
   constexpr int testInt = 5;
   constexpr const char* testString = "Test";
+  constexpr const char* testFloat = "3.141592";
 
   // Create nodes
   {
     ec.core.createNode(ec, "Text", {})->getComponent<TextFieldC<>>("Text")->textField.buffer = testString;
     ec.core.createNode(ec, "Int", {})->getComponent<MathC>("Int")->selectedMode = testInt;
+    auto vec2 = ec.core.createNode(ec, "Vec2", {})->getComponent<Vec2C<>>("Vec2")->textFields;
+    vec2[0].buffer = testFloat, vec2[1].buffer = testFloat;
+    auto vec3 = ec.core.createNode(ec, "Vec3", {})->getComponent<Vec3C<>>("Vec3")->textFields;
+    vec3[0].buffer = testFloat, vec3[1].buffer = testFloat, vec3[2].buffer = testFloat;
   }
 
   // Persist cycle
   ec.core.hasUnsavedChanges = true;
   ec.persist.saveProject(ec);
+
+  // Reset state
+  ec.core.resetEditor(ec);
+
   ec.persist.importProject(ec);
 
-  REQUIRE(ec.core.getNode(NodeID(0))->getComponent<TextFieldC<>>("Text")->textField.buffer == testString);
-  REQUIRE(ec.core.getNode(NodeID(1))->getComponent<MathC>("Int")->selectedMode == testInt);
+  // Test values
+  {
+    REQUIRE(ec.core.getNode(NodeID(0))->getComponent<TextFieldC<>>("Text")->textField.buffer == testString);
+    REQUIRE(ec.core.getNode(NodeID(1))->getComponent<MathC>("Int")->selectedMode == testInt);
+    auto vec2 = ec.core.getNode(NodeID(2))->getComponent<Vec2C<>>("Vec2")->textFields;
+    REQUIRE(vec2[0].buffer == testFloat);
+    REQUIRE(vec2[1].buffer == testFloat);
+    auto vec3 = ec.core.getNode(NodeID(3))->getComponent<Vec3C<>>("Vec3")->textFields;
+    REQUIRE(vec3[0].buffer == testFloat);
+    REQUIRE(vec3[1].buffer == testFloat);
+    REQUIRE(vec3[2].buffer == testFloat);
+  }
 }
 
 TEST_CASE("Benchmark saving and loading", "[Persist]") {

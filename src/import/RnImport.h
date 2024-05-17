@@ -59,7 +59,7 @@ RnImport importRNFromMemory(char* fileData, uint32_t fileSize);
 #define COMPS_PER_NODE 6            // Max components per node
 #define SEPARATOR '\037'            // Set this to the linesep used by cxio (default '\037'  - Unit Separator)
 #define COMPONENT_SEPARATOR '\035'  // The separator between component data (default '\035' - Group Separator)
-#define LINE_FEED_SUB '\036'        // Replaces new line ('\n') in the file ( default '\036' - Record Separator)
+#define NEW_LINE_SUB '\036'         // Replaces new line ('\n') in the file ( default '\036' - Record Separator)
 #define RN_MAX_NAME_LEN 16          // Max length of any component or node identifiers
 
 using ByteIndex = uint32_t;      // Limits fileSize to 4GB
@@ -361,7 +361,11 @@ auto NodeData::getData(char* fileData, const ComponentIndex id, const int index)
     while (*(start + count) != SEPARATOR && *(start + count) != '\0') {
       count++;
     }
-    return std::string{start, (size_t)count};  // Rely on RVO for efficient return
+    std::string result{start, (size_t)count};
+    for (char& ch : result) {
+      if (ch == NEW_LINE_SUB) { ch = '\n'; }
+    }
+    return result;
   } else if constexpr (dt == STRING_VIEW) {
     return StringView{workPtr, (uint16_t)_str_count_chars_until(workPtr, SEPARATOR, RN_MAX_NAME_LEN)};
   } else if constexpr (dt == INTEGER) {
@@ -369,9 +373,13 @@ auto NodeData::getData(char* fileData, const ComponentIndex id, const int index)
   } else if constexpr (dt == FLOAT) {
     return std::strtod(workPtr, nullptr);
   } else if constexpr (dt == VECTOR_2) {
-    static_assert(dt == STRING, "Not yet supported");
+    Vec2 vec2{};
+    sscanf(workPtr, "%f;%f", &vec2.x, &vec2.y);
+    return vec2;
   } else if constexpr (dt == VECTOR_3) {
-    static_assert(dt == STRING, "Not yet supported");
+    Vec3 vec3{};
+    sscanf(workPtr, "%f;%f;%f", &vec3.x, &vec3.y, &vec3.z);
+    return vec3;
   } else if constexpr (dt == DATA) {
     static_assert(dt == STRING, "Wont be supported... How?");
   }
@@ -400,13 +408,22 @@ inline StringView NodeTemplate::getName(const char* fileData) const {
 inline char* StringView::getAllocatedString() const {
   auto* ret = new char[length + 1];  // +1 for the null terminator
   std::memcpy(ret, start, length);
-  ret[length] = '\0';  // Null terminate the string
+  ret[length] = '\0';
+
+  for (int i = 0; i < length; ++i) {
+    if (ret[i] == NEW_LINE_SUB) { ret[i] = '\n'; }
+  }
+
   return ret;
 }
 
 inline std::string StringView::getString() const {
   if (start == nullptr || length == 0) [[unlikely]] { return {}; }
-  return {start, length};
+  std::string result(start, length);
+  for (char& ch : result) {
+    if (ch == NEW_LINE_SUB) { ch = '\n'; }
+  }
+  return result;
 }
 
 constexpr uint32_t StringView::getHash() const {
