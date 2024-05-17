@@ -27,6 +27,8 @@
 #include "plugin/RegisterInterface.h"
 #include "BuiltIns/components/TextFieldC.h"
 #include "BuiltIns/components/MathC.h"
+#include "BuiltIns/components/Vec2C.h"
+#include "BuiltIns/components/Vec3C.h"
 
 namespace {
 void registerNodes(EditorContext& ec) {
@@ -35,8 +37,12 @@ void registerNodes(EditorContext& ec) {
   ComponentRegister cr{ec, pc};
   cr.registerComponent<TextFieldC<>>("Text");
   cr.registerComponent<MathC>("Int");
+  cr.registerComponent<Vec2C<>>("Vec2");
+  cr.registerComponent<Vec3C<>>("Vec3");
   nr.registerNode("Text", {{"Text", "Text"}});
   nr.registerNode("Int", {{"Int", "Int"}});
+  nr.registerNode("Vec2", {{"Vec2", "Vec2"}});
+  nr.registerNode("Vec3", {{"Vec3", "Vec3"}});
 }
 
 }  // namespace

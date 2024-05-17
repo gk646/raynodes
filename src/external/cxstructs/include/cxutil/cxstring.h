@@ -130,7 +130,7 @@ inline int64_t str_parse_long(const char* str, const int radix = 10) {
 }
 // Parses the given string into a float on best effort basis
 inline float str_parse_float(const char* str) {
-  if (str == nullptr || *str == '\0') return 0.0;
+  if (str == nullptr || *str == '\0') return 0.0F;
 
   float result = 0.0;
   bool negative = false;
@@ -159,10 +159,41 @@ inline float str_parse_float(const char* str) {
 
   return negative ? -result : result;
 }
+// Parses the given string into a double on best effort basis
+inline double str_parse_double(const char* str) {
+  if (str == nullptr || *str == '\0') return 0.0;
+
+  double result = 0.0;
+  bool negative = false;
+  if (*str == '-') {
+    negative = true;
+    ++str;
+  }
+
+  // Parse the integer part
+  while (*str && *str != '.') {
+    if (*str < '0' || *str > '9') break;
+    result = result * 10 + (*str - '0');
+    ++str;
+  }
+
+  // Parse the fractional part
+  if (*str == '.') {
+    ++str;
+    double factor = 0.1;
+    while (*str && *str >= '0' && *str <= '9') {
+      result += (*str - '0') * factor;
+      factor *= 0.1;
+      ++str;
+    }
+  }
+
+  return negative ? -result : result;
+}
 // Returns the levenshtein distance for the two given strings - stops when either string ends
 // This doesnt penalize long strings
 // Failure: returns -1
-template<int MAX_LEN>
+template <int MAX_LEN>
 int str_sort_levenshtein_prefix(const char* s1, const char* s2) {
   const size_t len1 = str_len(s1), len2 = str_len(s2);
   const size_t limit = len1 < len2 ? len1 : len2;
@@ -173,8 +204,10 @@ int str_sort_levenshtein_prefix(const char* s1, const char* s2) {
 
   unsigned int d[MAX_LEN + 1][MAX_LEN + 1] = {0};
 
-  for (unsigned int i = 1; i <= limit; ++i) d[i][0] = i;
-  for (unsigned int i = 1; i <= len2; ++i) d[0][i] = i;
+  for (unsigned int i = 1; i <= limit; ++i)
+    d[i][0] = i;
+  for (unsigned int i = 1; i <= len2; ++i)
+    d[0][i] = i;
 
   for (unsigned int i = 1; i <= limit; ++i) {
     for (unsigned int j = 1; j <= len2; ++j) {
@@ -189,7 +222,6 @@ int str_sort_levenshtein_prefix(const char* s1, const char* s2) {
 
   return d[limit][len2];
 }
-
 // string hash function
 constexpr auto str_hash_fnv1a_32(char const* s) noexcept -> uint32_t {
   uint32_t hash = 2166136261U;
@@ -214,39 +246,16 @@ struct Fnv1aHash {
 struct StrEqual {
   bool operator()(const char* s1, const char* s2) const { return std::strcmp(s1, s2) == 0; }
 };
-}  // namespace cxstructs
 
-#  ifdef CX_INCLUDE_TESTS
-#    include <unordered_map>
-#    include <string>
-#    include "../cxconfig.h"
-
-namespace cxtests {
-static void TEST_STRING() {
-  std::unordered_map<const char*, int, cxstructs::Fnv1aHash, cxstructs::StrEqual> myMap;
-  auto* hey1 = "hey";
-  auto* hey2 = "hey";
-  auto s = std::string("hey");
-  auto* hey3 = s.c_str();
-
-  myMap.insert({"hey", 1});
-
-  CX_ASSERT(myMap.at(hey1) == 1, "");
-  CX_ASSERT(myMap.at(hey2) == 1, "");
-  CX_ASSERT(myMap.at(hey3) == 1, "");
-  CX_ASSERT(myMap.at("hey") == 1, "");
-  CX_ASSERT(myMap.at("hey") == 1, "");
-
-  auto it = myMap.find(hey3);
-  CX_ASSERT(it != myMap.end(), "");
-  it = myMap.find(hey1);
-  CX_ASSERT(it != myMap.end(), "");
-  it = myMap.find(hey2);
-  CX_ASSERT(it != myMap.end(), "");
-  it = myMap.find("hey");
-  CX_ASSERT(it != myMap.end(), "");
+#  if defined(_STRING_) || defined(_GLIBCXX_STRING)
+// Adds the string representation of the given number to the string
+inline void str_embed_num(std::string& s, float num) {
+  char buff[20];
+  snprintf(buff, sizeof(buff), "%.6f", num);
+  s.append(buff);
 }
-}  // namespace cxtests
 #  endif
+
+}  // namespace cxstructs
 
 #endif  //CXSTRUCTS_SRC_CXUTIL_CXSTRING_H_

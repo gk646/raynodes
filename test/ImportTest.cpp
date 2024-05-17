@@ -75,14 +75,22 @@ TEST_CASE("Test getComponentData", "[Import]") {
     REQUIRE(raynodes::StringView::Hash(staticStr) == view.getHash());
   }
 
+  // Vec2
+  {
+    auto val = rn.getComponentData<raynodes::VECTOR_2>(6, "Vec2");
+    Vec2 test{1.11, 1.222};
+    REQUIRE(val.x == test.x);
+    REQUIRE(val.y == test.y);
+  }
+
   // Vec3
-  /**
-   Vec3 test{1.1, 1.22, 1.333};
-   auto val = rn.getComponentData<raynodes::VECTOR_3>(3, "Vector3");
-   REQUIRE(val.x == test.x);
-   REQUIRE(val.y == test.y);
-   REQUIRE(val.z == test.z);
-   */
+  {
+    auto val = rn.getComponentData<raynodes::VECTOR_3>(3, "Vec3");
+    Vec3 test{1.11, 1.222, 1.3333};
+    REQUIRE(val.x == test.x);
+    REQUIRE(val.y == test.y);
+    REQUIRE(val.z == test.z);
+  }
 }
 TEST_CASE("Test getConnectionOut", "[Import]") {
   TestUtil::SetupCWD();
@@ -246,7 +254,7 @@ TEST_CASE("Test completeness - static tests", "[Import]") {
   TestUtil::SetupCWD();
   auto rn = raynodes::importRN("res/Test1.rn");
 
-  REQUIRE(rn.nodeCnt == 6);
+  REQUIRE(rn.nodeCnt == 7);
   REQUIRE(rn.connCnt == 6);
 
   REQUIRE(rn.templates[9].isNodeName(rn.fileData, "Dialog Choice") == true);

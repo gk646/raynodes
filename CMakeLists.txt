@@ -12,7 +12,7 @@ set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE) # Build as shared lib
 option(RN_ENABLE_SANITIZER "Set to compile with adress sanitizer (MSVC)") # set(RN_ENABLE_SANITIZER ON)
 option(RN_BUILD_TESTS "Set to compile the test executable")               # set(RN_BUILD_TESTS ON)
 option(RN_BUILD_RELEASE "Set to build the release archives")             # set(RN_BUILD_RELEASE ON) # You don't really need this
-set(RN_VERSION "1.0.3")
+set(RN_VERSION "1.0.4")
 
 # Compiler options for MSVC and GCC
 include(cmake/CompilerOptions.cmake)
@@ -33,7 +33,7 @@ add_subdirectory(src/plugins)
 add_subdirectory(src/import)
 
 # Add all the dependencies to the executable
-add_dependencies(raynodes BuiltIns QuestScript)
+add_dependencies(raynodes BuiltIns QuestScript Logics)
 
 if (RN_BUILD_TESTS)
     enable_testing()

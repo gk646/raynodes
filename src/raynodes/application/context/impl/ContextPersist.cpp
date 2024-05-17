@@ -119,9 +119,10 @@ void SaveEditorData(FILE* file, EditorContext& ec) {
   io_save(file, ec.display.camera.zoom);
   io_save_newline(file);
 }
+
 void SaveTemplates(FILE* file, EditorContext& ec) {
   io_save_section(file, "Templates");
-  io_save(file, (int)ec.templates.registeredNodes.size());
+  io_save(file, static_cast<int>(ec.templates.registeredNodes.size()));
   io_save_newline(file);
   for (const auto& nt : ec.templates.registeredNodes | std::views::values) {
     io_save(file, compIndices.add(nt.nTemplate.label));  // The arbitrary id of the template
