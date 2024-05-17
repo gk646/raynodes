@@ -24,8 +24,7 @@
 
 #include "node/Node.h"
 
-Connection::Connection(Node& fromNode, Component* from, OutputPin& out, Node& toNode, Component* to,
-                       InputPin& in)
+Connection::Connection(Node& fromNode, Component* from, OutputPin& out, Node& toNode, Component* to, InputPin& in)
     : fromNode(fromNode), from(from), out(out), toNode(toNode), to(to), in(in) {}
 
 Vector2 Connection::getFromPos() const {
@@ -34,6 +33,16 @@ Vector2 Connection::getFromPos() const {
 
 Vector2 Connection::getToPos() const {
   return {toNode.x, in.yPos};
+}
+
+Color Connection::getConnectionColor() const {
+  Color color = out.getColor();
+
+  if (in.pinType == BOOLEAN) {
+    if (!in.getData<BOOLEAN>()) return ColorAlpha(color, 0.4F);
+  }
+
+  return color;
 }
 
 void Connection::close() const {
