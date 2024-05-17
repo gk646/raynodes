@@ -95,6 +95,7 @@ struct Vec2C final : Component {
       f.minWidth = 60;
       f.bounds.width = 60;
       f.bounds.height = 20;
+      f.buffer = "0";
     }
 
     // Correctly apply style

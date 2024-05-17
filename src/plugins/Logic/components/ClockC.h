@@ -26,11 +26,7 @@ struct ClockC final : Component {
     const auto& f = ec.display.editorFont;
     const auto fs = ec.display.fontSize;
     DrawTextEx(f, "ms Cycle", {bounds.x + 132, bounds.y}, fs, 0.0F, UI::COLORS[UI_LIGHT]);
-
-    if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) delayField.onFocusGain(ec.logic.worldMouse);
-    delayField.update(ec, ec.logic.worldMouse);
   }
-
   void update(EditorContext& ec, Node& parent) override {
     if (delayField.hasUpdate()) delayMillis = cxstructs::str_parse_int(delayField.buffer.c_str());
 
@@ -47,6 +43,8 @@ struct ClockC final : Component {
       outputs[0].setData<BOOLEAN>(currentState);
       delayBuilder = 0.0F;
     }
+    if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) delayField.onFocusGain(ec.logic.worldMouse);
+    delayField.update(ec, ec.logic.worldMouse);
   }
 
   void onCreate(EditorContext& ec, Node& parent) override {
