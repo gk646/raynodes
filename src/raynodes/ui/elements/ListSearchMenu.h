@@ -26,12 +26,11 @@
 #include "shared/fwd.h"
 #include <unordered_map>
 
-struct ListSearchMenu {
+struct EXPORT ListSearchMenu {
 
   template <typename V, typename Hash, typename Comp>
   static const char* Draw(EditorContext& ec, Vector2 pos, TextField& searchBar,
                           const std::unordered_map<const char*, V, Hash, Comp>& map);
 };
-
 
 #endif  //LISTSEARCHMENU_H

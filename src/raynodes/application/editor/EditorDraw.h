@@ -46,7 +46,7 @@ inline void DrawConnections(EditorContext& ec, bool isCTRLDown) {
   for (const auto conn : connections) {
     const auto fromPos = conn->getFromPos();
     const auto toPos = conn->getToPos();
-    DrawLineBezier(fromPos, toPos, 2, conn->out.getColor());
+    DrawLineBezier(fromPos, toPos, 2, conn->getConnectionColor());
 
     if (delNodes && CheckCollisionBezierRect(fromPos, toPos, selectRect)) {
       action->deletedConnections.push_back(conn);

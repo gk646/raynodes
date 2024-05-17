@@ -40,8 +40,13 @@
 // These are basic components you can use for any custom nodes
 
 void BuiltIns::registerComponents(ComponentRegister& cr) {
+  // Transformations
   cr.registerComponent<MathC>("BI_MathOp");
+
+  // Display
   cr.registerComponent<DisplayC>("BI_Display");
+
+  // Conversions
   cr.registerComponent<StringToNumberC>("BI_StrToNum");
   cr.registerComponent<SeparateXYZC>("BI_SeparateXYZ");
   cr.registerComponent<SeparateXYC>("BI_SeparateXY");
