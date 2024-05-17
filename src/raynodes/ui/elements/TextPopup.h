@@ -26,7 +26,7 @@
 // Return nullptr for a valid str else the fail reason
 using ValidationFunc = const char* (*)(EditorContext&, const char*);
 
-struct TextPopup {
+struct EXPORT TextPopup {
   static const char* Draw(EditorContext& ec, Rectangle& r, TextField& input, ValidationFunc func, const char* txt);
 };
 

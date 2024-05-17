@@ -33,8 +33,8 @@
 static constexpr float PADDING = 3;
 static constexpr float OFFSET_Y = 20;  // Node name header offset
 static Vector2 DRAG_OFFSET;            // Drag anchor point
-static constexpr float MIN_WIDTH = 50;
-static constexpr float MIN_HEIGHT = 50;
+static constexpr float MIN_WIDTH = 75;
+static constexpr float MIN_HEIGHT = 45;
 
 // Helper functions
 namespace {
@@ -52,7 +52,7 @@ void UpdateNodePins(EditorContext& ec, Node& n) {
 void DrawNodePins(const EditorContext& ec, Node& n) {
   float posY = n.y + OFFSET_Y / 2.0F;
   const auto& font = ec.display.editorFont;
-  const bool showText = ec.input.isKeyDown(KEY_LEFT_ALT);
+  const bool showText = IsKeyDown(KEY_LEFT_ALT);
 
   Pin::DrawPin(n.nodeIn, font, n.x, posY, showText);
   for (auto& p : n.outputs) {
@@ -130,6 +130,7 @@ void HandleSelection(Node& n, EditorContext& ec, const Rectangle bounds, auto& s
     ec.logic.isAnyNodeHovered = true;
     ec.logic.hoveredNode = &n;
   } else {
+    selectedNodes.erase(n.uID);
     n.isHovered = false;
   }
 }
