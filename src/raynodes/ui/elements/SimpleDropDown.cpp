@@ -18,13 +18,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "ui/elements/DropDown.h"
+#include "ui/elements/SimpleDropDown.h"
 
 #include <raylib.h>
+#include <raygui.h>
 
+#include "ui/elements/TextField.h"
 #include "application/EditorContext.h"
 
-void DropDown::draw(EditorContext& ec, float dx, float dy) {
+void SimpleDropDown::draw(EditorContext& ec, float dx, float dy) {
   x = dx, y = dy;
 
   const Font& f = ec.display.editorFont;
@@ -54,8 +56,7 @@ void DropDown::draw(EditorContext& ec, float dx, float dy) {
   // Draw outline
   DrawRectangleLinesEx(bounds, 2, BLACK);
 }
-
-int DropDown::update(EditorContext& ec) {
+int SimpleDropDown::update(EditorContext& ec) {
   Rectangle bounds = {x, y, w, h};
 
   if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -75,4 +76,65 @@ int DropDown::update(EditorContext& ec) {
   }
 
   return selectedIndex;
+}
+
+void SimpleDropDown::DrawSearchDropdown(EditorContext& ec, Vector2 pos, TextField& search, const SortVector& items) {
+  bool& open = search.isFocused;
+  constexpr float padding = 4;
+  const auto& font = ec.display.editorFont;
+  const float fs = ec.display.fontSize;
+  const float entryHeight = fs + padding;
+  const auto mouse = ec.logic.mouse;
+
+  float maxWidth = 0;
+  for (const auto item : items) {
+    const float itemWidth = MeasureTextEx(font, item, fs, 0.5F).x + padding * 2;  // Additional padding
+    if (itemWidth > maxWidth) maxWidth = itemWidth;
+  }
+
+  pos.x = pos.x - maxWidth / 2;
+  pos.y = pos.y - entryHeight / 2;
+
+  pos.y += entryHeight;
+  const Rectangle dropdownRect = {pos.x, pos.y, maxWidth, entryHeight};
+
+  // Draw the text field
+  bool pressed = ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT);
+  const auto [x, y] = ec.display.getFullyScaled(Vector2{150, 20});
+
+  search.bounds = dropdownRect;
+  search.bounds.width = x;
+  search.bounds.height = y;
+
+  search.draw("Type...");
+  search.update(ec, ec.logic.mouse);
+
+  float totalHeight = items.size() * entryHeight;
+  Rectangle scrollPanelRec = {pos.x, pos.y + entryHeight, maxWidth, std::min(200.0f, totalHeight)};
+
+  if (open) {
+    Rectangle contentRec = {0, 0, maxWidth - 20, totalHeight};  // -20 for scrollbar width
+    static Vector2 scroll = {0, 0};
+    Rectangle view;
+
+    GuiScrollPanel(scrollPanelRec, nullptr, contentRec, &scroll, &view);
+
+    BeginScissorMode(view.x, view.y, view.width, view.height);
+    for (int i = 0; i < items.size(); ++i) {
+      Rectangle itemRec = {pos.x, pos.y + entryHeight + i * entryHeight + scroll.y, maxWidth - 20, entryHeight};
+      bool isHovered = CheckCollisionPointRec(mouse, itemRec);
+      if (pressed) ec.input.consumeMouse();
+      if (isHovered && pressed && CheckCollisionPointRec(mouse, scrollPanelRec)) {
+        search.buffer = items[i];
+        open = false;
+        EndScissorMode();
+        return;
+      }
+      DrawRectangleRec(itemRec, isHovered ? UI::COLORS[UI_MEDIUM] : UI::COLORS[UI_DARK]);
+      DrawTextEx(font, items[i], {itemRec.x + padding, itemRec.y + padding / 2.0F}, fs, 1.0F, UI::COLORS[UI_LIGHT]);
+    }
+    EndScissorMode();
+    if (pressed && CheckCollisionPointRec(mouse, scrollPanelRec)) pressed = false;
+  }
+  if (pressed) { search.onFocusGain(ec.logic.mouse); }
 }

@@ -67,7 +67,7 @@ inline void DrawGrid(const EditorContext& ec) {
 inline void DrawContextMenu(EditorContext& ec) {
   if (!ec.logic.showContextMenu) return;
   constexpr float menuWidth = 170.0F;
-  auto& categories = ec.ui.contextMenu.categories;
+  auto& categories = ec.ui.canvasContextMenu.categories;
   const auto& font = ec.display.editorFont;
   const auto mouse = ec.logic.mouse;
   const auto fs = ec.display.fontSize;

@@ -28,9 +28,6 @@
 #include "application/EditorContext.h"
 #include "ui/elements/TextField.h"
 
-// Current limit of 150 -> stacked based so really doesnt matter
-using SortVector = cxstructs::StackVector<const char*, 150, uint16_t>;
-
 namespace {
 void stringSort(const auto& map, const std::string& searchText, SortVector& sortVec) {
   sortVec.clear();
@@ -55,9 +52,24 @@ void stringSort(const auto& map, const std::string& searchText, SortVector& sort
 }
 }  // namespace
 
+SortVector ListSearchMenu::GetSortedVector(const auto& mapKeys, const std::string& search) {
+  SortVector vector;
+  stringSort(mapKeys, search, vector);
+  return vector;
+}
+
+
+
 template <typename V, typename Hash, typename Comp>
 const char* ListSearchMenu::Draw(EditorContext& ec, Vector2 pos, TextField& searchBar,
                                  const std::unordered_map<const char*, V, Hash, Comp>& map) {
+  SortVector sortedStrings;
+  stringSort(map, searchBar.buffer, sortedStrings);
+  return DrawIMPL(ec, pos, searchBar, sortedStrings);
+}
+
+const char* ListSearchMenu::DrawIMPL(EditorContext& ec, Vector2 pos, TextField& searchBar,
+                                     const SortVector& entries) {
   // Cache
   constexpr float entryWidth = 150.0f;
   constexpr float padding = 4;
@@ -65,10 +77,9 @@ const char* ListSearchMenu::Draw(EditorContext& ec, Vector2 pos, TextField& sear
   const float fs = ec.display.fontSize;
   const auto entryHeight = fs + padding;
   const auto mouse = ec.logic.mouse;
-  const int entries = map.size() + 1;
 
   // Draw BackGround
-  auto bounds = ec.display.getFullyScaled({pos.x, pos.y, entryWidth, entries * entryHeight});
+  auto bounds = ec.display.getFullyScaled({pos.x, pos.y, entryWidth, entries.size() * entryHeight});
   DrawRectangleRec(bounds, UI::COLORS[UI_DARK]);
 
   if (!CheckCollisionPointRec(mouse, bounds)) return UI::DUMMY_STRING;  // return code for close
@@ -83,12 +94,8 @@ const char* ListSearchMenu::Draw(EditorContext& ec, Vector2 pos, TextField& sear
   searchBar.draw();
   bounds.y += entryHeight;
 
-  // Sort
-  SortVector sortedStrings;
-  stringSort(map, searchBar.buffer, sortedStrings);
-
   const char* selected = nullptr;
-  for (const auto str : sortedStrings) {
+  for (const auto str : entries) {
     const auto currentRect = Rectangle{bounds.x, bounds.y, entryWidth, entryHeight};
     if (CheckCollisionPointRec(mouse, currentRect)) {
       DrawRectangleRounded(currentRect, 0.1F, 30, UI::COLORS[UI_MEDIUM]);
@@ -108,3 +115,6 @@ const char* ListSearchMenu::Draw(EditorContext& ec, Vector2 pos, TextField& sear
 template const char* ListSearchMenu::Draw(
     EditorContext& ec, Vector2 pos, TextField& searchBar,
     const std::unordered_map<const char*, ComponentCreateFunc, cxstructs::Fnv1aHash, cxstructs::StrEqual>& map);
+
+template SortVector ListSearchMenu::GetSortedVector(
+    const std::unordered_map<const char*, ComponentCreateFunc, cxstructs::Fnv1aHash, cxstructs::StrEqual>& map,const std::string&);

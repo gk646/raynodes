@@ -23,6 +23,14 @@
 
 #include <cstdint>
 
+struct RaynodesPluginI;
+struct PluginContainer {
+  void* handle;
+  const char* name;
+  RaynodesPluginI* plugin;
+  void free();
+};
+
 struct Ints {
   uint16_t a;
   uint16_t b;

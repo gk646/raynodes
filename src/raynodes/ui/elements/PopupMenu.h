@@ -18,25 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef RAYNODES_SRC_GRAPHICS_DROPDOWN_H_
-#define RAYNODES_SRC_GRAPHICS_DROPDOWN_H_
+#ifndef TEXTPOPUP_H
+#define TEXTPOPUP_H
 
 #include "shared/fwd.h"
 
-#include <vector>
-#include <string>
+// Return nullptr for a valid str else the fail reason
+using ValidationFunc = const char* (*)(EditorContext&, const char*);
+using CustomDraw = bool (*)(EditorContext& ec, const Rectangle& r);
 
-// This class is need as raygui controls dont work in worldspace -> raygui functions still use screen space mouse
+struct EXPORT PopupMenu {
+  static const char* InputText(EditorContext& ec, Rectangle& r, TextField& input, ValidationFunc func,
+                               const char* header);
 
-struct EXPORT DropDown final {
-  std::vector<std::string> items;
-  float x, y, w, h;  // no <raylib> compatibility
-  int selectedIndex = 0;
-  int hoveredIndex = 0;
-  bool isExpanded = false;
-
-  void draw(EditorContext& ec, float x, float y);
-  int update(EditorContext& ec);
+  static const char* InputTextEx(EditorContext& ec, Rectangle& scaled, TextField& input, ValidationFunc func,
+                                          const char* header, CustomDraw draw);
 };
 
-#endif  //RAYNODES_SRC_GRAPHICS_DROPDOWN_H_
+#endif  //TEXTPOPUP_H

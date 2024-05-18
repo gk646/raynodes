@@ -20,52 +20,6 @@
 
 #ifndef CONTEXTUI_H
 #define CONTEXTUI_H
-#include "ui/Window.h"
-
-struct ContextMenuCategory {
-  const char* name;
-  std::vector<const char*> nodes;
-  bool isOpen = false;
-};
-
-struct ContextMenu {
-  std::vector<ContextMenuCategory> categories{};
-  void addNode(const char* category, const char* name) {
-    for (auto& c : categories) {
-      if (cxstructs::str_cmp(c.name, category)) {
-        c.nodes.push_back(name);
-        return;
-      }
-    }
-    ContextMenuCategory cat{category, {}, false};
-    cat.nodes.push_back(name);
-    categories.push_back(cat);
-  }
-
-  void removeNode(const char* category, const char* name) {
-    for (auto catIt = categories.begin(); catIt != categories.end();) {
-      if (cxstructs::str_cmp(catIt->name, category)) {
-        bool erased = false;
-        for (auto nodeIt = catIt->nodes.begin(); nodeIt != catIt->nodes.end();) {
-          if (cxstructs::str_cmp(*nodeIt, name)) {
-            nodeIt = catIt->nodes.erase(nodeIt);
-            erased = true;
-          } else {
-            ++nodeIt;
-          }
-        }
-
-        if (catIt->nodes.empty()) {
-          catIt = categories.erase(catIt);
-        } else {
-          ++catIt;
-        }
-        if (erased) return;
-      }
-      ++catIt;
-    }
-  }
-};
 
 // All the UI is made to be normed to 1920x1080 so FullHD
 // The methods allow you to always use absolute coordinates and then transform them to real screen space
@@ -110,7 +64,7 @@ struct EXPORT UI final {
   static constexpr float UI_SPACE_H = 1080.0F;  // UI space height
   static constexpr float PAD = 25.0F;           // UI space padding amount
 
-  ContextMenu contextMenu;
+  CategoryListMenu canvasContextMenu;
   std::vector<Window*> windows;  // UI Windows
 
   // General State
