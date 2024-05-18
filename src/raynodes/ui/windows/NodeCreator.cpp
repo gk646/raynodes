@@ -21,19 +21,22 @@
 #include <ranges>
 
 #include "NodeCreator.h"
+
+#include "raygui.h"
 #include "application/EditorContext.h"
+#include "ui/elements/SimpleDropDown.h"
 #include "ui/elements/ListSearchMenu.h"
-#include "ui/elements/TextPopup.h"
+#include "ui/elements/PopupMenu.h"
 
 NodeCreator::NodeCreator(const Rectangle& r, const char* headerText) : Window(r, NODE_CREATOR, headerText) {
   searchField.growAutomatic = false;
-  componentSearchField.growAutomatic = false;
-  popupField.growAutomatic = false;
+  newCompID.growAutomatic = false;
+  newNodeName.growAutomatic = false;
+  newCompName.growAutomatic = false;
 }
 
 void NodeCreator::drawContent(EditorContext& ec, const Rectangle& body) {
   constexpr auto listWidth = 200.0F;
-
   // Draw search field
   drawSearchField(ec, body, listWidth);
 
@@ -51,41 +54,9 @@ void NodeCreator::drawContent(EditorContext& ec, const Rectangle& body) {
   Rectangle entry = {body.x, body.y + UI::PAD, listWidth, 45};
   drawCreatedNodeList(ec, entry, activeTemplate);
 
-  if (showNamePopup) {
-    // Name validation func
-    const auto vFunc = [](EditorContext& ec, const char* str) -> const char* {
-      const int len = cxstructs::str_len(str);
-      if (len > PLG_MAX_NAME_LEN) return "Name is too long!";
-      if (len == 0) return "Name is too short";
-      for (const auto& name : ec.templates.userDefinedNodes | std::ranges::views::keys) {
-        if (strcmp(name, str) == 0) return "Name already exists!";
-      }
-      return nullptr;
-    };
-
-    auto popUp = UI::GetSubRect(body);
-    constexpr auto* header = "Choose the node name";
-    const auto* name = TextPopup::Draw(ec, popUp, popupField, vFunc, header);
-
-    if (name == nullptr) [[likely]] { return; }
-    if (strcmp(name, UI::DUMMY_STRING) == 0) showNamePopup = false;
-    else {
-      NodeTemplate nTemplate;
-      nTemplate.label = cxstructs::str_dup(name);  // Need an allocated copy
-      const auto createFunc = [](const NodeTemplate& nt, const Vec2 pos, const NodeID id) {
-        return new Node(nt, pos, id);
-      };
-      ec.templates.registerUserNode(ec, nTemplate, createFunc);
-      searchField.buffer = name;
-      popupField.buffer.clear();
-      activeEntry = 0;
-      showNamePopup = false;
-      stringSort(ec.templates.userDefinedNodes, searchField.buffer, sortBuffer);
-      ec.ui.contextMenu.addNode(UI::USER_CATEGORY, nTemplate.label);
-      setNode(ec, nTemplate);
-    }
-  }
+  if (drawCreatePopup(ec, body)) return;
   const Rectangle space = {body.x + listWidth, body.y, body.width - listWidth, body.height};
+
   drawNodeCreateSandbox(ec, space, activeTemplate);
 }
 
@@ -102,10 +73,24 @@ void NodeCreator::drawSearchField(EditorContext& ec, const Rectangle& body, floa
 }
 
 void NodeCreator::drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeTemplate*& activeTemplate) {
+  constexpr float entryHeight = 45.0F;
+  const Vector2 mouse = ec.logic.mouse;
+
+  const float totalHeight = static_cast<float>(sortBuffer.size()) * entryHeight;
+  const auto contentRec = ec.display.getFullyScaled({0, 0, entry.width - 15, totalHeight});
+  static Vector2 scroll = {0, 0};
+  Rectangle view;
+  // Define scroll panel bounds
+  const auto scrollPanelRec =
+      ec.display.getFullyScaled({entry.x, entry.y, entry.width, std::min(420.0f, totalHeight)});
+  GuiScrollPanel(scrollPanelRec, nullptr, contentRec, &scroll, &view);
+  BeginScissorMode(view.x, view.y, view.width, view.height);
+
+  entry.y += scroll.y;
+  entry.width -= 15;
   int i = 0;
   for (const auto nInfo : sortBuffer) {
     const bool selected = i == activeEntry;
-    const Vector2 mouse = GetMousePosition();
     const Rectangle entryBounds = ec.display.getFullyScaled(entry);
 
     const Color text = selected ? UI::COLORS[UI_MEDIUM] : UI::COLORS[UI_LIGHT];
@@ -138,7 +123,7 @@ void NodeCreator::drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeT
     if (UI::DrawButton(ec, remove, buttonSize, buttonSize, "#143#")) {
       if (ec.templates.userDefinedNodes.contains(nInfo->nTemplate.label)) {
         auto& eraseInfo = ec.templates.userDefinedNodes[nInfo->nTemplate.label];
-        ec.ui.contextMenu.removeNode(UI::USER_CATEGORY, eraseInfo.nTemplate.label);
+        ec.ui.canvasContextMenu.removeNode(UI::USER_CATEGORY, eraseInfo.nTemplate.label);
         for (auto& [label, component] : eraseInfo.nTemplate.components) {
           delete component;
           delete label;
@@ -152,14 +137,13 @@ void NodeCreator::drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeT
     entry.y += 45.0F;
     i++;
   }
+
+  EndScissorMode();
 }
 
 void NodeCreator::drawNodeCreateSandbox(EditorContext& ec, Rectangle space, NodeTemplate* nTemplate) {
   if (nTemplate == nullptr || activeNode == nullptr) return;
-  // TODO possibly draw the grid aswell / should look like the node editor
-  // Draw BackGround
-  // DrawRectangleRec(ec.display.getFullyScaled(space), UI::COLORS[N_BACK_GROUND]);
-  const auto nodePos = ec.display.getFullyScaled(Vector2{space.x + UI::PAD * 5, space.y + UI::PAD * 3});
+  const auto nodePos = ec.display.getFullyScaled(Vector2{space.x + UI::PAD * 11, space.y + UI::PAD * 3});
 
   activeNode->x = nodePos.x;
   activeNode->y = nodePos.y;
@@ -172,13 +156,33 @@ void NodeCreator::drawNodeCreateSandbox(EditorContext& ec, Rectangle space, Node
 
   Node::Draw(ec, *activeNode);
 
-  if (UI::DrawButton(ec, {space.x + UI::PAD * 2, space.y + UI::PAD * 3}, 25, 25, "#112#")) {
+  if (UI::DrawButton(ec, {space.x + UI::PAD * 2, space.y + UI::PAD * 3}, 150, 25, "#227#Add component")) {
     showComponentSearch = true;
   }
 
   if (showComponentSearch) {
-    const auto bound = Vector2{space.x + UI::PAD * 2, space.y + UI::PAD * 3};
-    const auto res = ListSearchMenu::Draw(ec, bound, componentSearchField, ec.templates.componentFactory);
+    const auto vFunc = [](EditorContext& ec, const char* str) -> const char* {
+      const int len = cxstructs::str_len(str);
+      if (len > PLG_MAX_NAME_LEN) return "Name is too long!";
+      if (len == 0) return "Name is too short";
+      return nullptr;
+    };
+
+    const auto extendDraw = [](EditorContext& ec, const Rectangle& r) {
+      auto window = ec.ui.getWindow<NodeCreator>(NODE_CREATOR);
+      auto& search = window->newCompID;
+      const auto pos = Vector2{r.x + r.width / 2.0F, r.y + r.height / 2.0F};
+      const auto items = ListSearchMenu::GetSortedVector(ec.templates.componentFactory, search.buffer);
+      SimpleDropDown::DrawSearchDropdown(ec, pos, search, items);
+      for (const auto name : ec.templates.componentFactory | std::ranges::views::keys) {
+        if (strcmp(name, search.buffer.c_str()) == 0) return true;
+      }
+      return false;
+    };
+
+    auto rect = UI::GetSubRect(space);
+    const char* res = PopupMenu::InputTextEx(ec, rect, newCompName, vFunc, "header", extendDraw);
+
     if (res == nullptr) return;
     if (strcmp(res, UI::DUMMY_STRING) == 0) {
       showComponentSearch = false;
@@ -186,21 +190,17 @@ void NodeCreator::drawNodeCreateSandbox(EditorContext& ec, Rectangle space, Node
       showComponentSearch = false;
       for (auto& [label, component] : nTemplate->components) {
         if (component == nullptr) {
-          label = cxstructs::str_dup(componentName.buffer.c_str());
-          component = cxstructs::str_dup(res);
+          label = cxstructs::str_dup(res);
+          component = cxstructs::str_dup(newCompID.buffer.c_str());
           setNode(ec, *nTemplate);
+          newCompID.buffer.clear();
           break;
         }
       }
     }
   }
 
-  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) { componentName.onFocusGain(ec.logic.mouse); }
-  componentName.bounds = ec.display.getFullyScaled({space.x + UI::PAD, space.y + UI::PAD, 150, 20});
-  componentName.draw("ComponentName...");
-  componentName.update(ec, ec.logic.mouse);
-
-  if (UI::DrawButton(ec, {space.x + UI::PAD * 15, space.y + UI::PAD * 3}, 100, 25, "#128#Remove last")) {
+  if (UI::DrawButton(ec, {space.x + UI::PAD * 2, space.y + UI::PAD * 5}, 150, 25, "#143#Remove component")) {
     for (int i = COMPS_PER_NODE - 1; i > -1; --i) {
       if (nTemplate->components[i].component != nullptr) {
         delete nTemplate->components[i].label;
@@ -212,6 +212,44 @@ void NodeCreator::drawNodeCreateSandbox(EditorContext& ec, Rectangle space, Node
       }
     }
   }
+}
+
+bool NodeCreator::drawCreatePopup(EditorContext& ec, const Rectangle& body) {
+  if (showNamePopup) {
+    // Name validation func
+    const auto vFunc = [](EditorContext& ec, const char* str) -> const char* {
+      const int len = cxstructs::str_len(str);
+      if (len > PLG_MAX_NAME_LEN) return "Name is too long!";
+      if (len == 0) return "Name is too short";
+      for (const auto& name : ec.templates.userDefinedNodes | std::ranges::views::keys) {
+        if (strcmp(name, str) == 0) return "Name already exists!";
+      }
+      return nullptr;
+    };
+
+    auto popUp = UI::GetSubRect(body);
+    constexpr auto* header = "Choose the node name";
+    const auto* name = PopupMenu::InputText(ec, popUp, newNodeName, vFunc, header);
+
+    if (name == nullptr) [[likely]] { return true; }
+    if (strcmp(name, UI::DUMMY_STRING) == 0) showNamePopup = false;
+    else {
+      NodeTemplate nTemplate;
+      nTemplate.label = cxstructs::str_dup(name);  // Need an allocated copy
+      const auto createFunc = [](const NodeTemplate& nt, const Vec2 pos, const NodeID id) {
+        return new Node(nt, pos, id);
+      };
+      ec.templates.registerUserNode(ec, nTemplate, createFunc);
+      searchField.buffer = name;
+      newNodeName.buffer.clear();
+      activeEntry = 0;
+      showNamePopup = false;
+      stringSort(ec.templates.userDefinedNodes, searchField.buffer, sortBuffer);
+      ec.ui.canvasContextMenu.addNode(UI::USER_CATEGORY, nTemplate.label);
+      setNode(ec, nTemplate);
+    }
+  }
+  return false;
 }
 
 void NodeCreator::stringSort(auto& userCreatedTemplates, const std::string& searchText, auto& sortedNodes) {

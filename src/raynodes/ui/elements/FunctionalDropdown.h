@@ -18,41 +18,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "application/EditorContext.h"
-#include "plugin/PluginInterface.h"
+#ifndef FUNCTIONALDROPDOWN_H
+#define FUNCTIONALDROPDOWN_H
 
-bool ComponentRegister::registerComponent(const char* id, const ComponentCreateFunc func) {
-  const auto res = ec.templates.registerComponent(id, func, pc);
-  if (!res) errorCount++;
-  return res;
-}
 
-NodeCreateFunc NodeRegister::GetDefaultCreateFunc() {
-  return [](const NodeTemplate& nt, const Vec2 pos, const NodeID id) -> Node* {
-    return new Node(nt, pos, id);
-  };
-}
 
-NodeTemplate NodeRegister::CreateTemplate(const char* name, const ComponentDefinition& comps, Color4 c) {
-  NodeTemplate nt;
-  nt.label = name;
-  nt.color = c;
+class FunctionalDropdown {
 
-  int i = 0;
-  for (const auto component : comps) {
-    nt.components[i] = component;
-    i++;
-  }
-  return nt;
-}
+};
 
-bool NodeRegister::registerNode(const NodeTemplate& nt, NodeCreateFunc nodeCreateFunc) {
-  const auto res = ec.templates.registerNode(nt, nodeCreateFunc, pc);
 
-  if (res) {
-    ec.ui.canvasContextMenu.addNode(pc.name, nt.label);
-  } else {
-    errorCount++;
-  }
-  return res;
-}
+
+#endif //FUNCTIONALDROPDOWN_H

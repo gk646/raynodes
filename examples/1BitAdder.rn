@@ -1,39 +1,18 @@
 --EditorData--
-6642.000-17.0001.000
+66114.00025.0001.000
 --Templates--
-25
-0Vector2Vec2255
-1MathOpOperation255
-2XOR GateGate255
-3DisplayDisplay255
-4StringToNumConverter255
-5Vector3Vec3255
-6SeparateXYSeparator255
-7SeparateXYZSeparator255
-8TextFieldText255
-9NumberFieldNumber255
-10Logic ClockClock255
-11Bool DisplayDisplay255
-12BoolBool255
-13AND GateGate255
-14OR GateGate255
-15Equal GateGate255
-16NAND GateGate255
-17GOTO ProximityNPCTypeZoneTargetDistance255
-18NOR GateGate255
-19NOT GateGate255
-20Dialog ChoiceNPCTypeDisplayTextChoice1Choice2Choice3Choice4255
-21DialogNPCTypeDisplayText255
-22QuestHeaderNameDescriptionZoneLevel255
-23GOTO PositionNPCTypeZoneTarget255
-24MyTextfieldT1255
+4
+0XOR GateGate255
+1Bool DisplayDisplay255
+2BoolBool255
+3AND GateGate255
 --Nodes--
-120-333-140
-121-333-3
-22-24-1
-133-14-135
-114424-50
-115148218
+20-333-140
+21-333-3
+02-24-1
+33-14-135
+14424-50
+15153251
 --Connections--
 000200
 100201

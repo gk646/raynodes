@@ -24,7 +24,7 @@
 #include "shared/defines.h"
 #include "shared/types.h"
 
-enum  PinType : uint8_t;     // Datatype of connection pins
+enum PinType : uint8_t;     // Datatype of connection pins
 enum MOperation : uint8_t;  // Type of math operation
 enum Direction : bool;      // Which directiont the pin is factin (in/out)
 enum NodeID : uint16_t;     // Unique NodeID counting up - Limits to 65536 nodes!
@@ -44,23 +44,17 @@ struct ComponentRegister;   // Interface that encaspulate registering components
 struct NodeRegister;        // Interface that encaspulate registering nodes
 struct EditorContext;       // Central backend data holder
 struct PluginContainer;     // Holds the dll instance and the plugin instance
-class Window;              // UI class
-struct TextField;              // UI class
+class Window;               // UI class
+struct TextField;           // UI class
 
-using ComponentCreateFunc = Component* (*)(ComponentTemplate);  // Takes a name and returns a new Component
+using ComponentCreateFunc = Component* (*)(ComponentTemplate);        // Takes a name and returns a new Component
 using NodeCreateFunc = Node* (*)(const NodeTemplate&, Vec2, NodeID);  // Creates a new node
+using NodeContextAction = void (*)(EditorContext&, Node&);            // Function for the node context menu
 
 //Raylib types
 struct Color;
 struct Rectangle;
 struct Font;
 struct Vector2;
-
-struct PluginContainer {
-  void* handle;
-  const char* name;
-  RaynodesPluginI* plugin;
-  void free() ;
-};
 
 #endif  //RAYNODES_SRC_SHARED_FWD_H_

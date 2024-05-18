@@ -26,7 +26,7 @@
 
 #include "application/EditorContext.h"
 #include "component/Component.h"
-#include "ui/elements/DropDown.h"
+#include "ui/elements/SimpleDropDown.h"
 
 enum MOperation : uint8_t {
   ADD,       // Addition
@@ -101,7 +101,7 @@ inline const char* MOperationToString(const MOperation op) {
 
 struct MathC final : Component {
   int selectedMode = 0;
-  DropDown dropDown{};
+  SimpleDropDown dropDown{};
   explicit MathC(const ComponentTemplate ct) : Component(ct, 100, 20) {}
   Component* clone() override { return new MathC(*this); }
 

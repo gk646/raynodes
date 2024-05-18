@@ -21,6 +21,7 @@
 #include "application/EditorContext.h"
 
 #include <ranges>
+#include <unordered_set>
 #include <cxutil/cxio.h>
 #include <cxstructs/Constraint.h>
 #include <tinyfiledialogs.h>
@@ -118,15 +119,20 @@ void SaveEditorData(FILE* file, EditorContext& ec) {
   io_save(file, ec.display.camera.zoom);
   io_save_newline(file);
 }
-
 void SaveTemplates(FILE* file, EditorContext& ec) {
-  // TODO only save used templates
   io_save_section(file, "Templates");
-  io_save(file, static_cast<int>(ec.templates.registeredNodes.size() + ec.templates.userDefinedNodes.size()));
+
+  // Only save unique nodes
+  std::unordered_set<const char*, Fnv1aHash, StrEqual> uniqueNodes;
+  for (const auto node : ec.core.nodes) {
+    uniqueNodes.insert(node->name);
+  }
+
+  io_save(file, static_cast<int>(uniqueNodes.size()));
   io_save_newline(file);
 
   // Save func
-  constexpr auto saveTemplate = [](EditorContext& ec, FILE* file, const NodeInfo& nt) {
+  constexpr auto saveTemplate = [](FILE* file, const NodeInfo& nt) {
     io_save(file, compIndices.add(nt.nTemplate.label));  // The arbitrary id of the template
     io_save(file, nt.nTemplate.label);                   // The node name
     for (const auto& [label, component] : nt.nTemplate.components) {
@@ -138,12 +144,13 @@ void SaveTemplates(FILE* file, EditorContext& ec) {
   };
 
   for (const auto& nt : ec.templates.registeredNodes | std::views::values) {
-    saveTemplate(ec, file, nt);
+    if (!uniqueNodes.contains(nt.nTemplate.label)) continue;
+    saveTemplate(file, nt);
   }
   for (const auto& nt : ec.templates.userDefinedNodes | std::views::values) {
-    saveTemplate(ec, file, nt);
+    if (!uniqueNodes.contains(nt.nTemplate.label)) continue;
+    saveTemplate(file, nt);
   }
-
 }
 int SaveNodes(FILE* file, EditorContext& ec) {
   io_save_section(file, "Nodes");
@@ -156,7 +163,6 @@ int SaveNodes(FILE* file, EditorContext& ec) {
   }
   return count;
 }
-
 int SaveConnections(FILE* file, EditorContext& ec) {
   io_save_section(file, "Connections");
   int count = 0;
@@ -179,7 +185,6 @@ int SaveConnections(FILE* file, EditorContext& ec) {
   }
   return count;
 }
-
 void LoadEditorData(FILE* file, EditorContext& ec) {
   io_load_newline(file, true);   //Skip the Editor section
   io_load_skip_separator(file);  // Node count
@@ -378,7 +383,7 @@ bool LoadUserTemplates(EditorContext& ec, FILE* file) {
     };
 
     ec.templates.userDefinedNodes.insert({temp.label, {temp, createFunc}});
-    ec.ui.contextMenu.addNode(UI::USER_CATEGORY, temp.label);
+    ec.ui.canvasContextMenu.addNode(UI::USER_CATEGORY, temp.label);
     io_load_newline(file, true);
   }
   return true;

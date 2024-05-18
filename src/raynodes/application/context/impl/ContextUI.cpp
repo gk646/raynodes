@@ -35,9 +35,9 @@ UI::UI() {
 bool UI::loadUI(EditorContext& ec) {
   //TODO this is annoying
   getWindow<NodeCreator>(NODE_CREATOR)->searchField.font = &ec.display.editorFont;
-  getWindow<NodeCreator>(NODE_CREATOR)->componentSearchField.font = &ec.display.editorFont;
-  getWindow<NodeCreator>(NODE_CREATOR)->popupField.font = &ec.display.editorFont;
-  getWindow<NodeCreator>(NODE_CREATOR)->componentName.font = &ec.display.editorFont;
+  getWindow<NodeCreator>(NODE_CREATOR)->newCompID.font = &ec.display.editorFont;
+  getWindow<NodeCreator>(NODE_CREATOR)->newNodeName.font = &ec.display.editorFont;
+  getWindow<NodeCreator>(NODE_CREATOR)->newCompName.font = &ec.display.editorFont;
   return true;
 }
 int UI::DrawListMenu(EditorContext& ec, bool& open, const char* title, const char* listText, int& active) {
