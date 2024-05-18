@@ -31,23 +31,24 @@
 struct NodeCreator final : Window {
   cxstructs::StackVector<NodeInfo*, 50, uint8_t> sortBuffer;
   TextField searchField{150, 18, SINGLE_LINE};
-  TextField componentSearchField{150, 18, SINGLE_LINE};
-  TextField popupField{150, 18, SINGLE_LINE};
-  TextField componentName{150, 18, SINGLE_LINE};
+  TextField newCompID{150, 18, SINGLE_LINE};
+  TextField newNodeName{150, 18, SINGLE_LINE};
+  TextField newCompName{150, 18, SINGLE_LINE};
 
   Node* activeNode = nullptr;
-  int activeEntry = 0;
+  int activeEntry = -1;
   bool showNamePopup = false;
   bool showComponentSearch = false;
   bool showRenameField = false;
 
   NodeCreator(const Rectangle& r, const char* headerText);
+  bool drawCreatePopup(EditorContext& ec, const Rectangle& body);
   void drawContent(EditorContext& ec, const Rectangle& body) override;
   void onClose(EditorContext& ec)  override  {
     showNamePopup = false;
     searchField.isFocused = false;
-    componentSearchField.isFocused = false;
-    popupField.isFocused = false;
+    newCompID.isFocused = false;
+    newNodeName.isFocused = false;
     showComponentSearch = false;
   }
   void onOpen(EditorContext& ec) override {
@@ -57,7 +58,7 @@ struct NodeCreator final : Window {
  private:
   void setNode(EditorContext& ec, const NodeTemplate& nTemplate);
   void drawSearchField(EditorContext& ec, const Rectangle& body, float width);
-  void drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeTemplate*& nTemplate);
+  void drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeTemplate*& activeTemplate);
   void drawNodeCreateSandbox(EditorContext& ec, Rectangle space, NodeTemplate* nTemplate);
   static void stringSort(auto& userCreatedTemplates, const std::string& searchText, auto& sortedNodes);
 };

@@ -89,6 +89,8 @@ inline void SetupDisplay(EditorContext& ec) {
   GuiSetStyle(LISTVIEW, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
   GuiSetStyle(STATUSBAR, TEXT_ALIGNMENT, TEXT_ALIGN_MIDDLE);
 
+  GuiSetStyle(LISTVIEW, BORDER_COLOR_FOCUSED, ColorToInt(UI::COLORS[UI_DARK]));
+
   SetTextLineSpacing(0);  // No space in between
 }
 

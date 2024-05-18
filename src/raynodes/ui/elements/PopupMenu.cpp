@@ -21,14 +21,15 @@
 #include <raylib.h>
 #include <raygui.h>
 
-#include "TextPopup.h"
+#include "PopupMenu.h"
 
+#include "SimpleDropDown.h"
 #include "TextField.h"
 #include "application/EditorContext.h"
 #include "shared/rayutils.h"
 
-const char* TextPopup::Draw(EditorContext& ec, Rectangle& r, TextField& input, ValidationFunc func,
-                            const char* txt) {
+const char* PopupMenu::InputText(EditorContext& ec, Rectangle& r, TextField& input, ValidationFunc func,
+                                 const char* txt) {
   const auto& f = ec.display.editorFont;
   const auto fs = ec.display.fontSize;
 
@@ -44,7 +45,13 @@ const char* TextPopup::Draw(EditorContext& ec, Rectangle& r, TextField& input, V
   input.bounds.x = r.x + (r.width - input.bounds.width) / 2.0F;
   input.bounds.y = r.y + r.height / 5.0F;
 
-  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) { input.onFocusGain(ec.logic.mouse); }
+  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+    if (!CheckCollisionPointRec(ec.logic.mouse, r)) {
+      input.buffer.clear();
+      return UI::DUMMY_STRING;
+    }
+    input.onFocusGain(ec.logic.mouse);
+  }
   input.update(ec, ec.logic.mouse);
   input.draw();
 
@@ -64,6 +71,67 @@ const char* TextPopup::Draw(EditorContext& ec, Rectangle& r, TextField& input, V
   const auto buttonY = r.y + r.height * 0.7F;
   const auto leftButton = Rectangle{r.x + scaledPad, buttonY, buttonW, buttonH};
   const auto rightButton = Rectangle{r.x + r.width - (scaledPad + buttonW), buttonY, buttonW, buttonH};
+
+  if (!isValid) GuiSetState(STATE_DISABLED);
+  if (UI::DrawButton(ec, leftButton, "Confirm") || IsKeyPressed(KEY_ENTER)) {
+    if (input.buffer.c_str() != nullptr && isValid) { return input.buffer.c_str(); }
+  }
+  GuiSetState(STATE_NORMAL);
+
+  if (UI::DrawButton(ec, rightButton, "Cancel")) { return UI::DUMMY_STRING; }
+
+  return nullptr;
+}
+
+const char* PopupMenu::InputTextEx(EditorContext& ec, Rectangle& r, TextField& input, ValidationFunc func,
+                                   const char* header, CustomDraw customFunc) {
+  const auto& f = ec.display.editorFont;
+  const auto fs = ec.display.fontSize;
+
+  const auto scaled = ec.display.getFullyScaled(r);
+  DrawRectangleRec(scaled, UI::Darken(UI::COLORS[UI_MEDIUM]));
+  DrawRectangleLinesEx(scaled, 1, UI::Darken(UI::COLORS[UI_DARK]));
+  DrawCenteredText(f, header, {scaled.x + scaled.width / 2.0F, scaled.y}, fs, 1.0F, UI::COLORS[UI_LIGHT]);
+
+  const auto scaledPad = scaled.width * 0.1F;  // So we can pad in scaling
+
+  input.bounds.width = scaled.width / 3.0F;
+  input.bounds.height = 20;
+  input.bounds.x = scaled.x + (scaled.width - input.bounds.width) / 2.0F;
+  input.bounds.y = scaled.y + scaled.height / 5.0F;
+
+  input.update(ec, ec.logic.mouse);
+  input.draw();
+
+  const char* vRes = func(ec, input.buffer.c_str());
+  bool isValid = vRes == nullptr;
+
+  const auto infoPos = Vector2{scaled.x + scaled.width / 2.0F, input.bounds.y + scaledPad};
+  if (vRes != nullptr) {
+    DrawCenteredText(f, vRes, infoPos, fs, 1.0F, RED);
+  } else {
+    DrawCenteredText(f, "Valid Name", infoPos, fs, 1.0F, UI::COLORS[UI_LIGHT]);
+  }
+
+  const bool validCustom = customFunc(ec, r);
+
+  // Update after so custom func has layer control
+  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+    if (!CheckCollisionPointRec(ec.logic.mouse, scaled)) {
+      input.buffer.clear();
+      return UI::DUMMY_STRING;
+    }
+    input.onFocusGain(ec.logic.mouse);
+  }
+
+
+  isValid = validCustom && isValid;
+
+  const auto buttonW = scaled.width / 5.0F;
+  const auto buttonH = scaled.height / 8.0F;
+  const auto buttonY = scaled.y + scaled.height * 0.7F;
+  const auto leftButton = Rectangle{scaled.x + scaledPad, buttonY, buttonW, buttonH};
+  const auto rightButton = Rectangle{scaled.x + scaled.width - (scaledPad + buttonW), buttonY, buttonW, buttonH};
 
   if (!isValid) GuiSetState(STATE_DISABLED);
   if (UI::DrawButton(ec, leftButton, "Confirm") || IsKeyPressed(KEY_ENTER)) {

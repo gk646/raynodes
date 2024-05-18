@@ -50,7 +50,7 @@
 //    Otherwise correct persistence can not be guaranteed
 // .....................................................................
 
-struct EXPORT Component {                                                   // Ordered after access pattern
+struct EXPORT Component {                                            // Ordered after access pattern
   cxstructs::StackVector<OutputPin, OUTPUT_PINS, int8_t> outputs{};  // Current limit
   cxstructs::StackVector<InputPin, INPUT_PINS, int8_t> inputs{};     // Current limit
   float x = 0;                                                       // Internal state (don't change, only read)
@@ -59,7 +59,7 @@ struct EXPORT Component {                                                   // O
   uint16_t height = 20;                                              // Dynamically adjustable
   bool isFocused = false;                                            // Internal state (don't change, only read)
   bool isHovered = false;                                            // Internal state (don't change, only read)
-  bool internalLabel = true;                                         // Label drawn by the node or not
+  bool internalLabel = false;                                        // Label drawn by the node or not
   const char* const label;                                           // Display name (and access name)
   const char* const id;                                              // Uniquely identifying id (allocated ptr)
 
