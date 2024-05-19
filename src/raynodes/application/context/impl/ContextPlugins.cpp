@@ -30,8 +30,15 @@ void RegisterPlugin(EditorContext& ec, PluginContainer& pc) {
   char nameBuff[PLG_MAX_NAME_LEN];
 
   // Start
-  cxstructs::str_pad(nameBuff, PLG_MAX_NAME_LEN, pc.name, '.', nullptr, ":");
+  cxstructs::str_pad(nameBuff, PLG_MAX_NAME_LEN, pc.name, '.', nullptr);
   printf("    > %s ", nameBuff);  // Print the initial loading message
+
+  // Components - registered first
+  int componentsRegistered = static_cast<int>(ec.templates.componentFactory.size());
+  ComponentRegister cr(ec, pc);
+  pc.plugin->registerComponents(cr);
+  componentsRegistered = static_cast<int>(ec.templates.componentFactory.size()) - componentsRegistered;
+  printf("Components: %s / ", ec.string.getPaddedNum(componentsRegistered));
 
   // Nodes
   int nodesRegistered = static_cast<int>(ec.templates.registeredNodes.size());
@@ -39,13 +46,6 @@ void RegisterPlugin(EditorContext& ec, PluginContainer& pc) {
   pc.plugin->registerNodes(nr);
   nodesRegistered = static_cast<int>(ec.templates.registeredNodes.size()) - nodesRegistered;
   printf("Nodes: %s / ", ec.string.getPaddedNum(nodesRegistered));
-
-  // Components
-  int componentsRegistered = static_cast<int>(ec.templates.componentFactory.size());
-  ComponentRegister cr(ec, pc);
-  pc.plugin->registerComponents(cr);
-  componentsRegistered = static_cast<int>(ec.templates.componentFactory.size()) - componentsRegistered;
-  printf("Components: %s / ", ec.string.getPaddedNum(componentsRegistered));
 
   // Errors
   printf("Errors: %s", ec.string.getPaddedNum(nr.getErrors() + cr.getErrors()));
@@ -96,9 +96,7 @@ bool Plugin::loadPlugins(EditorContext& ec) {
 }
 
 void Plugin::sortPlugins() {
-  for (auto& dll : plugins) {
-    if (TextIsEqual(dll.name, "BuiltIns")) {
-      std::swap(plugins[0], dll);
-    }
-  }
+  std::ranges::sort(plugins, [](const PluginContainer& p1, const PluginContainer& p2) {
+    return p1.plugin->priority < p2.plugin->priority;
+  });
 }

@@ -1,3 +1,4 @@
+
 // Copyright (c) 2024 gk646
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -45,7 +46,8 @@ extern "C" EXPORT RaynodesPluginI* CreatePlugin() {
 // .....................................................................
 
 struct RaynodesPluginI {
-  virtual ~RaynodesPluginI() = default;
+  PluginPriority priority;  // This determines when your plugin is loaded - allows for dependency chains
+  explicit RaynodesPluginI(const PluginPriority priority = MEDIUM) : priority(priority) {}
   // Called once after its been loaded
   virtual void onLoad(EditorContext& ec) {}
   // Called once at the correct time to register its components
@@ -54,18 +56,7 @@ struct RaynodesPluginI {
   virtual void registerNodes(NodeRegister& nr) {}
 };
 
-//-----------EXAMPLE-----------//
-/*
-#include "plugin/PluginInterface.h"
-
-struct BuiltIns final : RaynodesPluginI{
-  void registerComponents(ComponentRegister& cr) override;
-};
-
-extern "C" EXPORT RaynodesPluginI* CreatePlugin() {
-  return new BuiltIns();
-}
-*/
+// For examples look at src/plugins/BuiltIns
 
 #pragma warning(pop)
 

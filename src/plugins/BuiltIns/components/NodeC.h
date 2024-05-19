@@ -18,14 +18,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#ifndef NODEC_H
+#define NODEC_H
+
+#include "component/Component.h"
 #include "application/EditorContext.h"
 
-#include <raygui.h>
+template <ComponentStyle style = IN_AND_OUT>
+struct NodeC final : Component {
+  explicit NodeC(const ComponentTemplate ct) : Component(ct, 75, 20) {}
+  Component* clone() override { return new NodeC(*this); }
 
-bool Display::loadResources(EditorContext& /**/) {
-  editorFont = LoadFontEx("res/monogram.ttf", 64, nullptr, 95);
-  GuiSetFont(editorFont);
-  GuiLoadIcons("res/iconset.rgi", false);
-  SetWindowIcon(LoadImage("res/icon.png"));
-  return editorFont.texture.id != 0 || GetFontDefault().texture.id != 0;
-}
+  void draw(EditorContext& /**/, Node& /**/) override {
+    const auto bounds = getBounds();
+    DrawRectangleRec(bounds, UI::COLORS[UI_MEDIUM]);
+  }
+
+  void update(EditorContext& /**/, Node& /**/) override {}
+
+  void onCreate(EditorContext& ec, Node& /**/) override {
+    if constexpr (style == IN_AND_OUT || style == INPUT_ONLY) {
+      addPinInput(NODE);
+    } else if constexpr (style == IN_AND_OUT || style == OUTPUT_ONLY) {
+      addPinOutput(NODE);
+    }
+  }
+};
+
+#endif  //NODEC_H

@@ -24,6 +24,7 @@
 #include "plugin/PluginInterface.h"
 
 struct QuestScript final : RaynodesPluginI {
+  QuestScript() : RaynodesPluginI(HIGH) {}
   void registerComponents(ComponentRegister& cr) override;
   void registerNodes(NodeRegister& nr) override;
 };

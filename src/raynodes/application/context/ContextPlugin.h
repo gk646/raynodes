@@ -21,7 +21,6 @@
 #ifndef CONTEXTPLUGIN_H
 #define CONTEXTPLUGIN_H
 
-
 struct Plugin {
   static constexpr auto* PLUGIN_PATH = "plugins/";
 

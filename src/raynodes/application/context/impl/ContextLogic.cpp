@@ -134,10 +134,10 @@ void Logic::registerNodeContextActions(EditorContext& ec) {
       18);
 
   ec.ui.nodeContextMenu.registerQickAction(
-    "Delete (Delete)",
-    [](EditorContext& ec, Node& node) {
-      ec.core.selectedNodes.insert({node.uID, &node});
-      ec.core.erase(ec);
-    },
-    143);
+      "Delete (Delete)",
+      [](EditorContext& ec, Node& node) {
+        ec.core.selectedNodes.insert({node.uID, &node});
+        ec.core.erase(ec);
+      },
+      143);
 }

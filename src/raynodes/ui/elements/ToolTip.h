@@ -28,9 +28,7 @@ struct EXPORT ToolTip {
   inline static int showCounter = 0;
   static constexpr int showDely = 60;
   static void Draw(EditorContext& ec);
-  static void Set(const char* txt) {
-    toolTip = txt;
-  }
+  static void Set(const char* txt) { toolTip = txt; }
 };
 
 #endif  //TOOLTIP_H

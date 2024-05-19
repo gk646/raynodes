@@ -45,7 +45,7 @@ struct NodeCreator final : Window {
   NodeCreator(const Rectangle& r, const char* headerText);
   bool drawCreatePopup(EditorContext& ec, const Rectangle& body);
   void drawContent(EditorContext& ec, const Rectangle& body) override;
-  void onClose(EditorContext& /**/)  override  {
+  void onClose(EditorContext& /**/) override {
     showNamePopup = false;
     searchField.isFocused = false;
     newCompID.isFocused = false;

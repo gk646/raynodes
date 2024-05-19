@@ -25,4 +25,4 @@ struct OrGateC final : Component {
   }
 };
 
-#endif //ORGATEC_H
+#endif  //ORGATEC_H

@@ -32,7 +32,7 @@ struct EXPORT PopupMenu {
                                const char* header);
 
   static const char* InputTextEx(EditorContext& ec, Rectangle& scaled, TextField& input, ValidationFunc func,
-                                          const char* header, CustomDraw draw);
+                                 const char* header, CustomDraw draw);
 };
 
 #endif  //TEXTPOPUP_H

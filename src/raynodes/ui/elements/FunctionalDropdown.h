@@ -21,12 +21,6 @@
 #ifndef FUNCTIONALDROPDOWN_H
 #define FUNCTIONALDROPDOWN_H
 
+class FunctionalDropdown {};
 
-
-class FunctionalDropdown {
-
-};
-
-
-
-#endif //FUNCTIONALDROPDOWN_H
+#endif  //FUNCTIONALDROPDOWN_H

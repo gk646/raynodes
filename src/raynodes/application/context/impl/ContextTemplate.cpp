@@ -32,8 +32,8 @@ bool Template::registerComponent(const char* name, ComponentCreateFunc func, con
 
 bool Template::registerNode(const NodeTemplate& nt, NodeCreateFunc func, const PluginContainer& pc) {
   if (registeredNodes.contains(nt.label)) {
-    auto* format = "Naming collision: %s/%s wont be loaded. Please contact the plugin author.\n";
-    fprintf(stderr, format, pc.name, nt.label);
+    auto* format = "Name Collision Error: Node already exists with name: %s";
+    fprintf(stderr, format, nt.label);
     return false;
   }
 
@@ -45,6 +45,21 @@ bool Template::registerNode(const NodeTemplate& nt, NodeCreateFunc func, const P
     if (nt.components[i].component == nullptr) continue;  // We dont break for safety
     newTemplate.components[i].component = cxstructs::str_dup(nt.components[i].component);
     newTemplate.components[i].label = cxstructs::str_dup(nt.components[i].label);
+
+    // Checks
+    if (!componentFactory.contains(newTemplate.components[i].component)) {
+      auto* format = "Illegal Component Error: %s/%s tries to register with missing component: %s\n";
+      fprintf(stderr, format, pc.name, nt.label, newTemplate.components[i].component);
+      return false;
+    }
+
+    for (int j = 0; j < COMPS_PER_NODE; ++j) {
+      if (j == i || nt.components[i].label == nullptr || nt.components[j].label == nullptr) continue;
+      if (strcmp(nt.components[i].label, nt.components[j].label) == 0) {
+        auto* format = "Label Duplicate Warning: Using unique component labels is advised: %s/%s/%s\n";
+        fprintf(stderr, format,pc.name,nt.label, nt.components[i].label);
+      }
+    }
   }
 
   registeredNodes.insert({newTemplate.label, NodeInfo{newTemplate, func}});

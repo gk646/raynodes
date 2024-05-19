@@ -100,7 +100,7 @@ void TextField::draw(const char* emptyHint) {
                       bounds.x + 3, bounds.y, fs);
   }
 }
-void TextField::update(EditorContext& ec,Vector2 mouse) {
+void TextField::update(EditorContext& ec, Vector2 mouse) {
   if (!isFocused || ec.input.keyboardConsumed) [[likely]] { return; }  // This is actually the most likely case
 
   cursorPos = cxstructs::clamp(static_cast<int>(cursorPos), 0, static_cast<int>(buffer.size()));

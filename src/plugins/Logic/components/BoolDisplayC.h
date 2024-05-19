@@ -16,9 +16,7 @@ struct BoolDisplayC final : Component {
       DrawTextEx(ec.display.editorFont, active ? "TRUE" : "FALSE", {x, y}, ec.display.fontSize, 1.0F, WHITE);
     }
   }
-  void update(EditorContext& ec, Node& /**/) override {
-    outputs[0].setData<BOOLEAN>(inputs[0].getData<BOOLEAN>());
-  }
+  void update(EditorContext& ec, Node& /**/) override { outputs[0].setData<BOOLEAN>(inputs[0].getData<BOOLEAN>()); }
   void onCreate(EditorContext& ec, Node& /**/) override {
     addPinInput(BOOLEAN);
     addPinOutput(BOOLEAN);

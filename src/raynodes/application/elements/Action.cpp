@@ -75,7 +75,7 @@ void NodeDeleteAction::redo(EditorContext& ec) {
 
 //-----------NODE_CREATE-----------//
 NodeCreateAction::NodeCreateAction(const int size) : Action(CREATE_NODE) {
-  createdNodes.reserve(size+1);
+  createdNodes.reserve(size + 1);
   deletedConnections.reserve(5);
 }
 
