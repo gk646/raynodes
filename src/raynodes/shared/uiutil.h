@@ -18,4 +18,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "ActionMenu.h"
+#ifndef UIUTIL_H
+#define UIUTIL_H
+
+#include "shared/fwd.h"
+
+
+#include <cxstructs/StackVector.h>
+// Current limit of 150 -> stacked based so really doesnt matter
+using SortVector = cxstructs::StackVector<const char*, 150, uint16_t>;
+
+
+#endif //UIUTIL_H

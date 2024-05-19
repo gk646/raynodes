@@ -76,9 +76,10 @@ void CheckPinCollisions(EditorContext& ec, Node& n, Component* c) {
 void UpdateComponent(EditorContext& ec, Node& n, Component* c) {
   const auto compRect = c->getBounds();
   const auto worldMouse = ec.logic.worldMouse;
+  const auto pressed = ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT);
 
   //Pins are partly outside so need to check them regardless of hover state
-  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+  if (pressed) {
     //First check if the mouse is close to the rect and mouse is pressed
     //TODO this check is done for all components / only needs to be done once
     if (CheckCollisionPointRec(worldMouse, n.getExtendedBounds(Pin::PIN_SIZE))) { CheckPinCollisions(ec, n, c); }
@@ -97,15 +98,10 @@ void UpdateComponent(EditorContext& ec, Node& n, Component* c) {
   //Focus Gain
   const bool previousFocused = c->isFocused;
   if (!previousFocused) {
-    c->isFocused = compHovered && ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT);
-  } else {
-    cxstructs::Constraint<false> con;  //Constraint holds when all are false
-
-    con += ec.logic.isAnyNodeDragged;
-    con += IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !compHovered;
-    con += IsMouseButtonPressed(KEY_ESCAPE);
-
-    c->isFocused = con.holds();
+    c->isFocused = compHovered && pressed;
+  } else if (ec.logic.isAnyNodeHovered || IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)
+             || (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !compHovered) || IsKeyPressed(KEY_ESCAPE)) {
+    c->isFocused = false;
   }
 
   if (previousFocused != c->isFocused) {

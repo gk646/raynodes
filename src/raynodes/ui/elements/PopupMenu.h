@@ -28,7 +28,7 @@ using ValidationFunc = const char* (*)(EditorContext&, const char*);
 using CustomDraw = bool (*)(EditorContext& ec, const Rectangle& r);
 
 struct EXPORT PopupMenu {
-  static const char* InputText(EditorContext& ec, Rectangle& r, TextField& input, ValidationFunc func,
+  static const char* InputText(EditorContext& ec, Rectangle& scaled, TextField& input, ValidationFunc func,
                                const char* header);
 
   static const char* InputTextEx(EditorContext& ec, Rectangle& scaled, TextField& input, ValidationFunc func,

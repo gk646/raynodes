@@ -21,50 +21,20 @@
 #ifndef CATEGORYLISTMENU_H
 #define CATEGORYLISTMENU_H
 
+#include "shared/fwd.h"
 #include <vector>
 
-struct ContextMenuCategory {
+struct Category {
   const char* name;
   std::vector<const char*> nodes;
   bool isOpen = false;
 };
 
-struct CategoryListMenu {
-  std::vector<ContextMenuCategory> categories{};
-  void addNode(const char* category, const char* name) {
-    for (auto& c : categories) {
-      if (cxstructs::str_cmp(c.name, category)) {
-        c.nodes.push_back(name);
-        return;
-      }
-    }
-    ContextMenuCategory cat{category, {}, false};
-    cat.nodes.push_back(name);
-    categories.push_back(cat);
-  }
-  void removeNode(const char* category, const char* name) {
-    for (auto catIt = categories.begin(); catIt != categories.end();) {
-      if (cxstructs::str_cmp(catIt->name, category)) {
-        bool erased = false;
-        for (auto nodeIt = catIt->nodes.begin(); nodeIt != catIt->nodes.end();) {
-          if (cxstructs::str_cmp(*nodeIt, name)) {
-            nodeIt = catIt->nodes.erase(nodeIt);
-            erased = true;
-          } else {
-            ++nodeIt;
-          }
-        }
-
-        if (catIt->nodes.empty()) {
-          catIt = categories.erase(catIt);
-        } else {
-          ++catIt;
-        }
-        if (erased) return;
-      }
-      ++catIt;
-    }
-  }
+struct CanvasContextMenu {
+  std::vector<Category> categories{};
+  void draw(EditorContext& ec, const Vector2& pos);
+  void addNode(const char* category, const char* name);
+  void removeNode(const char* category, const char* name);
 };
 
 #endif  //CATEGORYLISTMENU_H

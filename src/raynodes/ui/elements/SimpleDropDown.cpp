@@ -96,6 +96,7 @@ void SimpleDropDown::DrawSearchDropdown(EditorContext& ec, Vector2 pos, TextFiel
   pos.y = pos.y - entryHeight / 2;
 
   pos.y += entryHeight;
+  pos = ec.display.getFullyScaled(pos);
   const Rectangle dropdownRect = {pos.x, pos.y, maxWidth, entryHeight};
 
   // Draw the text field

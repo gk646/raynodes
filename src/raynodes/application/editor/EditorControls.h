@@ -60,7 +60,9 @@ inline void PollControls(EditorContext& ec) {
 
   if (ec.input.isMouseButtonReleased(MOUSE_BUTTON_RIGHT)) {
     if (DistEuclidean(contextMenuPos, mouse) <= 5.0F) {
-      ec.logic.showContextMenu = true;
+      if (ec.logic.isAnyPinHovered) ec.logic.showPinContextMenu = true;
+      else if (ec.logic.isAnyNodeHovered) ec.logic.showNodeContextMenu = true;
+      else ec.logic.showCanvasContextMenu = true;
       ec.logic.isDraggingScreen = false;
       ec.logic.isSelecting = false;
       return;
@@ -88,7 +90,8 @@ inline void PollControls(EditorContext& ec) {
   }
 
   //Selecting
-  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !ec.logic.isAnyNodeHovered && !ec.logic.showContextMenu) {
+  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !ec.logic.isAnyNodeHovered
+      && !ec.logic.showCanvasContextMenu) {
     ec.logic.isSelecting = true;
     ec.logic.selectPoint = worldMouse;
     selectRect.width = 0;

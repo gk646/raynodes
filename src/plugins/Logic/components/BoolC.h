@@ -24,6 +24,7 @@ struct BoolC final : Component {
       if (inputs[0].isConnected()) activeSwitch.isOn = inputs[0].getData<BOOLEAN>();
     }
   }
+
   void onCreate(EditorContext& ec, Node& parent) override {
     if constexpr (style == IN_AND_OUT || style == INPUT_ONLY) { addPinInput(BOOLEAN); }
     if constexpr (style == IN_AND_OUT || style == OUTPUT_ONLY) { addPinOutput(BOOLEAN); }

@@ -248,9 +248,10 @@ struct StrEqual {
 };
 
 #  if defined(_STRING_) || defined(_GLIBCXX_STRING)
-// Adds the string representation of the given number to the string
+// Replaces the string with the string representation of the given number
 inline void str_embed_num(std::string& s, float num) {
-  char buff[20];
+  s.clear();
+  char buff[10];
   snprintf(buff, sizeof(buff), "%.6f", num);
   s.append(buff);
 }

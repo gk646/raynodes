@@ -100,7 +100,6 @@ void TextField::draw(const char* emptyHint) {
                       bounds.x + 3, bounds.y, fs);
   }
 }
-
 void TextField::update(EditorContext& ec,Vector2 mouse) {
   if (!isFocused || ec.input.keyboardConsumed) [[likely]] { return; }  // This is actually the most likely case
 
@@ -219,7 +218,6 @@ void TextField::update(EditorContext& ec,Vector2 mouse) {
     blinkCounter = 0;
   }
 }
-
 void TextField::onFocusGain(const Vector2 mouse) {
   //Position the cursor correct inside the text
   if (!CheckCollisionPointRec(mouse, bounds)) return onFocusLoss();

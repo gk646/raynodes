@@ -37,8 +37,8 @@
 #include <raylib.h>
 #include <cxutil/cxstring.h>
 
-#include "ui/elements/CategoryListMenu.h"
-#include "ui/elements/ActionMenu.h"
+#include "ui/elements/CanvasContextMenu.h"
+#include "ui/elements/NodeContextMenu.h"
 #include "blocks/Connection.h"
 #include "node/Node.h"
 

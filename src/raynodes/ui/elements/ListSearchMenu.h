@@ -21,26 +21,10 @@
 #ifndef LISTSEARCHMENU_H
 #define LISTSEARCHMENU_H
 
-// Draw a list menu with a search bar
-
-#include "shared/fwd.h"
-
-#include <unordered_map>
-#include <string>
-
-#include <cxstructs/StackVector.h>
-// Current limit of 150 -> stacked based so really doesnt matter
-using SortVector = cxstructs::StackVector<const char*, 150, uint16_t>;
+#include "shared/uiutil.h"
 
 struct EXPORT ListSearchMenu {
-
   static SortVector GetSortedVector(const auto& mapKeys, const std::string& search);
-  template <typename V, typename Hash, typename Comp>
-  static const char* Draw(EditorContext& ec, Vector2 pos, TextField& searchBar,
-                          const std::unordered_map<const char*, V, Hash, Comp>& map);
-
- private:
-  static const char* DrawIMPL(EditorContext& ec, Vector2 pos, TextField& searchBar, const SortVector& entries);
 };
 
 #endif  //LISTSEARCHMENU_H

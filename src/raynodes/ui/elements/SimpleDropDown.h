@@ -21,10 +21,13 @@
 #ifndef RAYNODES_SRC_GRAPHICS_DROPDOWN_H_
 #define RAYNODES_SRC_GRAPHICS_DROPDOWN_H_
 
-#include "ListSearchMenu.h"
-#include "shared/fwd.h"
+#include "shared/uiutil.h"
+
+#include <vector>
+#include <string>
 
 #include <raylib.h>
+
 // This class is need as raygui controls dont work in worldspace -> raygui functions still use screen space mouse
 
 struct EXPORT SimpleDropDown final {
