@@ -33,20 +33,20 @@ const char* PopupMenu::InputText(EditorContext& ec, Rectangle& r, TextField& inp
   const auto& f = ec.display.editorFont;
   const auto fs = ec.display.fontSize;
 
-  r = ec.display.getFullyScaled(r);
-  DrawRectangleRec(r, UI::Darken(UI::COLORS[UI_MEDIUM]));
-  DrawRectangleLinesEx(r, 1, UI::Darken(UI::COLORS[UI_DARK]));
-  DrawCenteredText(f, txt, {r.x + r.width / 2.0F, r.y}, fs, 1.0F, UI::COLORS[UI_LIGHT]);
+  const auto scaled = ec.display.getFullyScaled(r);
+  DrawRectangleRec(scaled, UI::Darken(UI::COLORS[UI_MEDIUM]));
+  DrawRectangleLinesEx(scaled, 1, UI::Darken(UI::COLORS[UI_DARK]));
+  DrawCenteredText(f, txt, {scaled.x + scaled.width / 2.0F, scaled.y}, fs, 1.0F, UI::COLORS[UI_LIGHT]);
 
-  const auto scaledPad = r.width * 0.1F;  // So we can pad in scaling
+  const auto scaledPad = scaled.width * 0.1F;  // So we can pad in scaling
 
-  input.bounds.width = r.width / 3.0F;
+  input.bounds.width = scaled.width / 3.0F;
   input.bounds.height = 20;
-  input.bounds.x = r.x + (r.width - input.bounds.width) / 2.0F;
-  input.bounds.y = r.y + r.height / 5.0F;
+  input.bounds.x = scaled.x + (scaled.width - input.bounds.width) / 2.0F;
+  input.bounds.y = scaled.y + scaled.height / 5.0F;
 
   if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-    if (!CheckCollisionPointRec(ec.logic.mouse, r)) {
+    if (!CheckCollisionPointRec(ec.logic.mouse, scaled)) {
       input.buffer.clear();
       return UI::DUMMY_STRING;
     }
@@ -58,7 +58,7 @@ const char* PopupMenu::InputText(EditorContext& ec, Rectangle& r, TextField& inp
   const char* vRes = func(ec, input.buffer.c_str());
   const bool isValid = vRes == nullptr;
 
-  const auto infoPos = Vector2{r.x + r.width / 2.0F, input.bounds.y + scaledPad};
+  const auto infoPos = Vector2{scaled.x + scaled.width / 2.0F, input.bounds.y + scaledPad};
   if (vRes != nullptr) {
     DrawCenteredText(f, vRes, infoPos, fs, 1.0F, RED);
   } else {
@@ -69,8 +69,8 @@ const char* PopupMenu::InputText(EditorContext& ec, Rectangle& r, TextField& inp
   const auto buttonH = r.height / 8.0F;
 
   const auto buttonY = r.y + r.height * 0.7F;
-  const auto leftButton = Rectangle{r.x + scaledPad, buttonY, buttonW, buttonH};
-  const auto rightButton = Rectangle{r.x + r.width - (scaledPad + buttonW), buttonY, buttonW, buttonH};
+  const auto leftButton = Rectangle{r.x + r.width * 0.1F, buttonY, buttonW, buttonH};
+  const auto rightButton = Rectangle{r.x + r.width - (r.width * 0.1F + buttonW), buttonY, buttonW, buttonH};
 
   if (!isValid) GuiSetState(STATE_DISABLED);
   if (UI::DrawButton(ec, leftButton, "Confirm") || IsKeyPressed(KEY_ENTER)) {
@@ -124,14 +124,14 @@ const char* PopupMenu::InputTextEx(EditorContext& ec, Rectangle& r, TextField& i
     input.onFocusGain(ec.logic.mouse);
   }
 
-
   isValid = validCustom && isValid;
 
-  const auto buttonW = scaled.width / 5.0F;
-  const auto buttonH = scaled.height / 8.0F;
-  const auto buttonY = scaled.y + scaled.height * 0.7F;
-  const auto leftButton = Rectangle{scaled.x + scaledPad, buttonY, buttonW, buttonH};
-  const auto rightButton = Rectangle{scaled.x + scaled.width - (scaledPad + buttonW), buttonY, buttonW, buttonH};
+  const auto buttonW = r.width / 5.0F;
+  const auto buttonH = r.height / 8.0F;
+
+  const auto buttonY = r.y + r.height * 0.7F;
+  const auto leftButton = Rectangle{r.x + r.width * 0.1F, buttonY, buttonW, buttonH};
+  const auto rightButton = Rectangle{r.x + r.width - (r.width * 0.1F + buttonW), buttonY, buttonW, buttonH};
 
   if (!isValid) GuiSetState(STATE_DISABLED);
   if (UI::DrawButton(ec, leftButton, "Confirm") || IsKeyPressed(KEY_ENTER)) {

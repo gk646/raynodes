@@ -21,12 +21,29 @@
 #ifndef ACTIONMENU_H
 #define ACTIONMENU_H
 
+#include "shared/fwd.h"
+#include "cxstructs/StackVector.h"
 
-
-class ActionMenu {
-
+struct ContextActionInfo {
+  NodeContextAction action;
+  const char* name;
+  uint8_t iconID;
 };
 
+struct NodeContextMenu {
+  static constexpr int SIZE = 1;
+  cxstructs::StackVector<ContextActionInfo, SIZE> actions;
 
+  void draw(EditorContext& ec, const Vector2& pos);
+  void registerAction(const char* name, NodeContextAction action, uint8_t iconID) {
+    for (const auto& n : actions) {
+      if (strcmp(n.name, name) == 0) {
+        fprintf(stderr, "Action with this name already exists");
+        return;
+      }
+    }
+    actions.push_back({action, name, iconID});
+  }
+};
 
-#endif //ACTIONMENU_H
+#endif  //ACTIONMENU_H

@@ -59,12 +59,13 @@ struct EXPORT UI final {
 
   static constexpr auto* DUMMY_STRING = "__";
   static constexpr auto* USER_CATEGORY = "User Created";
-  static constexpr float CONTEXT_MENU_THRESHOLD = 15.0F;
+  static constexpr float CONTEXT_MENU_THRESHOLD = 20.0F;
   static constexpr float UI_SPACE_W = 1920.0F;  // UI space width
   static constexpr float UI_SPACE_H = 1080.0F;  // UI space height
   static constexpr float PAD = 25.0F;           // UI space padding amount
 
-  CategoryListMenu canvasContextMenu;
+  CanvasContextMenu canvasContextMenu;
+  NodeContextMenu nodeContextMenu;
   std::vector<Window*> windows;  // UI Windows
 
   // General State

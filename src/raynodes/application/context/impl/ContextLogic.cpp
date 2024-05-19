@@ -19,11 +19,12 @@
 // SOFTWARE.
 
 #include "application/EditorContext.h"
+#include "application/elements/Action.h"
 
 namespace {
 void AssignConnection(EditorContext& ec, Node& fromNode, Component* from, OutputPin& out, Node& toNode,
                       Component* to, InputPin& in) {
-  if (!out.isConnectable(ec,in)) return;
+  if (!out.isConnectable(ec, in)) return;
   const auto conn = new Connection(fromNode, from, out, toNode, to, in);
 
   printf("Connection assigned \n");
@@ -84,7 +85,6 @@ void FindDropPin(EditorContext& ec, Node& fromNode, Component* from, Pin* dragge
     }
   }
 }
-
 }  // namespace
 
 void Logic::handleDroppedPin(EditorContext& ec) {
@@ -103,4 +103,18 @@ void Logic::handleDroppedPin(EditorContext& ec) {
   draggedPin = nullptr;
   draggedPinComponent = nullptr;
   draggedPinPos = {};
+}
+
+void Logic::registerNodeContextActions(EditorContext& ec) {
+  ec.ui.nodeContextMenu.registerAction(
+      "Remove all connections",
+      [](EditorContext& ec, Node& node) {
+        // Cant fully test for connections unless we iterate connections
+        // -> Outputs dont track connections!
+        auto* action = new ConnectionDeleteAction(2);
+        ec.core.removeConnectionsFromNode(node, action->deletedConnections);
+        if (action->deletedConnections.empty()) delete action;
+        else ec.core.addEditorAction(ec, action);
+      },
+      175);
 }
