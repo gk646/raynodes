@@ -26,6 +26,7 @@
 
 #include "shared/rayutils.h"
 #include "ui/Window.h"
+#include "ui/elements/ToolTip.h"
 
 #include "application/elements/Action.h"
 #include "application/editor/EditorControls.h"
@@ -69,6 +70,7 @@ void DrawBackGround(EditorContext& ec) {
     Editor::DrawSideBar(ec);
     Editor::DrawWindows(ec);
     Editor::DrawUnsavedChanges(ec);
+    ToolTip::Draw(ec);
   }
   EndTextureMode();
   Editor::UpdateTick(ec);    // Updates all nodes
@@ -99,7 +101,6 @@ void DrawForeGround(EditorContext& ec) {
 
 int NodeEditor::run() {
   const auto& camera = context.display.camera;
-
   // Double loop to catch the window close event from raylib
   // Would require native handling and overriding the window function otherwise
   while (!context.core.closeApplication) {

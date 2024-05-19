@@ -29,7 +29,6 @@
 #include "ui/elements/TextField.h"
 
 struct NodeCreator final : Window {
-  cxstructs::StackVector<NodeInfo*, 50, uint8_t> sortBuffer;
   TextField searchField{150, 18, SINGLE_LINE};
   TextField newCompID{150, 18, SINGLE_LINE};
   TextField newNodeName{150, 18, SINGLE_LINE};
@@ -41,26 +40,25 @@ struct NodeCreator final : Window {
   bool showComponentSearch = false;
   bool showRenameField = false;
 
+  cxstructs::StackVector<NodeInfo*, 150> filteredNodes;
+
   NodeCreator(const Rectangle& r, const char* headerText);
   bool drawCreatePopup(EditorContext& ec, const Rectangle& body);
   void drawContent(EditorContext& ec, const Rectangle& body) override;
-  void onClose(EditorContext& ec)  override  {
+  void onClose(EditorContext& /**/)  override  {
     showNamePopup = false;
     searchField.isFocused = false;
     newCompID.isFocused = false;
     newNodeName.isFocused = false;
     showComponentSearch = false;
   }
-  void onOpen(EditorContext& ec) override {
-    stringSort(ec.templates.userDefinedNodes, searchField.buffer, sortBuffer);
-  }
+  void onOpen(EditorContext& ec) override;
 
  private:
   void setNode(EditorContext& ec, const NodeTemplate& nTemplate);
   void drawSearchField(EditorContext& ec, const Rectangle& body, float width);
   void drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeTemplate*& activeTemplate);
   void drawNodeCreateSandbox(EditorContext& ec, Rectangle space, NodeTemplate* nTemplate);
-  static void stringSort(auto& userCreatedTemplates, const std::string& searchText, auto& sortedNodes);
 };
 
 #endif  //NODECREATOR_H

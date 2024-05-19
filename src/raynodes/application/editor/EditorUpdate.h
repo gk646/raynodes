@@ -96,6 +96,8 @@ inline void StartUpdateTick(EditorContext& ec) {
   const auto scaleY = ec.display.screenSize.y / 1080.0F;
   const auto fontSize = fmaxf(13.0F, std::round(13.0F * scaleY));
   GuiSetStyle(DEFAULT, TEXT_SIZE, static_cast<int>(fontSize));
+
+  ToolTip::Set(nullptr);
 }
 
 }  // namespace Editor

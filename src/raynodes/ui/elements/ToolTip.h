@@ -18,13 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef LISTSEARCHMENU_H
-#define LISTSEARCHMENU_H
+#ifndef TOOLTIP_H
+#define TOOLTIP_H
 
-#include "shared/uiutil.h"
+#include "shared/fwd.h"
 
-struct EXPORT ListSearchMenu {
-  static SortVector GetSortedVector(const auto& mapKeys, const std::string& search);
+struct EXPORT ToolTip {
+  inline static const char* toolTip = nullptr;
+  inline static int showCounter = 0;
+  static constexpr int showDely = 60;
+  static void Draw(EditorContext& ec);
+  static void Set(const char* txt) {
+    toolTip = txt;
+  }
 };
 
-#endif  //LISTSEARCHMENU_H
+#endif  //TOOLTIP_H

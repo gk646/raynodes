@@ -61,8 +61,10 @@ inline void PollControls(EditorContext& ec) {
   if (ec.input.isMouseButtonReleased(MOUSE_BUTTON_RIGHT)) {
     if (DistEuclidean(contextMenuPos, mouse) <= 5.0F) {
       if (ec.logic.isAnyPinHovered) ec.logic.showPinContextMenu = true;
-      else if (ec.logic.isAnyNodeHovered) ec.logic.showNodeContextMenu = true;
-      else ec.logic.showCanvasContextMenu = true;
+      else if (ec.logic.isAnyNodeHovered) {
+        ec.logic.showNodeContextMenu = true;
+        ec.core.selectedNodes.insert({ec.logic.hoveredNode->uID, ec.logic.hoveredNode});
+      } else ec.logic.showCanvasContextMenu = true;
       ec.logic.isDraggingScreen = false;
       ec.logic.isSelecting = false;
       return;

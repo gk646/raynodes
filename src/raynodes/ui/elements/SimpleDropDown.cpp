@@ -86,7 +86,7 @@ void SimpleDropDown::DrawSearchDropdown(EditorContext& ec, Vector2 pos, TextFiel
   const float entryHeight = fs + padding;
   const auto mouse = ec.logic.mouse;
 
-  float maxWidth = 0;
+  float maxWidth = 150;
   for (const auto item : items) {
     const float itemWidth = MeasureTextEx(font, item, fs, 0.5F).x + padding * 2;  // Additional padding
     if (itemWidth > maxWidth) maxWidth = itemWidth;
@@ -101,28 +101,27 @@ void SimpleDropDown::DrawSearchDropdown(EditorContext& ec, Vector2 pos, TextFiel
 
   // Draw the text field
   bool pressed = ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT);
-  const auto [x, y] = ec.display.getFullyScaled(Vector2{150, 20});
 
   search.bounds = dropdownRect;
-  search.bounds.width = x;
-  search.bounds.height = y;
+  search.bounds.width = maxWidth;
+  search.bounds.height = 20;
 
   search.draw("Type...");
   search.update(ec, ec.logic.mouse);
 
-  float totalHeight = items.size() * entryHeight;
-  Rectangle scrollPanelRec = {pos.x, pos.y + entryHeight, maxWidth, std::min(200.0f, totalHeight)};
+  const float totalHeight = items.size() * entryHeight;
+  const Rectangle scrollPanelRec = {pos.x, pos.y + entryHeight, maxWidth, std::min(200.0f, totalHeight)};
 
   if (open) {
-    Rectangle contentRec = {0, 0, maxWidth - 20, totalHeight};  // -20 for scrollbar width
+    const Rectangle contentRec = {0, 0, maxWidth - 20, totalHeight};  // -20 for scrollbar width
     static Vector2 scroll = {0, 0};
     Rectangle view;
 
     GuiScrollPanel(scrollPanelRec, nullptr, contentRec, &scroll, &view);
 
-    BeginScissorMode(view.x, view.y, view.width, view.height);
+    BeginScissorMode(view.x, view.y, view.width + 7, view.height);
     for (int i = 0; i < items.size(); ++i) {
-      Rectangle itemRec = {pos.x, pos.y + entryHeight + i * entryHeight + scroll.y, maxWidth - 20, entryHeight};
+      Rectangle itemRec = {pos.x, pos.y + entryHeight + i * entryHeight + scroll.y, maxWidth - 13, entryHeight};
       bool isHovered = CheckCollisionPointRec(mouse, itemRec);
       if (pressed) ec.input.consumeMouse();
       if (isHovered && pressed && CheckCollisionPointRec(mouse, scrollPanelRec)) {
@@ -131,7 +130,8 @@ void SimpleDropDown::DrawSearchDropdown(EditorContext& ec, Vector2 pos, TextFiel
         EndScissorMode();
         return;
       }
-      DrawRectangleRec(itemRec, isHovered ? UI::COLORS[UI_MEDIUM] : UI::COLORS[UI_DARK]);
+      DrawRectangleRec(itemRec,
+                       isHovered ? UI::Lighten(UI::COLORS[UI_MEDIUM], 15) : UI::Lighten(UI::COLORS[UI_DARK]));
       DrawTextEx(font, items[i], {itemRec.x + padding, itemRec.y + padding / 2.0F}, fs, 1.0F, UI::COLORS[UI_LIGHT]);
     }
     EndScissorMode();
