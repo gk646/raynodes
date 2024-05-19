@@ -53,7 +53,7 @@ void PluginContainer::free() {
 #endif
   handle = nullptr;  // Prevent double-free
 }
-PluginContainer PluginLoader::GetPluginInstance( const char* path, const char* funcName) {
+PluginContainer PluginLoader::GetPluginInstance(const char* path, const char* funcName) {
   char buff[64]{};
   void* handle;
 #if defined(_WIN32)

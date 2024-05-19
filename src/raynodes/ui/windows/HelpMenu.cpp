@@ -25,7 +25,7 @@
 
 void HelpMenu::drawContent(EditorContext& ec, const Rectangle& body) {
   constexpr float listWidth = 150.0F;
-  const Rectangle listBounds = {body.x, body.y , listWidth, body.height};
+  const Rectangle listBounds = {body.x, body.y, listWidth, body.height};
   GuiListView(ec.display.getFullyScaled(listBounds), menuText, &scrollIndex, &activeIndex);
 
   Vector2 topLeft = {body.x + listWidth + UI::PAD, body.y + UI::PAD};

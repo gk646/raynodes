@@ -27,7 +27,6 @@
 #include <string>
 #include <unordered_map>
 
-
 enum ActionType : uint8_t { NEW_CANVAS_ACTION, MOVE_NODE, TEXT_EDIT, DELETE_NODE, CREATE_NODE, CONNECTION_DELETED };
 
 //Action was already performed when created
