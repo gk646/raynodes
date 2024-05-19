@@ -230,8 +230,8 @@ inline void DrawUnsavedChanges(EditorContext& ec) {
   if (UI::DrawButton(ec, windowRect, "#072#Cancel")) { ec.ui.showUnsavedChanges = false; }
 }
 inline void DrawSideBar(EditorContext& ec) {
-  Rectangle button = {5, 250, 50, 25};
-  if (GuiButton(ec.display.getFullyScaled(button), "Create custom Node")) {
+  Rectangle button = {5, 250, 100, 25};
+  if (GuiButton(ec.display.getFullyScaled(button), "Custom Nodes")) {
     ec.ui.getWindow(NODE_CREATOR)->toggleWindow(ec);
   }
 }

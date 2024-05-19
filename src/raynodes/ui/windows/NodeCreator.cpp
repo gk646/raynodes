@@ -25,7 +25,6 @@
 #include "raygui.h"
 #include "application/EditorContext.h"
 #include "ui/elements/SimpleDropDown.h"
-#include "ui/elements/ListSearchMenu.h"
 #include "ui/elements/PopupMenu.h"
 
 NodeCreator::NodeCreator(const Rectangle& r, const char* headerText) : Window(r, NODE_CREATOR, headerText) {
@@ -33,6 +32,10 @@ NodeCreator::NodeCreator(const Rectangle& r, const char* headerText) : Window(r,
   newCompID.growAutomatic = false;
   newNodeName.growAutomatic = false;
   newCompName.growAutomatic = false;
+}
+
+void NodeCreator::onOpen(EditorContext& ec) {
+  StringFilterMap(ec.templates.userDefinedNodes, searchField.buffer, filteredNodes);
 }
 
 void NodeCreator::drawContent(EditorContext& ec, const Rectangle& body) {
@@ -49,7 +52,7 @@ void NodeCreator::drawContent(EditorContext& ec, const Rectangle& body) {
   if (UI::DrawButton(ec, listBounds, "#227#Add")) { showNamePopup = true; }
 
   NodeTemplate* activeTemplate = nullptr;
-  if (searchField.hasUpdate()) { stringSort(ec.templates.userDefinedNodes, searchField.buffer, sortBuffer); }
+  if (searchField.hasUpdate()) { StringFilterMap(ec.templates.userDefinedNodes, searchField.buffer, filteredNodes); }
 
   Rectangle entry = {body.x, body.y + UI::PAD, listWidth, 45};
   drawCreatedNodeList(ec, entry, activeTemplate);
@@ -76,7 +79,7 @@ void NodeCreator::drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeT
   constexpr float entryHeight = 45.0F;
   const Vector2 mouse = ec.logic.mouse;
 
-  const float totalHeight = static_cast<float>(sortBuffer.size()) * entryHeight;
+  const float totalHeight = static_cast<float>(filteredNodes.size()) * entryHeight;
   const auto contentRec = ec.display.getFullyScaled({0, 0, entry.width - 15, totalHeight});
   static Vector2 scroll = {0, 0};
   Rectangle view;
@@ -89,7 +92,7 @@ void NodeCreator::drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeT
   entry.y += scroll.y;
   entry.width -= 15;
   int i = 0;
-  for (const auto nInfo : sortBuffer) {
+  for (const auto nInfo : filteredNodes) {
     const bool selected = i == activeEntry;
     const Rectangle entryBounds = ec.display.getFullyScaled(entry);
 
@@ -130,7 +133,7 @@ void NodeCreator::drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeT
         }
         ec.templates.userDefinedNodes.erase(nInfo->nTemplate.label);
         delete eraseInfo.nTemplate.label;
-        stringSort(ec.templates.userDefinedNodes, searchField.buffer, sortBuffer);
+        StringFilterMap(ec.templates.userDefinedNodes, searchField.buffer, filteredNodes);
       }
     }
 
@@ -165,6 +168,10 @@ void NodeCreator::drawNodeCreateSandbox(EditorContext& ec, Rectangle space, Node
       const int len = cxstructs::str_len(str);
       if (len > PLG_MAX_NAME_LEN) return "Name is too long!";
       if (len == 0) return "Name is too short";
+      const auto window = ec.ui.getWindow<NodeCreator>(NODE_CREATOR);
+      for (const auto comp : window->activeNode->components) {
+        if (strcmp(comp->label, window->newCompName.buffer.c_str()) == 0) return "Name already exists";
+      }
       return nullptr;
     };
 
@@ -172,8 +179,9 @@ void NodeCreator::drawNodeCreateSandbox(EditorContext& ec, Rectangle space, Node
       auto window = ec.ui.getWindow<NodeCreator>(NODE_CREATOR);
       auto& search = window->newCompID;
       const auto pos = Vector2{r.x + r.width / 2.0F, r.y + r.height / 2.0F};
-      const auto items = ListSearchMenu::GetSortedVector(ec.templates.componentFactory, search.buffer);
-      SimpleDropDown::DrawSearchDropdown(ec, pos, search, items);
+      SortVector vec;
+      StringFilterMap(ec.templates.componentFactory,search.buffer,vec);
+      SimpleDropDown::DrawSearchDropdown(ec, pos, search, vec);
       for (const auto name : ec.templates.componentFactory | std::ranges::views::keys) {
         if (strcmp(name, search.buffer.c_str()) == 0) return true;
       }
@@ -221,7 +229,10 @@ bool NodeCreator::drawCreatePopup(EditorContext& ec, const Rectangle& body) {
       const int len = cxstructs::str_len(str);
       if (len > PLG_MAX_NAME_LEN) return "Name is too long!";
       if (len == 0) return "Name is too short";
-      for (const auto& name : ec.templates.userDefinedNodes | std::ranges::views::keys) {
+      for (const auto name : ec.templates.userDefinedNodes | std::ranges::views::keys) {
+        if (strcmp(name, str) == 0) return "Name already exists!";
+      }
+      for (const auto name : ec.templates.registeredNodes | std::ranges::views::keys) {
         if (strcmp(name, str) == 0) return "Name already exists!";
       }
       return nullptr;
@@ -244,33 +255,10 @@ bool NodeCreator::drawCreatePopup(EditorContext& ec, const Rectangle& body) {
       newNodeName.buffer.clear();
       activeEntry = 0;
       showNamePopup = false;
-      stringSort(ec.templates.userDefinedNodes, searchField.buffer, sortBuffer);
+      StringFilterMap(ec.templates.userDefinedNodes, searchField.buffer, filteredNodes);
       ec.ui.canvasContextMenu.addNode(UI::USER_CATEGORY, nTemplate.label);
       setNode(ec, nTemplate);
     }
   }
   return false;
-}
-
-void NodeCreator::stringSort(auto& userCreatedTemplates, const std::string& searchText, auto& sortedNodes) {
-  sortedNodes.clear();
-
-  for (auto& value : userCreatedTemplates | std::ranges::views::values) {
-    sortedNodes.push_back(&value);
-  }
-
-  const char* searchCStr = searchText.c_str();
-  const int size = sortedNodes.size();
-  if (size == 0) return;
-  for (uint8_t i = 0; i < size - 1; ++i) {
-    uint8_t minIndex = i;
-    for (uint8_t j = i + 1; j < size; ++j) {
-      if (cxstructs::str_sort_levenshtein_prefix<PLG_MAX_NAME_LEN>(sortedNodes[j]->nTemplate.label, searchCStr)
-          < cxstructs::str_sort_levenshtein_prefix<PLG_MAX_NAME_LEN>(sortedNodes[minIndex]->nTemplate.label,
-                                                                     searchCStr)) {
-        minIndex = j;
-      }
-    }
-    if (minIndex != i) { std::swap(sortedNodes[i], sortedNodes[minIndex]); }
-  }
 }

@@ -190,13 +190,17 @@ inline double str_parse_double(const char* str) {
 
   return negative ? -result : result;
 }
-// Returns the levenshtein distance for the two given strings - stops when either string ends
-// This doesnt penalize long strings
+// Returns the Levenshtein distance for the two given strings
+// This penalizes differences in length
 // Failure: returns -1
 template <int MAX_LEN>
-int str_sort_levenshtein_prefix(const char* s1, const char* s2) {
-  const size_t len1 = str_len(s1), len2 = str_len(s2);
-  const size_t limit = len1 < len2 ? len1 : len2;
+int str_sort_levenshtein(const char* s1, const char* s2) {
+  if (s1 == nullptr || s2 == nullptr) {
+    return -1;  // Error: string length exceeds maximum allowed length
+  }
+
+  const size_t len1 = strlen(s1);
+  const size_t len2 = strlen(s2);
 
   if (len1 > MAX_LEN || len2 > MAX_LEN) {
     return -1;  // Error: string length exceeds maximum allowed length
@@ -204,23 +208,23 @@ int str_sort_levenshtein_prefix(const char* s1, const char* s2) {
 
   unsigned int d[MAX_LEN + 1][MAX_LEN + 1] = {0};
 
-  for (unsigned int i = 1; i <= limit; ++i)
+  for (unsigned int i = 0; i <= len1; ++i)
     d[i][0] = i;
-  for (unsigned int i = 1; i <= len2; ++i)
-    d[0][i] = i;
+  for (unsigned int j = 0; j <= len2; ++j)
+    d[0][j] = j;
 
-  for (unsigned int i = 1; i <= limit; ++i) {
+  for (unsigned int i = 1; i <= len1; ++i) {
     for (unsigned int j = 1; j <= len2; ++j) {
       unsigned int cost = (s1[i - 1] == s2[j - 1]) ? 0 : 1;
       unsigned int above = d[i - 1][j] + 1;
       unsigned int left = d[i][j - 1] + 1;
       unsigned int diag = d[i - 1][j - 1] + cost;
 
-      d[i][j] = above < left ? (above < diag ? above : diag) : (left < diag ? left : diag);
+      d[i][j] = above < left ? above : left < diag ? left : diag;
     }
   }
 
-  return d[limit][len2];
+  return d[len1][len2];
 }
 // string hash function
 constexpr auto str_hash_fnv1a_32(char const* s) noexcept -> uint32_t {

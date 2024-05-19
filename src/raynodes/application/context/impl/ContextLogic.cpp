@@ -117,4 +117,27 @@ void Logic::registerNodeContextActions(EditorContext& ec) {
         else ec.core.addEditorAction(ec, action);
       },
       175);
+
+  ec.ui.nodeContextMenu.registerQickAction(
+      "Cut (Ctrl+X)",
+      [](EditorContext& ec, Node& node) {
+        ec.core.selectedNodes.insert({node.uID, &node});
+        ec.core.cut(ec);
+      },
+      17);
+  ec.ui.nodeContextMenu.registerQickAction(
+      "Copy (Ctrl+C)",
+      [](EditorContext& ec, Node& node) {
+        ec.core.selectedNodes.insert({node.uID, &node});
+        ec.core.copy(ec);
+      },
+      18);
+
+  ec.ui.nodeContextMenu.registerQickAction(
+    "Delete (Delete)",
+    [](EditorContext& ec, Node& node) {
+      ec.core.selectedNodes.insert({node.uID, &node});
+      ec.core.erase(ec);
+    },
+    143);
 }

@@ -31,8 +31,9 @@ struct ContextActionInfo {
 };
 
 struct NodeContextMenu {
-  static constexpr int SIZE = 1;
+  static constexpr int SIZE = 4;
   cxstructs::StackVector<ContextActionInfo, SIZE> actions;
+  cxstructs::StackVector<ContextActionInfo, SIZE> quickActions;
 
   void draw(EditorContext& ec, const Vector2& pos);
   void registerAction(const char* name, NodeContextAction action, uint8_t iconID) {
@@ -44,6 +45,18 @@ struct NodeContextMenu {
     }
     actions.push_back({action, name, iconID});
   }
+  void registerQickAction(const char* name, NodeContextAction action, uint8_t iconID) {
+    for (const auto& n : quickActions) {
+      if (strcmp(n.name, name) == 0) {
+        fprintf(stderr, "QuickAction with this name already exists");
+        return;
+      }
+    }
+    quickActions.push_back({action, name, iconID});
+  }
+
+ private:
+  void drawQuickActions();
 };
 
 #endif  //ACTIONMENU_H

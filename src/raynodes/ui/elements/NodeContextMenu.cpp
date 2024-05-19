@@ -22,6 +22,8 @@
 #include <raygui.h>
 
 #include "NodeContextMenu.h"
+
+#include "ToolTip.h"
 #include "application/EditorContext.h"
 #include "shared/rayutils.h"
 
@@ -32,24 +34,49 @@ void NodeContextMenu::draw(EditorContext& ec, const Vector2& pos) {
   const auto [paddingX, paddingY, w, h] = Rectangle{22, 4, 200, fs + 4};
   const auto entryHeight = fs + paddingY;
 
-  const auto pressed = ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT);
+  const auto pressed =
+      ec.input.isMouseButtonDown(MOUSE_BUTTON_LEFT) || ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT);
   const auto released = ec.input.isMouseButtonReleased(MOUSE_BUTTON_LEFT);
   if (pressed) ec.input.consumeMouse();
 
   const auto background = ColorAlpha(UI::COLORS[UI_DARK], 0.97F);
   const auto highlight = ColorAlpha(UI::COLORS[UI_MEDIUM], 0.97F);
 
-  Rectangle entry = {pos.x, pos.y, w, h * 2};
   // Draw First Row - Quick actions
-  DrawRectangleRec(entry, background);
+  DrawRectangleRec({pos.x, pos.y, w, 32}, background);
 
+  Rectangle entry = {pos.x, pos.y, 32, 32};
+  entry.x += 2;
+  GuiSetIconScale(2);
+  for (const auto& [action, name, icon] : quickActions) {
+    const auto hovered = CheckCollisionPointRec(mouse, entry);
+    const auto back = pressed ? UI::Darken(UI::COLORS[UI_MEDIUM], 25) : UI::COLORS[UI_MEDIUM];
+    if (hovered) {
+      BeginBlendMode(BLEND_ADDITIVE);
+      DrawRectangleRounded(entry, 0.3F, 30, ColorAlpha(back, 0.4F));
+      EndBlendMode();
+      ToolTip::Set(name);
+    }
+    GuiDrawIcon(icon, entry.x, entry.y, 2, GRAY);
+    if (hovered && released && ec.logic.hoveredNode) {
+      action(ec, *ec.logic.hoveredNode);
+      ec.logic.showNodeContextMenu = false;
+    }
+    entry.x += 34;
+  }
+
+  GuiSetIconScale(1);
+
+  entry.x = pos.x;
+  entry.y += entry.height;
+  entry.width = w;
   entry.height = h;
-  entry.y += h * 2;
+
   int i = 0;
   for (const auto& [action, name, icon] : actions) {
     if (CheckCollisionPointRec(mouse, entry)) {
       DrawRectangleRounded(entry, 0.1F, 30, highlight);
-      if (released && ec.logic.hoveredNode) {
+      if (released && ec.logic.hoveredNode != nullptr) {
         action(ec, *ec.logic.hoveredNode);
         ec.logic.showNodeContextMenu = false;
       }
@@ -64,7 +91,7 @@ void NodeContextMenu::draw(EditorContext& ec, const Vector2& pos) {
     i++;
   }
 
-  const auto totalHeight = static_cast<float>(actions.size()) * entryHeight + h * 2;
+  const auto totalHeight = static_cast<float>(actions.size()) * entryHeight + h * 1.5F;
   if (!CheckExtendedRec(mouse, {entry.x, entry.y - totalHeight, entry.width, totalHeight},
                         UI::CONTEXT_MENU_THRESHOLD)) {
     ec.logic.showNodeContextMenu = false;
