@@ -62,7 +62,7 @@ void DrawBackGround(EditorContext& ec) {
   BeginTextureMode(ec.display.uiTexture);
   {
     ClearBackground(BLANK);
-    Editor::DrawContextMenu(ec);
+    Editor::DrawContextMenus(ec);
     Editor::DrawActions(ec);
     Editor::DrawTopBar(ec);
     Editor::DrawStatusBar(ec);

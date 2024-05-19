@@ -36,11 +36,14 @@ struct Logic {
   Vector2 worldMouse = {};          // Mouse pos in world space
   Vector2 contextMenuPos = {};      // Position of the context menu
   Vector2 draggedPinPos = {};       // Position of the dragged pin
+  bool isSelecting = false;         // Is user currently selecting
   bool isMakingConnection = false;  // Is user trying to connect pins
-  bool isDraggingScreen = false;
-  bool showContextMenu = false;
-  bool isSelecting = false;  // Is user currently selecting
+  bool isDraggingScreen = false;    // Is user currently dragging the screen
+  bool showCanvasContextMenu = false;
+  bool showNodeContextMenu = false;
+  bool showPinContextMenu = false;
   bool isAnyNodeHovered = false;
+  bool isAnyPinHovered = false;
   bool isAnyNodeDragged = false;
 
   void assignDraggedPin(const float x, const float y, Node& n, Component* c, Pin& p) {
@@ -51,6 +54,7 @@ struct Logic {
     isMakingConnection = true;
   }
   void handleDroppedPin(EditorContext& ec);
+  void registerNodeContextActions(EditorContext& ec);
 };
 
 #endif  //RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTLOGIC_H_

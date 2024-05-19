@@ -58,6 +58,7 @@ inline bool CheckCollisionBezierRect(const Vector2 startPos, const Vector2 endPo
   }
   return false;
 }
+
 inline bool CheckExtendedRec(const Vector2 p, const Rectangle& r, float ext) {
   return CheckCollisionPointRec(p, {r.x - ext, r.y - ext, r.width + ext * 2, r.height + ext * 2});
 }
