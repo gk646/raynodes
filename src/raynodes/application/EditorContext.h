@@ -57,7 +57,6 @@
 // So its always hot in cache
 // Sorted after access pattern and size - sadly cant use perf with cache misses on WSL
 
-
 struct EXPORT EditorContext {
   Input input{};
   Core core{};

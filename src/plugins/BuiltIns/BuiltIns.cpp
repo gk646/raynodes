@@ -25,6 +25,7 @@
 
 #include "components/MathC.h"
 #include "components/DisplayC.h"
+#include "components/NodeC.h"
 #include "components/NumberFieldC.h"
 #include "components/SeparateXYC.h"
 #include "components/SeparateXYZC.h"
@@ -70,6 +71,11 @@ void BuiltIns::registerComponents(ComponentRegister& cr) {
   cr.registerComponent<Vec2C<IN_AND_OUT>>("BI_Vec2");
   cr.registerComponent<Vec2C<INPUT_ONLY>>("BI_Vec2_In");
   cr.registerComponent<Vec2C<OUTPUT_ONLY>>("BI_Vec2_Out");
+
+  // Node  - different flavours
+  cr.registerComponent<NodeC<IN_AND_OUT>>("BI_Node");
+  cr.registerComponent<NodeC<INPUT_ONLY>>("BI_Node_In");
+  cr.registerComponent<NodeC<OUTPUT_ONLY>>("BI_Node_Out");
 }
 
 void BuiltIns::registerNodes(NodeRegister& nr) {

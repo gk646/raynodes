@@ -25,7 +25,7 @@
 
 struct PluginDeleter;
 struct PluginLoader {
-  static PluginContainer GetPluginInstance( const char* path, const char* funcName);
+  static PluginContainer GetPluginInstance(const char* path, const char* funcName);
 };
 
 #endif  //PLUGIN_H

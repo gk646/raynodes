@@ -30,9 +30,7 @@ inline void DrawNodes(EditorContext& ec) {
   const Rectangle cameraBounds = {topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y};
 
   for (const auto n : nodes) {
-    if (CheckCollisionRecs(cameraBounds, n->getBounds())) {
-      Node::Draw(ec, *n);
-    }
+    if (CheckCollisionRecs(cameraBounds, n->getBounds())) { Node::Draw(ec, *n); }
   }
 }
 inline void DrawConnections(EditorContext& ec, bool isCTRLDown) {

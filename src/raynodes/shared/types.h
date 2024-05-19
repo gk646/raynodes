@@ -96,8 +96,11 @@ enum ColorIndex : uint8_t { E_BACK_GROUND = 0, E_GRID, N_BACK_GROUND, UI_LIGHT, 
 enum ScaleDirection : uint8_t { HORIZONTAL, VERTICAL };
 
 // Flavour of components with only 1 datatype - specifies if it has both input and output or only either one
-// This is mostly cosmetic - for example if you have a complex node and only wanna output node level, you can make the components have no outputs
+// This is mostly cosmetic - for example if you have a complex node and only want to output at node level, you can make the components themselves have no outputs
 enum ComponentStyle : uint8_t { INPUT_ONLY, OUTPUT_ONLY, IN_AND_OUT };
 
 enum WindowType : uint8_t { SETTINGS_MENU, HELP_MENU, NODE_CREATOR };
+
+enum PluginPriority : uint8_t { ESSENTIAL, CRITICAL, HIGH, MEDIUM, LOW };
+
 #endif  //TYPES_H

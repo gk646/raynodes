@@ -6,6 +6,7 @@
 // Accepting naming suggestions instead of logics
 
 struct Logics final : RaynodesPluginI {
+  Logics() : RaynodesPluginI(HIGH) {}
   void registerComponents(ComponentRegister& cr) override;
   void registerNodes(NodeRegister& nr) override;
 };

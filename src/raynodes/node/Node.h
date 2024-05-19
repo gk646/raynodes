@@ -47,16 +47,16 @@
 // .....................................................................
 
 struct Node {                                                             // Ordered after access pattern
-  cxstructs::StackVector<Component*, COMPS_PER_NODE, int8_t> components;  // Fixed size
   float x, y;                                                             // Position
   float width, height;                                                    // Dimensions
   Color4 color;                                                           // Header colour
   uint16_t contentHeight = 0;                                             //Current height of the content
+  const char* const name = nullptr;                                       //Unique allocated name
   bool isHovered = false;                                                 // If the node is hovered
   bool isDragged = false;                                                 // If the node is dragged
-  const char* const name = nullptr;                                       //Unique allocated name
   const NodeID uID;                                                       // Unqiue node ID
-  InputPin nodeIn{NODE};                                               // Allow node-to-node connections
+  cxstructs::StackVector<Component*, COMPS_PER_NODE, int8_t> components;  // Fixed size
+  InputPin nodeIn{NODE};                                                  // Allow node-to-node connections
   cxstructs::StackVector<OutputPin, NODE_OUTPUT_PINS, int8_t> outputs;    // Allow node-to-node connections
 
   explicit Node(const NodeTemplate& nt, Vec2 pos, NodeID id);
@@ -85,7 +85,7 @@ struct Node {                                                             // Ord
   virtual void onCreation(EditorContext& ec) {}
 
   //-----------COMPONENTS-----------//
-  // If the type fits retuns the exact component
+  // Retuns the exact component
   template <typename ComponentType>
   ComponentType* getComponent(const char* label) {
     for (const auto c : components) {

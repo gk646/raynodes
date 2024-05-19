@@ -180,7 +180,7 @@ void NodeCreator::drawNodeCreateSandbox(EditorContext& ec, Rectangle space, Node
       auto& search = window->newCompID;
       const auto pos = Vector2{r.x + r.width / 2.0F, r.y + r.height / 2.0F};
       SortVector vec;
-      StringFilterMap(ec.templates.componentFactory,search.buffer,vec);
+      StringFilterMap(ec.templates.componentFactory, search.buffer, vec);
       SimpleDropDown::DrawSearchDropdown(ec, pos, search, vec);
       for (const auto name : ec.templates.componentFactory | std::ranges::views::keys) {
         if (strcmp(name, search.buffer.c_str()) == 0) return true;

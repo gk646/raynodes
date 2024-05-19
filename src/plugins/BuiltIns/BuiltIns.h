@@ -24,11 +24,12 @@
 #include "plugin/PluginInterface.h"
 
 struct BuiltIns final : RaynodesPluginI {
+  BuiltIns() : RaynodesPluginI(ESSENTIAL) {}
   void registerComponents(ComponentRegister& cr) override;
   void registerNodes(NodeRegister& nr) override;
 };
 
-extern "C" EXPORT  RaynodesPluginI* CreatePlugin() {
+extern "C" EXPORT RaynodesPluginI* CreatePlugin() {
   return new BuiltIns();
 }
 
