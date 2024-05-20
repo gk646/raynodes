@@ -96,6 +96,11 @@ void DrawContent(EditorContext& ec) {
 void DrawForeGround(EditorContext& ec) {
   DrawTextureRec(ec.display.uiTexture.texture, {0, 0, ec.display.screenSize.x, -ec.display.screenSize.y}, {0, 0},
                  WHITE);
+
+  if (ec.core.nodes.empty()) {
+    const auto pos = Vector2{ec.display.screenSize.x / 2.0F, ec.display.screenSize.y * 0.3F};
+    DrawCenteredText(ec.display.editorFont, "Right-Click to add nodes!", pos, 20, 1.0F, WHITE);
+  }
 }
 }  // namespace
 

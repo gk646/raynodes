@@ -35,10 +35,15 @@ static constexpr float OFFSET_Y = 20;  // Node name header offset
 static Vector2 DRAG_OFFSET;            // Drag anchor point
 static constexpr float MIN_WIDTH = 75;
 static constexpr float MIN_HEIGHT = 45;
+static float CACHED_ZOOM = 1.0F;  // Cache the zoom value to have cleaner method parameters
+
+#define LOW_ZOOM_THRESHOLD 0.4F
+// We make this likely - zoom is low we might miss the branch but gain the skip
+#define IF_HIGH_ZOOM(expr)                                                                                          \
+  if (CACHED_ZOOM > LOW_ZOOM_THRESHOLD) [[likely]] { expr; }
 
 // Helper functions
 namespace {
-
 void UpdateNodePins(EditorContext& ec, Node& n) {
   if (!ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) return;
 
@@ -146,9 +151,8 @@ void HandleHover(EditorContext& ec, Node& n, std::unordered_map<NodeID, Node*>& 
     auto& moveAction = ec.logic.currentMoveAction;  //Start a move action
     if (moveAction == nullptr) {                    //Let's not leak too much...
       moveAction = new NodeMovedAction(static_cast<int>(selectedNodes.size()) + 1);
-      for (auto pair : selectedNodes) {
-        const auto node = pair.second;
-        moveAction->movedNodes.push_back({pair.first, {node->x, node->y}});
+      for (auto [id, node] : selectedNodes) {
+        moveAction->movedNodes.push_back({id, {node->x, node->y}});
       }
     }
 
@@ -187,18 +191,19 @@ void HandleDrag(Node& n, EditorContext& ec, auto& selectedNodes, auto worldMouse
   }
 }
 
-void DrawComponentPins(const EditorContext& ec, Component& c, float dx, float startIn, float startOut, float w) {
+void DrawComponentPins(const EditorContext& ec, Component& c, const float dx, const float in, const float out,
+                       const float w) {
   const bool showText = ec.input.isKeyDown(KEY_LEFT_ALT);
   const auto& font = ec.display.editorFont;
   // Draw Input Pins
-  float currentY = startIn;
+  float currentY = in;
   for (auto& p : c.inputs) {
     Pin::DrawPin(p, font, dx, currentY, showText);
     currentY += Pin::PIN_SIZE;
   }
 
   // Draw Output Pins
-  currentY = startOut;
+  currentY = out;
   const float outputX = dx + w;  // Pins on the right edge
   for (auto& p : c.outputs) {
     Pin::DrawPin(p, font, outputX, currentY, showText);
@@ -206,27 +211,27 @@ void DrawComponentPins(const EditorContext& ec, Component& c, float dx, float st
   }
 }
 
-void DrawComponent(EditorContext& ec, Node& n, Component& c, float dx, float& dy, float width) {
-  if (!c.internalLabel) {
+void DrawComponent(EditorContext& ec, Node& n, Component& c, const float dx, float& dy, const float width) {
+  if (!c.internalLabel) [[likely]] {
     const auto fs = ec.display.fontSize;
-    Vector2 textPos = {n.x + PADDING, dy};
-    DrawTextEx(ec.display.editorFont, c.label, textPos, fs, 0.0F, UI::COLORS[UI_LIGHT]);
+    const Vector2 textPos = {n.x + PADDING, dy};
+    IF_HIGH_ZOOM(DrawTextEx(ec.display.editorFont, c.label, textPos, fs, 0.0F, UI::COLORS[UI_LIGHT]));
     dy += fs;
   }
 
-  int maxPins = std::max(c.inputs.size(), c.outputs.size());
-  float componentHeight = c.getHeight();
+  const int maxPins = std::max(c.inputs.size(), c.outputs.size());
+  const float componentHeight = c.getHeight();
 
   // Calculate the total height needed for pins on the side with the maximum number
-  float totalPinHeight = static_cast<float>(maxPins) * Pin::PIN_SIZE;
-  float maxVerticalSpace = std::max(totalPinHeight, componentHeight);
+  const float totalPinHeight = static_cast<float>(maxPins) * Pin::PIN_SIZE;
+  const float maxVerticalSpace = std::max(totalPinHeight, componentHeight);
 
   // Calculate starting positions for pins and component to be vertically centered
-  float startYInputs = dy + (maxVerticalSpace - totalPinHeight) / 2.0f;
-  float startYOutputs = startYInputs;  // Symmetrical layout
-  float componentStartY = dy + (maxVerticalSpace - componentHeight) / 2.0f;
+  const float startYInputs = dy + (maxVerticalSpace - totalPinHeight) / 2.0f;
+  const float startYOutputs = startYInputs;  // Symmetrical layout
+  const float componentStartY = dy + (maxVerticalSpace - componentHeight) / 2.0f;
 
-  DrawComponentPins(ec, c, dx, startYInputs, startYOutputs, width);
+   IF_HIGH_ZOOM(DrawComponentPins(ec, c, dx, startYInputs, startYOutputs, width));
 
   c.x = dx + PADDING * 2;
   c.y = componentStartY;
@@ -264,7 +269,9 @@ Node* Node::clone(const NodeID nid) {
 }
 
 void Node::Draw(EditorContext& ec, Node& n) {
-  const auto& display = ec.display;
+  const auto& f = ec.display.editorFont;
+  CACHED_ZOOM = ec.display.camera.zoom;
+  const auto fs = ec.display.fontSize;
   const auto bounds = Rectangle{n.x, n.y, n.width, n.height};
   const auto headerPos = Vector2{n.x + PADDING * 3.0F, n.y + PADDING};
   float startY = n.y + PADDING + OFFSET_Y;
@@ -273,13 +280,13 @@ void Node::Draw(EditorContext& ec, Node& n) {
   DrawRectangleRec(bounds, UI::COLORS[N_BACK_GROUND]);
 
   // Draw hover outline
-  if (n.isHovered) { DrawRectangleLinesEx(bounds, 1, ColorAlpha(UI::COLORS[UI_LIGHT], 0.7)); }
+  if (n.isHovered) [[unlikely]] { DrawRectangleLinesEx(bounds, 1, ColorAlpha(UI::COLORS[UI_LIGHT], 0.7)); }
 
   // Draw header text
-  DrawTextEx(display.editorFont, n.name, headerPos, display.fontSize, 1.0F, UI::COLORS[UI_LIGHT]);
+  IF_HIGH_ZOOM(DrawTextEx(f, n.name, headerPos, fs, 1.0F, UI::COLORS[UI_LIGHT]));
 
   // Draw Node pins
-  DrawNodePins(ec, n);
+  IF_HIGH_ZOOM(DrawNodePins(ec, n));
 
   // Iterate over components and draw them
   const float initialY = startY;
@@ -327,14 +334,14 @@ void Node::Update(EditorContext& ec, Node& n) {
   n.isHovered = n.isDragged || CheckCollisionPointRec(worldMouse, bounds);
 
   //Its hovered - what's going to happen?
-  if (n.isHovered && !ec.logic.isAnyNodeHovered) {
+  if (n.isHovered && !ec.logic.isAnyNodeHovered) [[unlikely]] {
     HandleHover(ec, n, selectedNodes);
   } else {
     n.isHovered = !selectedNodes.empty() && selectedNodes.contains(n.uID);
   }
 
   //Node is dragged
-  if (n.isDragged) { HandleDrag(n, ec, selectedNodes, worldMouse); }
+  if (n.isDragged) [[unlikely]] { HandleDrag(n, ec, selectedNodes, worldMouse); }
 }
 void Node::SaveState(FILE* file, const Node& n) {
   cxstructs::io_save(file, n.uID);

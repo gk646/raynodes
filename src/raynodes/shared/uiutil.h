@@ -27,22 +27,24 @@
 
 #include <cxstructs/StackVector.h>
 #include <cxutil/cxstring.h>
+
 // Current limit of 150 -> stacked based so really doesnt matter
 using SortVector = cxstructs::StackVector<const char*, 150>;
 
-// Filters the strings based on prefix and then sorts after levenshtein distance
+// Case insensitive - filters based on prefix OR exisiting substring
+// -> then sorts after case insensitive levenshtein
 template <typename T>
 void StringFilterMap(auto& map, const std::string& s, cxstructs::StackVector<T*, 150>& vec) {
   vec.clear();
-
-  if constexpr (std::is_same_v<const char, T>) { volatile int s = 5; }
 
   const char* searchCStr = s.c_str();
   const int searchSize = s.size();
 
   for (auto& pair : map) {
     const auto* name = pair.first;  // Sort after keys
-    if (searchSize == 0 || strncmp(name, searchCStr, searchSize) == 0) {
+    const bool emptyOrPrefix = searchSize == 0 || strncmp(name, searchCStr, searchSize) == 0;
+    const bool commonSubstring = cxstructs::str_substr_case(name, searchCStr) != nullptr;
+    if (emptyOrPrefix || commonSubstring) {
       if constexpr (std::is_same_v<NodeInfo, T>) {
         vec.push_back(&pair.second);
       } else if constexpr (std::is_same_v<const char, T>) {
@@ -66,8 +68,8 @@ void StringFilterMap(auto& map, const std::string& s, cxstructs::StackVector<T*,
         str1 = vec[j];
         str2 = vec[minIndex];
       }
-      if (cxstructs::str_sort_levenshtein<PLG_MAX_NAME_LEN>(str1, searchCStr)
-          < cxstructs::str_sort_levenshtein<PLG_MAX_NAME_LEN>(str2, searchCStr)) {
+      if (cxstructs::str_sort_levenshtein_case<PLG_MAX_NAME_LEN>(str1, searchCStr)
+          < cxstructs::str_sort_levenshtein_case<PLG_MAX_NAME_LEN>(str2, searchCStr)) {
         minIndex = j;
       }
     }

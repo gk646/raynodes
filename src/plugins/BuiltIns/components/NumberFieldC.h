@@ -49,8 +49,13 @@ class NumberFieldC final : public Component {
     textField.update(ec, ec.logic.worldMouse);
 
     if constexpr (style == IN_AND_OUT || style == INPUT_ONLY) {
-      auto* input = inputs[0].getData<STRING>();
-      if (input) textField.buffer = input;
+      if (inputs[0].isConnected()) {
+        const auto input = inputs[0].getData<INTEGER>();
+        cxstructs::str_embed_num(textField.buffer, input);
+      }else if(inputs[1].isConnected()) {
+        const auto input = inputs[0].getData<FLOAT>();
+        cxstructs::str_embed_num(textField.buffer, input);
+      }
     }
 
     if constexpr (style == IN_AND_OUT || style == OUTPUT_ONLY) {
@@ -92,7 +97,10 @@ class NumberFieldC final : public Component {
     textField.font = &ec.display.editorFont;
     textField.fs = ec.display.fontSize;
 
-    if constexpr (style == IN_AND_OUT || style == INPUT_ONLY) { addPinInput(STRING); }
+    if constexpr (style == IN_AND_OUT || style == INPUT_ONLY) {
+      addPinInput(INTEGER);
+      addPinInput(FLOAT);
+    }
     if constexpr (style == IN_AND_OUT || style == OUTPUT_ONLY) {
       addPinOutput(INTEGER);
       addPinOutput(FLOAT);

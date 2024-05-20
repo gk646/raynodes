@@ -49,18 +49,19 @@ Color Pin::getColor() const {
   return RED;
 }
 
-void Pin::DrawPin(Pin& p, const Font& f, float x, float y, bool showText) {
+void Pin::DrawPin(Pin& p, const Font& f, const float x, const float y, const bool showText) {
   constexpr float pinRadius = PIN_SIZE / 2.0F;
   constexpr float textOff = PIN_SIZE * 1.5F;
   const auto middlePos = Vector2{x, y + pinRadius};
 
   if (p.direction == INPUT && static_cast<InputPin*>(&p)->connection == nullptr) {
-    DrawCircleSector(middlePos, pinRadius, 0, 360, 50, UI::COLORS[N_BACK_GROUND]);
+    DrawCircleSector(middlePos, pinRadius, 0, 360, 36, UI::COLORS[N_BACK_GROUND]);
     DrawCircleLinesV(middlePos, pinRadius, p.getColor());
   } else {
-    DrawCircleV(middlePos, pinRadius, p.getColor());
+    DrawCircleSector(middlePos, pinRadius, 0, 360, 36, p.getColor());
   }
-  if (showText) {
+
+  if (showText) [[unlikely]]{
     const auto txt = TypeToString(p.pinType);
     const Vector2 textPos = {middlePos.x + (p.direction == INPUT ? -textOff : textOff), middlePos.y - pinRadius};
     DrawCenteredText(f, txt, textPos, Pin::PIN_SIZE + 2, 0, UI::COLORS[UI_LIGHT]);
@@ -68,7 +69,7 @@ void Pin::DrawPin(Pin& p, const Font& f, float x, float y, bool showText) {
   p.yPos = y + pinRadius;
 }
 
-bool Pin::UpdatePin(EditorContext& ec, Node& n, Component* c, Pin& p, float x) {
+bool Pin::UpdatePin(EditorContext& ec, Node& n, Component* c, Pin& p, const float x) {
   constexpr float pinRadius = PIN_SIZE / 2.0F;
   if (CheckCollisionPointCircle(ec.logic.worldMouse, {x, p.yPos}, pinRadius)) {
     ec.logic.assignDraggedPin(x, p.yPos, n, c, p);
@@ -79,7 +80,7 @@ bool Pin::UpdatePin(EditorContext& ec, Node& n, Component* c, Pin& p, float x) {
   return false;
 }
 
-auto OutputPin::isConnectable(EditorContext& ec, InputPin& other) const -> bool {
+auto OutputPin::isConnectable(const EditorContext& ec, const InputPin& other) const -> bool {
   if (other.pinType != pinType) [[unlikely]] { return false; }
 
   if (pinType == NODE) [[unlikely]] {
