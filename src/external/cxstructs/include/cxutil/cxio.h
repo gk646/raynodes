@@ -68,7 +68,6 @@ inline auto io_check_eof(FILE* file) -> bool {
   fseek(file, currentPos, SEEK_SET);
   return false;  // Not EOF
 }
-
 //-----------SAVING-----------//
 // Writes a section header - used like: while(io_load_inside_section()){}
 inline void io_save_section(FILE* file, const char* value) {

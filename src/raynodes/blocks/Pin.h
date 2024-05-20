@@ -146,7 +146,7 @@ struct Pin {
 struct OutputPin final : Pin {
   OutputData data{nullptr};
   explicit OutputPin(const PinType pt) : Pin{pt, OUTPUT, 0} {}
-  [[nodiscard]] bool isConnectable(EditorContext& ec, InputPin& other) const;
+  [[nodiscard]] bool isConnectable(const EditorContext& ec, const InputPin& other) const;
   template <PinType pt>
   void setData(auto val) {
     data.set<pt>(val);
