@@ -14,8 +14,8 @@ A small showcase of its major features:
 - Supports both **Windows and Linux** (and possibly macOS)
 - **Plugin interface** and capabilities
 - **Unit testing** of critical parts (importing, persistence...)
+- Fully-fledged **User created** nodes in-editor without touching the source code!
 - **Modern code base** using many C++20 and above
-- **User created** nodes at runtime scripted in-editor in python (planned)
 
 For more infos on the design choices go to [Software Design](#Software-Design)  
 For more information on how to use the editor look at the [raynodes-wiki](https://github.com/gk646/raynodes/wiki).  

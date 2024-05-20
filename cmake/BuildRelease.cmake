@@ -4,14 +4,14 @@ if (MSVC)
     set(STAGING_DIR "${CMAKE_BINARY_DIR}/staging-WIN")
     set(OS "Windows")
     set(REDIS_PATH "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Redist/MSVC/14.38.33135/x64/Microsoft.VC143.CRT")
-    set(EXE_NAME "raynodes.exe")
-    set(LIB_NAME "raylib.dll")
+    set(EXE_SUFFIX ".exe")
+    set(LIB_SUFFIX ".dll")
 else ()
     set(STAGING_DIR "${CMAKE_BINARY_DIR}/staging-UNIX")
     set(OS "GNU-Linux")
     set(REDIS_PATH "//wsl.localhost/Ubuntu-22.04/usr/lib/gcc/x86_64-linux-gnu/11")
-    set(EXE_NAME "raynodes")
-    set(LIB_NAME "raylib.so")
+    set(EXE_SUFFIX "")
+    set(LIB_SUFFIX ".so")
 endif ()
 
 # Ensure the staging directory is properly set up and all files are copied after the build
@@ -21,8 +21,9 @@ add_custom_command(TARGET raynodes POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "${STAGING_DIR}/include"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${STAGING_DIR}/res"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${STAGING_DIR}/plugins"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:raynodes>" "${STAGING_DIR}/${EXE_NAME}"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:raylib>" "${STAGING_DIR}/${LIB_NAME}"
+        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:raynodes>" "${STAGING_DIR}/raynodes${EXE_SUFFIX}"
+        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:editor>" "${STAGING_DIR}/editor${LIB_SUFFIX}"
+        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:raylib>" "${STAGING_DIR}/raylib${LIB_SUFFIX}"
         COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/THIRD_PARTY_LICENSES" "${STAGING_DIR}/THIRD_PARTY_LICENSES"
         COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/LICENSE" "${STAGING_DIR}/LICENSE"
 )

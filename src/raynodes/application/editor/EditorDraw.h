@@ -39,7 +39,7 @@ inline void DrawConnections(EditorContext& ec, bool isCTRLDown) {
   const bool delNodes = isCTRLDown && ec.input.isMouseButtonReleased(MOUSE_BUTTON_RIGHT);
 
   ConnectionDeleteAction* action = nullptr;
-  if (delNodes) action = new ConnectionDeleteAction(10);
+  if (delNodes) action = new ConnectionDeleteAction(2);
 
   for (const auto conn : connections) {
     const auto fromPos = conn->getFromPos();
@@ -51,7 +51,10 @@ inline void DrawConnections(EditorContext& ec, bool isCTRLDown) {
       ec.core.removeConnection(conn);
     }
   }
-  if (delNodes) ec.core.addEditorAction(ec, action);
+  if (delNodes) [[unlikely]] {
+    if (action->deletedConnections.empty()) delete action;
+    else ec.core.addEditorAction(ec, action);
+  }
 }
 }  // namespace Editor
 #endif  //RAYNODES_SRC_EDITOR_ELEMENTS_EDITORDISPLAY_H_
