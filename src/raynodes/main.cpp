@@ -19,11 +19,15 @@
 // SOFTWARE.
 
 #include "application/NodeEditor.h"
+#include "install/Installer.h"
 
 #define RAYGUI_IMPLEMENTATION
 #include <raygui.h>
 
 int main(int argc, char* argv[]) {
+  if (Installer::NeedsInstallation())
+    if (!Installer::Install()) exit(1);
+
   NodeEditor editor{argc, argv};
   if (editor.start()) { return editor.run(); }
   return 1;
