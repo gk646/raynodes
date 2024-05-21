@@ -40,8 +40,6 @@ struct NodeCreator final : Window {
   bool showComponentSearch = false;
   bool showRenameField = false;
 
-  cxstructs::StackVector<NodeInfo*, 150> filteredNodes;
-
   NodeCreator(const Rectangle& r, const char* headerText);
   bool drawCreatePopup(EditorContext& ec, const Rectangle& body);
   void drawContent(EditorContext& ec, const Rectangle& body) override;
@@ -52,7 +50,6 @@ struct NodeCreator final : Window {
     newNodeName.isFocused = false;
     showComponentSearch = false;
   }
-  void onOpen(EditorContext& ec) override;
 
  private:
   void setNode(EditorContext& ec, const NodeTemplate& nTemplate);

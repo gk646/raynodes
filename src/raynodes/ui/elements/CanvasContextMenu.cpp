@@ -25,108 +25,156 @@
 #include "application/elements/Action.h"
 
 #include "shared/rayutils.h"
+#include "shared/uiutil.h"
 
 namespace {
-void HandleNewNode(EditorContext& ec, Vector2 pos, const char* name) {
+void HandleNewNode(EditorContext& ec, const Vector2 pos, const char* name) {
   const auto newN = ec.core.createNode(ec, name, GetScreenToWorld2D(pos, ec.display.camera));
   if (!newN) return;
   const auto action = new NodeCreateAction(2);
   action->createdNodes.push_back(newN);
   ec.core.addEditorAction(ec, action);
 }
+
+template <typename Iterable>
+bool DrawList(EditorContext& ec, const Vector2 pos, const Iterable& names) {
+  const auto released = ec.input.isMouseButtonReleased(MOUSE_BUTTON_LEFT);
+
+  const auto& f = ec.display.editorFont;
+  const auto fs = ec.display.fontSize;
+  const auto mouse = ec.logic.mouse;
+  const auto entryHeight = fs + 4;
+
+  Rectangle entry = {pos.x, pos.y, 180, 20};
+
+  // Colors
+  const auto background = ColorAlpha(UI::COLORS[UI_DARK], 0.97F);
+  const auto highlight = ColorAlpha(UI::COLORS[UI_MEDIUM], 0.97F);
+
+  bool oneHovered = false;
+
+  for (const auto name : names) {
+    if (CheckCollisionPointRec(mouse, entry)) {
+      DrawRectangleRounded(entry, 0.1F, 30, highlight);
+      if (released) {
+        HandleNewNode(ec, ec.logic.contextMenuPos, name);
+        ec.logic.showCanvasContextMenu = false;
+        return false;
+      }
+      oneHovered = true;
+    } else {
+      DrawRectangleRec(entry, background);
+    }
+    const auto textPos = Vector2{entry.x, entry.y + 2};
+    constexpr auto color = UI::COLORS[UI_LIGHT];
+    DrawTextEx(f, name, textPos, fs, 0.0F, color);
+    entry.y += entryHeight;
+  }
+
+  const bool isClose =
+      CheckExtendedRec(mouse, {pos.x, pos.y, 180, names.size() * entryHeight}, UI::CONTEXT_MENU_THRESHOLD);
+  return oneHovered || isClose;
+}
 }  // namespace
 
-void CanvasContextMenu::draw(EditorContext& ec, const Vector2& pos) {
-  if (!ec.logic.showCanvasContextMenu) return;
-  constexpr float menuWidth = 170.0F;
-  const auto& font = ec.display.editorFont;
+void CanvasContextMenu::draw(EditorContext& ec, const Vector2 pos) {
+  handleOpen();
+  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) ec.input.consumeMouse();
+
+  // Cache
   const auto mouse = ec.logic.mouse;
-  const auto fs = ec.display.fontSize;
-  const auto hightLightColor = ColorAlpha(UI::COLORS[UI_LIGHT], 0.65);
-  const auto padding = fs * 0.3F;
-  const auto height = (fs + padding) * static_cast<float>(categories.size());
-  const Rectangle menuRect = {pos.x, pos.y, menuWidth, height};
-  Vector2 drawPos{pos.x, pos.y};
+  Rectangle entry = {pos.x, pos.y, 180, 20};
 
-  // Draw main menu background
-  DrawRectangleRounded(menuRect, 0.1F, 10, ColorAlpha(UI::COLORS[UI_DARK], 0.9));
+  // Textfield
+  searchBar.bounds = entry;
+  searchBar.draw("Search...");
+  searchBar.update(ec, mouse);
 
-  const Category* hoveredCategory = nullptr;
-  bool closeToMenu = false;
-
-  for (auto& category : categories) {
-    const Rectangle textRect = {drawPos.x, drawPos.y, menuWidth, fs + padding};
-    float categoryHeight = static_cast<float>(category.nodes.size()) * (fs + padding);
-    Rectangle categoryRect = {drawPos.x + menuWidth, drawPos.y, menuWidth, categoryHeight};
-
-    // Detect if mouse is over this category
-    if (CheckCollisionPointRec(mouse, textRect)
-        || (CheckCollisionPointRec(mouse, categoryRect) && category.isOpen)) {
-      if (hoveredCategory != nullptr) {
-        for (auto& category2 : categories) {
-          category2.isOpen = false;
-        }
-      }
-      hoveredCategory = &category;  // Update the currently hovered category
-    } else {
-      if (CheckExtendedRec(mouse, textRect, UI::CONTEXT_MENU_THRESHOLD)) {
-        closeToMenu = true;  // If menu closes too fast its annoying
-      } else if (CheckExtendedRec(mouse, categoryRect, UI::CONTEXT_MENU_THRESHOLD) && category.isOpen) {
-        closeToMenu = true;  // If menu closes too fast its annoying
-        hoveredCategory = &category;
+  if (searchBar.buffer.empty()) drawCategories(ec, {pos.x, pos.y + 20});
+  else {
+    SortVector sorted;
+    auto searchStr = searchBar.buffer.c_str();
+    for (const auto& cat : categories) {
+      for (const auto name : cat.nodes) {
+        StringFilter(name, searchStr, sorted, [](const char* arg) { return arg; });
       }
     }
-
-    category.isOpen = hoveredCategory == &category;
-
-    // Highlight the category if it's open
-    if (category.isOpen) { DrawRectangleRounded(textRect, 0.1F, 10, hightLightColor); }
-
-    DrawTextEx(font, category.name, {drawPos.x + padding, drawPos.y + padding / 2.0F}, fs, 0.6F,
-               UI::COLORS[UI_LIGHT]);
-
-    // Draw the category's nodes if it's open
-    if (category.isOpen && !category.nodes.empty()) {
-      Vector2 drawPosC = {drawPos.x + menuWidth, drawPos.y};
-      DrawRectangleRounded(categoryRect, 0.1F, 10, ColorAlpha(UI::COLORS[UI_DARK], 0.9));
-      for (const auto& name : category.nodes) {
-        const Rectangle nodeTextRect = {drawPosC.x, drawPosC.y, menuWidth, fs + padding};
-        if (CheckCollisionPointRec(mouse, nodeTextRect)) {
-          DrawRectangleRounded(nodeTextRect, 0.1F, 10, hightLightColor);
-          if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            HandleNewNode(ec, pos, name);
-            hoveredCategory = nullptr;
-            break;
-          }
-        }
-        DrawTextEx(font, name, {drawPosC.x + padding, drawPosC.y + padding / 2.0F}, fs, 0.7F, UI::COLORS[UI_LIGHT]);
-        drawPosC.y += fs + padding;
-      }
-    }
-
-    drawPos.y += fs + padding;
-  }
-
-  // If no category is hovered, close all and hide the context menu
-  if (!hoveredCategory && !closeToMenu) {
-    for (auto& category : categories) {
-      category.isOpen = false;
-    }
-    ec.logic.showCanvasContextMenu = false;
+    SortFilteredVector(sorted, searchStr, [](const char* arg) { return arg; });
+    ec.logic.showCanvasContextMenu = DrawList(ec, {pos.x, pos.y + 20}, sorted);
+    prevState = ec.logic.showCanvasContextMenu;
   }
 }
-void CanvasContextMenu::addNode(const char* category, const char* name) {
+
+void CanvasContextMenu::drawCategories(EditorContext& ec, Vector2 pos) {
+  const auto& f = ec.display.editorFont;
+  const auto fs = ec.display.fontSize;
+  const auto mouse = ec.logic.mouse;
+
+  const auto entryHeight = fs + 4;
+
+  // Colors
+  const auto background = ColorAlpha(UI::COLORS[UI_DARK], 0.97F);
+  const auto highlight = ColorAlpha(UI::COLORS[UI_MEDIUM], 0.97F);
+
+  Rectangle entry = {pos.x, pos.y, 180, 20};
+  bool insideCategory = false;
+  for (auto& [name, nodes, isOpen] : categories) {
+    if (CheckCollisionPointRec(mouse, entry)) {
+      DrawRectangleRounded(entry, 0.1F, 30, highlight);
+      if (!isOpen) {
+        for (auto& c : categories) {
+          c.isOpen = false;
+        }
+      }
+      isOpen = true;
+    } else if (isOpen) {
+      DrawRectangleRounded(entry, 0.1F, 30, highlight);
+    } else {
+      DrawRectangleRec(entry, background);
+      isOpen = false;
+    }
+
+    if (isOpen) {
+      insideCategory = DrawList(ec, {pos.x + 180, entry.y}, nodes);  // Draw subcategories
+    }
+
+    const Vector2 textPos = {entry.x, entry.y + 2};
+    constexpr auto color = UI::COLORS[UI_LIGHT];
+    DrawTextEx(f, name, textPos, fs, 0.0F, color);
+    entry.y += entryHeight;
+  }
+
+  const auto extendedRec = Rectangle{pos.x, pos.y, 180, categories.size() * entryHeight + 20};
+  if (!(insideCategory || CheckExtendedRec(mouse, extendedRec, UI::CONTEXT_MENU_THRESHOLD))) {
+    ec.logic.showCanvasContextMenu = false;
+  }
+  prevState = ec.logic.showCanvasContextMenu;
+}
+
+void CanvasContextMenu::handleOpen() {
+  if (prevState == false) {
+    searchBar.buffer.clear();
+    for (auto& cat : categories) {
+      cat.isOpen = false;
+    }
+    prevState = true;
+  }
+}
+
+void CanvasContextMenu::addEntry(const char* category, const char* name) {
   for (auto& c : categories) {
     if (cxstructs::str_cmp(c.name, category)) {
       c.nodes.push_back(name);
       return;
     }
   }
+
   Category cat{category, {}, false};
   cat.nodes.push_back(name);
   categories.push_back(cat);
 }
-void CanvasContextMenu::removeNode(const char* category, const char* name) {
+
+void CanvasContextMenu::removeEntry(const char* category, const char* name) {
   for (auto catIt = categories.begin(); catIt != categories.end();) {
     if (cxstructs::str_cmp(catIt->name, category)) {
       bool erased = false;
