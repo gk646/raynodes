@@ -33,6 +33,7 @@ inline void DrawNodes(EditorContext& ec) {
     if (CheckCollisionRecs(cameraBounds, n->getBounds())) { Node::Draw(ec, *n); }
   }
 }
+
 inline void DrawConnections(EditorContext& ec, bool isCTRLDown) {
   const auto& connections = ec.core.connections;
   const auto selectRect = ec.logic.selectRect;
@@ -54,6 +55,11 @@ inline void DrawConnections(EditorContext& ec, bool isCTRLDown) {
   if (delNodes) [[unlikely]] {
     if (action->deletedConnections.empty()) delete action;
     else ec.core.addEditorAction(ec, action);
+  }
+}
+inline void DrawGroups(EditorContext& ec) {
+  for (auto& group : ec.core.nodeGroups) {
+    group.draw(ec);
   }
 }
 }  // namespace Editor

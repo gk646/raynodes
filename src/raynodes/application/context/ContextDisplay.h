@@ -46,6 +46,44 @@ struct Display final {
 
   void zoomIn() { camera.zoom = std::min(MAX_ZOOM, camera.zoom + MAX_ZOOM / 10.0F); }
   void zoomOut() { camera.zoom = std::max(MIN_ZOOM, camera.zoom - MAX_ZOOM / 10.0F); }
+
+  // Callable in a loop - finds the bounding rect of the iterated nodes
+  // Initializes for you
+  static void ReduceToBounding(const Node& n, Rectangle& rect) {
+    // Initialize the rectangle bounds if not already initialized
+    if (rect.width == 0 && rect.height == 0) {
+      rect.x = n.x;
+      rect.y = n.y;
+      rect.width = n.width;
+      rect.height = n.height;
+      return;
+    }
+
+    // Update the left boundary
+    if (n.x < rect.x) {
+      rect.width += rect.x - n.x;
+      rect.x = n.x;
+    }
+
+    // Update the top boundary
+    if (n.y < rect.y) {
+      rect.height += rect.y - n.y;
+      rect.y = n.y;
+    }
+
+    // Update the right boundary
+    if (n.x + n.width > rect.x + rect.width) { rect.width = n.x + n.width - rect.x; }
+
+    // Update the bottom boundary
+    if (n.y + n.height > rect.y + rect.height) { rect.height = n.y + n.height - rect.y; }
+  }
+  static void ApplyInset(Rectangle& rect, const float inset) {
+    rect.x = rect.x - inset;
+    rect.y = rect.y - inset;
+    rect.width = rect.width + inset * 2.0F;
+    rect.height = rect.height + inset * 2.0F;
+  }
+
   // Only applies scaling when screen is bigger than the ui space -> elements dont shrink
   [[nodiscard]] Rectangle getSmartScaled(const Rectangle& bounds) const {
     Rectangle ret;

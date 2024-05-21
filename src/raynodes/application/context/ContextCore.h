@@ -31,6 +31,7 @@ struct EXPORT Core final {
   std::vector<Node*> nodes;
   std::vector<Node*> copiedNodes;
   std::vector<Connection*> connections;
+  std::vector<NodeGroup> nodeGroups;
   int drawTickTime = 0;
   int currentActionIndex = -1;
   NodeID UID = static_cast<NodeID>(0);  // Starts with 0 so UINT16_MAX is the sentinel value
