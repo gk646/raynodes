@@ -31,50 +31,50 @@
 // Current limit of 150 -> stacked based so really doesnt matter
 using SortVector = cxstructs::StackVector<const char*, 150>;
 
-// Case insensitive - filters based on prefix OR exisiting substring
-// -> then sorts after case insensitive levenshtein
-template <typename T>
-void StringFilterMap(auto& map, const std::string& s, cxstructs::StackVector<T*, 150>& vec) {
-  vec.clear();
+// Case insensitive - filters based on exisiting substring
+template <typename T, typename GetString>
+void StringFilter(T* arg, const char* search, cxstructs::StackVector<T*, 150>& collector, GetString getString) {
+  const char* name = getString(arg);
+  if (cxstructs::str_substr_case(name, search) != nullptr) { collector.push_back(arg); }
+}
 
-  const char* searchCStr = s.c_str();
-  const int searchSize = s.size();
-
-  for (auto& pair : map) {
-    const auto* name = pair.first;  // Sort after keys
-    const bool emptyOrPrefix = searchSize == 0 || strncmp(name, searchCStr, searchSize) == 0;
-    const bool commonSubstring = cxstructs::str_substr_case(name, searchCStr) != nullptr;
-    if (emptyOrPrefix || commonSubstring) {
-      if constexpr (std::is_same_v<NodeInfo, T>) {
-        vec.push_back(&pair.second);
-      } else if constexpr (std::is_same_v<const char, T>) {
-        vec.push_back(pair.first);
-      }
-    }
-  }
-
-  size_t size = vec.size();
+// Sorts after case insensitive levenshtein
+template <typename T, typename GetString>
+void SortFilteredVector(cxstructs::StackVector<T*, 150>& vec, const char* search, GetString getString) {
+  int size = vec.size();
   if (size == 0) return;
-
   for (uint8_t i = 0; i < size - 1; ++i) {
     uint8_t minIndex = i;
     for (uint8_t j = i + 1; j < size; ++j) {
-      const char* str1 = nullptr;
-      const char* str2 = nullptr;
-      if constexpr (std::is_same_v<NodeInfo, T>) {
-        str1 = vec[j]->nTemplate.label;
-        str2 = vec[minIndex]->nTemplate.label;
-      } else if constexpr (std::is_same_v<const char, T>) {
-        str1 = vec[j];
-        str2 = vec[minIndex];
-      }
-      if (cxstructs::str_sort_levenshtein_case<PLG_MAX_NAME_LEN>(str1, searchCStr)
-          < cxstructs::str_sort_levenshtein_case<PLG_MAX_NAME_LEN>(str2, searchCStr)) {
+      if (cxstructs::str_sort_levenshtein_case<PLG_MAX_NAME_LEN>(getString(vec[j]), search)
+          < cxstructs::str_sort_levenshtein_case<PLG_MAX_NAME_LEN>(getString(vec[minIndex]), search)) {
         minIndex = j;
       }
     }
     if (minIndex != i) { std::swap(vec[i], vec[minIndex]); }
   }
+}
+
+template <typename T>
+void StringFilterMap(auto& map, const std::string& s, cxstructs::StackVector<T*, 150>& vec) {
+  vec.clear();
+  const char* searchCStr = s.c_str();
+
+  for (auto& pair : map) {
+    if constexpr (std::is_same_v<NodeInfo, T>) {
+      StringFilter(&pair.second, searchCStr, vec, [](T* arg) { return arg->nTemplate.label; });
+    } else if constexpr (std::is_same_v<const char, T>) {
+      StringFilter(pair.first, searchCStr, vec, [](T* arg) { return arg; });
+    }
+  }
+
+  SortFilteredVector(vec, s.c_str(), [](T* arg) {
+    if constexpr (std::is_same_v<NodeInfo, T>) {
+      return arg->nTemplate.label;
+    } else if constexpr (std::is_same_v<const char, T>) {
+      return arg;
+    }
+  });
 }
 
 #endif  //UIUTIL_H

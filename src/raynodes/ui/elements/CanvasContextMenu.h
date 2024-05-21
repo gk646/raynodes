@@ -22,6 +22,8 @@
 #define CATEGORYLISTMENU_H
 
 #include "shared/fwd.h"
+
+#include "TextField.h"
 #include <vector>
 
 struct Category {
@@ -30,11 +32,22 @@ struct Category {
   bool isOpen = false;
 };
 
-struct CanvasContextMenu {
+struct EXPORT CanvasContextMenu {
+  bool prevState = false;
+  TextField searchBar;
   std::vector<Category> categories{};
-  void draw(EditorContext& ec, const Vector2& pos);
-  void addNode(const char* category, const char* name);
-  void removeNode(const char* category, const char* name);
+
+  CanvasContextMenu() {
+    searchBar.isFocused = true;
+    searchBar.showCursor = true;
+  }
+  void draw(EditorContext& ec, Vector2 pos);
+  void addEntry(const char* category, const char* name);
+  void removeEntry(const char* category, const char* name);
+
+ private:
+  void handleOpen();
+  void drawCategories(EditorContext&ec, Vector2 pos);
 };
 
 #endif  //CATEGORYLISTMENU_H

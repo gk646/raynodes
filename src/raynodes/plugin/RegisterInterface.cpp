@@ -50,7 +50,7 @@ bool NodeRegister::registerNode(const NodeTemplate& nt, NodeCreateFunc nodeCreat
   const auto res = ec.templates.registerNode(nt, nodeCreateFunc, pc);
 
   if (res) {
-    ec.ui.canvasContextMenu.addNode(pc.name, nt.label);
+    ec.ui.canvasContextMenu.addEntry(pc.name, nt.label);
   } else {
     errorCount++;
   }

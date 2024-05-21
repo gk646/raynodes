@@ -51,7 +51,7 @@ void Window::draw(EditorContext& ec) {
 
   const auto& font = ec.display.editorFont;
   const auto fs = ec.display.fontSize;
-  const auto textPos = Vector2{body.x + body.width / 2, body.y + header.height / 5.0F};
+  const auto textPos = Vector2{body.x + body.width / 2, body.y};
   const auto textColor = isHeaderHovered || isDragged ? UI::COLORS[UI_LIGHT] : UI::COLORS[UI_DARK];
   DrawCenteredText(font, headerText, textPos, fs, 1.0F, textColor);
 

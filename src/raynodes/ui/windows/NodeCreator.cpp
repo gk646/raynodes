@@ -34,10 +34,6 @@ NodeCreator::NodeCreator(const Rectangle& r, const char* headerText) : Window(r,
   newCompName.growAutomatic = false;
 }
 
-void NodeCreator::onOpen(EditorContext& ec) {
-  StringFilterMap(ec.templates.userDefinedNodes, searchField.buffer, filteredNodes);
-}
-
 void NodeCreator::drawContent(EditorContext& ec, const Rectangle& body) {
   constexpr auto listWidth = 200.0F;
   // Draw search field
@@ -52,8 +48,6 @@ void NodeCreator::drawContent(EditorContext& ec, const Rectangle& body) {
   if (UI::DrawButton(ec, listBounds, "#227#Add")) { showNamePopup = true; }
 
   NodeTemplate* activeTemplate = nullptr;
-  if (searchField.hasUpdate()) { StringFilterMap(ec.templates.userDefinedNodes, searchField.buffer, filteredNodes); }
-
   Rectangle entry = {body.x, body.y + UI::PAD, listWidth, 45};
   drawCreatedNodeList(ec, entry, activeTemplate);
 
@@ -78,6 +72,9 @@ void NodeCreator::drawSearchField(EditorContext& ec, const Rectangle& body, floa
 void NodeCreator::drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeTemplate*& activeTemplate) {
   constexpr float entryHeight = 45.0F;
   const Vector2 mouse = ec.logic.mouse;
+
+  cxstructs::StackVector<NodeInfo*, 150> filteredNodes;
+  StringFilterMap(ec.templates.userDefinedNodes, searchField.buffer, filteredNodes);
 
   const float totalHeight = static_cast<float>(filteredNodes.size()) * entryHeight;
   const auto contentRec = ec.display.getFullyScaled({0, 0, entry.width - 15, totalHeight});
@@ -126,14 +123,13 @@ void NodeCreator::drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeT
     if (UI::DrawButton(ec, remove, buttonSize, buttonSize, "#143#")) {
       if (ec.templates.userDefinedNodes.contains(nInfo->nTemplate.label)) {
         auto& eraseInfo = ec.templates.userDefinedNodes[nInfo->nTemplate.label];
-        ec.ui.canvasContextMenu.removeNode(UI::USER_CATEGORY, eraseInfo.nTemplate.label);
+        ec.ui.canvasContextMenu.removeEntry(UI::USER_CATEGORY, eraseInfo.nTemplate.label);
         for (auto& [label, component] : eraseInfo.nTemplate.components) {
           delete component;
           delete label;
         }
         ec.templates.userDefinedNodes.erase(nInfo->nTemplate.label);
         delete eraseInfo.nTemplate.label;
-        StringFilterMap(ec.templates.userDefinedNodes, searchField.buffer, filteredNodes);
       }
     }
 
@@ -255,8 +251,7 @@ bool NodeCreator::drawCreatePopup(EditorContext& ec, const Rectangle& body) {
       newNodeName.buffer.clear();
       activeEntry = 0;
       showNamePopup = false;
-      StringFilterMap(ec.templates.userDefinedNodes, searchField.buffer, filteredNodes);
-      ec.ui.canvasContextMenu.addNode(UI::USER_CATEGORY, nTemplate.label);
+      ec.ui.canvasContextMenu.addEntry(UI::USER_CATEGORY, nTemplate.label);
       setNode(ec, nTemplate);
     }
   }

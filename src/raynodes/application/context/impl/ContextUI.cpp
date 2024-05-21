@@ -39,6 +39,7 @@ bool UI::loadUI(EditorContext& ec) {
   getWindow<NodeCreator>(NODE_CREATOR)->newNodeName.font = &ec.display.editorFont;
   getWindow<NodeCreator>(NODE_CREATOR)->newCompName.font = &ec.display.editorFont;
   ec.logic.registerNodeContextActions(ec);
+  canvasContextMenu.searchBar.font = &ec.display.editorFont;
   return true;
 }
 int UI::DrawListMenu(EditorContext& ec, bool& open, const char* title, const char* listText, int& active) {
