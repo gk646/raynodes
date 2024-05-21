@@ -45,7 +45,7 @@ NodeDeleteAction::NodeDeleteAction(EditorContext& ec, const std::unordered_map<N
 }
 
 NodeDeleteAction::~NodeDeleteAction() noexcept {
-  if (!removeNodes) return;
+  if (!hasOwnerShip) return;
   for (const auto n : deletedNodes) {
     delete n;
   }
@@ -55,7 +55,7 @@ NodeDeleteAction::~NodeDeleteAction() noexcept {
 }
 
 void NodeDeleteAction::undo(EditorContext& ec) {
-  removeNodes = false;
+  hasOwnerShip = false;
   for (const auto n : deletedNodes) {
     ec.core.insertNode(ec, *n);
   }
@@ -66,7 +66,7 @@ void NodeDeleteAction::undo(EditorContext& ec) {
 }
 
 void NodeDeleteAction::redo(EditorContext& ec) {
-  removeNodes = true;
+  hasOwnerShip = true;
   for (const auto n : deletedNodes) {
     ec.core.removeNode(ec, n->uID);
     ec.core.removeConnectionsFromNode(*n, deletedConnections);
@@ -80,7 +80,7 @@ NodeCreateAction::NodeCreateAction(const int size) : Action(CREATE_NODE) {
 }
 
 NodeCreateAction::~NodeCreateAction() noexcept {
-  if (removeNodes) {
+  if (hasOwnerShip) {
     for (const auto n : createdNodes) {
       delete n;
     }
@@ -91,7 +91,7 @@ NodeCreateAction::~NodeCreateAction() noexcept {
 }
 
 void NodeCreateAction::undo(EditorContext& ec) {
-  removeNodes = true;
+  hasOwnerShip = true;
   for (const auto n : createdNodes) {
     ec.core.removeNode(ec, n->uID);
     ec.core.removeConnectionsFromNode(*n, deletedConnections);
@@ -99,7 +99,7 @@ void NodeCreateAction::undo(EditorContext& ec) {
 }
 
 void NodeCreateAction::redo(EditorContext& ec) {
-  removeNodes = false;
+  hasOwnerShip = false;
   for (const auto n : createdNodes) {
     ec.core.insertNode(ec, *n);
   }
@@ -150,22 +150,50 @@ ConnectionDeleteAction::ConnectionDeleteAction(const int size) : Action(CONNECTI
 }
 
 ConnectionDeleteAction::~ConnectionDeleteAction() noexcept {
-  if (!removeNodes) return;
+  if (!hasOwnerShip) return;
   for (const auto n : deletedConnections) {
     delete n;
   }
 }
 
 void ConnectionDeleteAction::undo(EditorContext& ec) {
-  removeNodes = false;
+  hasOwnerShip = false;
   for (const auto conn : deletedConnections) {
     ec.core.addConnection(conn);
   }
 }
 
 void ConnectionDeleteAction::redo(EditorContext& ec) {
-  removeNodes = true;
+  hasOwnerShip = true;
   for (const auto conn : deletedConnections) {
     ec.core.removeConnection(conn);
   }
+}
+
+//-----------CONNECTION_CREATE-----------//
+
+ConnectionCreateAction::ConnectionCreateAction(const int size) : Action(CONNECTION_CREATED) {
+  createdConnections.reserve(size);
+}
+
+ConnectionCreateAction::~ConnectionCreateAction() noexcept {
+  if (hasOwnerShip) {
+    for (const auto conn : createdConnections) {
+      delete conn;
+    }
+  }
+}
+
+void ConnectionCreateAction::undo(EditorContext& ec) {
+  for (const auto conn : createdConnections) {
+    ec.core.removeConnection(conn);
+  }
+  hasOwnerShip = true;
+}
+
+void ConnectionCreateAction::redo(EditorContext& ec) {
+  for (const auto conn : createdConnections) {
+    ec.core.addConnection(conn);
+  }
+  hasOwnerShip = false;
 }

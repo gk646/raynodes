@@ -66,6 +66,11 @@ inline void UpdateTick(EditorContext& ec) {
     Node::Update(ec, **it);
   }
 
+  // Reverse update groups
+  for (auto it = ec.core.nodeGroups.rbegin(); it != ec.core.nodeGroups.rend(); ++it) {
+    it->update(ec);
+  }
+
   if (ec.logic.isSelecting) { FormatSelectRectangle(ec); }
 }
 inline void StartUpdateTick(EditorContext& ec) {
