@@ -41,6 +41,8 @@ bool Core::loadCore(EditorContext& ec) {
 void Core::resetEditor(EditorContext& ec) {
   hasUnsavedChanges = true;  // Set flag to avoid unnecessary SetTitle insdie addEditorAction()
 
+  nodeGroups.clear();
+
   // Setup action queue
   for (auto a : actionQueue) {
     delete a;
@@ -92,7 +94,8 @@ void Core::insertNode(EditorContext& ec, Node& node) {
   }
 }
 
-void Core::removeNode(EditorContext& ec, NodeID id) {
+// Only call with a valdi id
+void Core::removeNode(EditorContext& ec, const NodeID id) {
   const auto node = nodeMap[id];
   nodeMap.erase(id);
   std::erase(nodes, node);

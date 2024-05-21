@@ -25,7 +25,12 @@ namespace {
 void AssignConnection(EditorContext& ec, Node& fromNode, Component* from, OutputPin& out, Node& toNode,
                       Component* to, InputPin& in) {
   if (!out.isConnectable(ec, in)) return;
+  auto* action = new ConnectionCreateAction(2);
+
   const auto conn = new Connection(fromNode, from, out, toNode, to, in);
+
+  action->createdConnections.push_back(conn);
+  ec.core.addEditorAction(ec, action);
 
   printf("Connection assigned \n");
 
@@ -117,6 +122,15 @@ void Logic::registerNodeContextActions(EditorContext& ec) {
         else ec.core.addEditorAction(ec, action);
       },
       175);
+
+  ec.ui.nodeContextMenu.registerAction(
+      "Create node group",
+      [](EditorContext& ec, Node& node) {
+        ec.core.nodeGroups.emplace_back(ec, "Default Name", ec.core.selectedNodes);
+      },
+      109);
+
+  // Quick Actions
 
   ec.ui.nodeContextMenu.registerQickAction(
       "Cut (Ctrl+X)",

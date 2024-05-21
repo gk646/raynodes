@@ -19,6 +19,7 @@
 // SOFTWARE.
 
 #include <raylib.h>
+#include <raygui.h>
 
 #include "application/EditorContext.h"
 #include "ui/elements/CanvasContextMenu.h"
@@ -40,69 +41,82 @@ template <typename Iterable>
 bool DrawList(EditorContext& ec, const Vector2 pos, const Iterable& names) {
   const auto released = ec.input.isMouseButtonReleased(MOUSE_BUTTON_LEFT);
 
+  // Create node on enter
+  if (IsKeyPressed(KEY_ENTER) && names.size() == 1) {
+    HandleNewNode(ec, ec.logic.contextMenuPos, names[0]);
+    ec.logic.showCanvasContextMenu = false;
+    return false;
+  }
+
   const auto& f = ec.display.editorFont;
   const auto fs = ec.display.fontSize;
   const auto mouse = ec.logic.mouse;
   const auto entryHeight = fs + 4;
+  const auto totalHeight = names.size() * entryHeight;
 
   Rectangle entry = {pos.x, pos.y, 180, 20};
-
-  // Colors
-  const auto background = ColorAlpha(UI::COLORS[UI_DARK], 0.97F);
-  const auto highlight = ColorAlpha(UI::COLORS[UI_MEDIUM], 0.97F);
-
   bool oneHovered = false;
 
-  for (const auto name : names) {
-    if (CheckCollisionPointRec(mouse, entry)) {
-      DrawRectangleRounded(entry, 0.1F, 30, highlight);
-      if (released) {
-        HandleNewNode(ec, ec.logic.contextMenuPos, name);
-        ec.logic.showCanvasContextMenu = false;
-        return false;
-      }
-      oneHovered = true;
-    } else {
-      DrawRectangleRec(entry, background);
-    }
-    const auto textPos = Vector2{entry.x, entry.y + 2};
-    constexpr auto color = UI::COLORS[UI_LIGHT];
-    DrawTextEx(f, name, textPos, fs, 0.0F, color);
-    entry.y += entryHeight;
-  }
+  // Scroll
+  const Rectangle scrollPanelRec = {pos.x, pos.y, 194, std::min(200.0f, totalHeight)};
+  static Vector2 scroll = {0, 0};
+  const Rectangle contentRec = {0, 0, 180, totalHeight};
+  Rectangle view;
+  GuiScrollPanel(scrollPanelRec, nullptr, contentRec, &scroll, &view);
 
-  const bool isClose =
-      CheckExtendedRec(mouse, {pos.x, pos.y, 180, names.size() * entryHeight}, UI::CONTEXT_MENU_THRESHOLD);
+  entry.y = pos.y + scroll.y;
+  BeginScissorMode(view.x, view.y, view.width, view.height);
+  {
+    for (const auto name : names) {
+      if (CheckCollisionPointRec(mouse, entry)) {
+        DrawRectangleRounded(entry, 0.1F, 30, UI::Lighten(UI::COLORS[UI_MEDIUM], 15));
+        if (released) {
+          HandleNewNode(ec, ec.logic.contextMenuPos, name);
+          ec.logic.showCanvasContextMenu = false;
+          EndScissorMode();
+          return false;
+        }
+        oneHovered = true;
+      } else {
+        DrawRectangleRec(entry, UI::Lighten(UI::COLORS[UI_DARK]));
+      }
+
+      const auto textPos = Vector2{entry.x + 5, entry.y + 2};
+      constexpr auto color = UI::COLORS[UI_LIGHT];
+      DrawTextEx(f, name, textPos, fs, 0.0F, color);
+      entry.y += entryHeight;
+    }
+  }
+  EndScissorMode();
+  const bool isClose = CheckExtendedRec(mouse, {pos.x, pos.y, 180, totalHeight}, UI::CONTEXT_MENU_THRESHOLD);
   return oneHovered || isClose;
 }
 }  // namespace
 
 void CanvasContextMenu::draw(EditorContext& ec, const Vector2 pos) {
   handleOpen();
-  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) ec.input.consumeMouse();
-
-  // Cache
-  const auto mouse = ec.logic.mouse;
-  Rectangle entry = {pos.x, pos.y, 180, 20};
 
   // Textfield
-  searchBar.bounds = entry;
+  searchBar.bounds = {pos.x, pos.y, 180, 20};
   searchBar.draw("Search...");
-  searchBar.update(ec, mouse);
+  searchBar.update(ec, ec.logic.mouse);
 
   if (searchBar.buffer.empty()) drawCategories(ec, {pos.x, pos.y + 20});
   else {
     SortVector sorted;
-    auto searchStr = searchBar.buffer.c_str();
+    const auto* searchStr = searchBar.buffer.c_str();
     for (const auto& cat : categories) {
       for (const auto name : cat.nodes) {
         StringFilter(name, searchStr, sorted, [](const char* arg) { return arg; });
       }
     }
     SortFilteredVector(sorted, searchStr, [](const char* arg) { return arg; });
-    ec.logic.showCanvasContextMenu = DrawList(ec, {pos.x, pos.y + 20}, sorted);
+    const bool insideList = DrawList(ec, {pos.x, pos.y + 20}, sorted);
+    if (!insideList && ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) { ec.logic.showCanvasContextMenu = false; }
     prevState = ec.logic.showCanvasContextMenu;
   }
+
+  ec.input.consumeMouse();
 }
 
 void CanvasContextMenu::drawCategories(EditorContext& ec, Vector2 pos) {
@@ -117,6 +131,7 @@ void CanvasContextMenu::drawCategories(EditorContext& ec, Vector2 pos) {
   const auto highlight = ColorAlpha(UI::COLORS[UI_MEDIUM], 0.97F);
 
   Rectangle entry = {pos.x, pos.y, 180, 20};
+
   bool insideCategory = false;
   for (auto& [name, nodes, isOpen] : categories) {
     if (CheckCollisionPointRec(mouse, entry)) {
@@ -127,20 +142,17 @@ void CanvasContextMenu::drawCategories(EditorContext& ec, Vector2 pos) {
         }
       }
       isOpen = true;
+      insideCategory = true;
+      DrawList(ec, {pos.x + 180, entry.y}, nodes);
     } else if (isOpen) {
       DrawRectangleRounded(entry, 0.1F, 30, highlight);
+      insideCategory = true;
+      isOpen = DrawList(ec, {pos.x + 180, entry.y}, nodes);
     } else {
       DrawRectangleRec(entry, background);
       isOpen = false;
     }
-
-    if (isOpen) {
-      insideCategory = DrawList(ec, {pos.x + 180, entry.y}, nodes);  // Draw subcategories
-    }
-
-    const Vector2 textPos = {entry.x, entry.y + 2};
-    constexpr auto color = UI::COLORS[UI_LIGHT];
-    DrawTextEx(f, name, textPos, fs, 0.0F, color);
+    DrawTextEx(f, name, {entry.x, entry.y + 2}, fs, 0.0F, UI::COLORS[UI_LIGHT]);
     entry.y += entryHeight;
   }
 

@@ -81,6 +81,8 @@ void DrawBackGround(EditorContext& ec) {
 void DrawContent(EditorContext& ec) {
   Editor::DrawNodes(ec);
 
+  Editor::DrawGroups(ec);
+
   const bool isCTRLDown = ec.input.isKeyDown(KEY_LEFT_CONTROL);
   Editor::DrawConnections(ec, isCTRLDown);
 

@@ -10,3 +10,4 @@ target_link_libraries(raynodes_test PUBLIC catch2 raylib editor)
 # Register the test with CMake - run from binary dir
 add_test(NAME ImportTest COMMAND raynodes_test [Import] --benchmark-samples 5 WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 add_test(NAME PersistTest COMMAND raynodes_test [Persist] --benchmark-samples 5 WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+add_test(NAME ActionTest COMMAND raynodes_test [Actions] --benchmark-samples 5 WORKING_DIRECTORY ${CMAKE_BINARY_DIR})

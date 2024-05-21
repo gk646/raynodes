@@ -23,6 +23,8 @@
 
 #include "shared/fwd.h"
 
+#include <random>
+
 #include "application/EditorContext.h"
 #include "plugin/RegisterInterface.h"
 #include "BuiltIns/components/TextFieldC.h"
@@ -44,8 +46,9 @@ void registerNodes(EditorContext& ec) {
   nr.registerNode("Vec2", {{"Vec2", "Vec2"}});
   nr.registerNode("Vec3", {{"Vec3", "Vec3"}});
 }
-
 }  // namespace
+
+using EditorFunction = void (*)(EditorContext&);
 
 namespace TestUtil {
 // Returns a basic context with a component and a node registered
@@ -59,6 +62,19 @@ inline void SetupCWD() {
   char buff[256];
   snprintf(buff, 256, "%s/../test", GetWorkingDirectory());
   if (!ChangeDirectory(buff)) { fprintf(stderr, "Failed to change CWD\n"); }
+}
+
+inline void fuzzTest(EditorContext& ec, const std::vector<EditorFunction>& functions, const int iterations,
+                     EditorFunction setupForEach) {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<size_t> dist(0, functions.size() - 1);
+
+  for (int i = 0; i < iterations; ++i) {
+    setupForEach(ec);
+    size_t funcIndex = dist(gen);
+    functions[funcIndex](ec);
+  }
 }
 }  // namespace TestUtil
 #endif  //REGISTERNODES_H

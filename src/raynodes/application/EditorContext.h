@@ -39,7 +39,9 @@
 
 #include "ui/elements/CanvasContextMenu.h"
 #include "ui/elements/NodeContextMenu.h"
+
 #include "blocks/Connection.h"
+#include "blocks/NodeGroup.h"
 #include "node/Node.h"
 
 #include "context/ContextInfo.h"

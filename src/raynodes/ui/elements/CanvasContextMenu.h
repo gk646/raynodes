@@ -34,7 +34,7 @@ struct Category {
 
 struct EXPORT CanvasContextMenu {
   bool prevState = false;
-  TextField searchBar;
+  TextField searchBar{180,20,SINGLE_LINE};
   std::vector<Category> categories{};
 
   CanvasContextMenu() {

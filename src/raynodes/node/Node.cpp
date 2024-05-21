@@ -257,6 +257,7 @@ Node::Node(const Node& n, const NodeID id)
     }
     components.push_back(clone);
   }
+  outputs.push_back(OutputPin{NODE});
 }
 Node::~Node() {
   for (const auto c : components) {

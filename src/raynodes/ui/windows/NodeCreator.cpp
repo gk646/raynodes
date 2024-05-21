@@ -125,11 +125,11 @@ void NodeCreator::drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeT
         auto& eraseInfo = ec.templates.userDefinedNodes[nInfo->nTemplate.label];
         ec.ui.canvasContextMenu.removeEntry(UI::USER_CATEGORY, eraseInfo.nTemplate.label);
         for (auto& [label, component] : eraseInfo.nTemplate.components) {
-          delete component;
-          delete label;
+          delete [] component;
+          delete [] label;
         }
         ec.templates.userDefinedNodes.erase(nInfo->nTemplate.label);
-        delete eraseInfo.nTemplate.label;
+        delete [] eraseInfo.nTemplate.label;
       }
     }
 
@@ -207,8 +207,8 @@ void NodeCreator::drawNodeCreateSandbox(EditorContext& ec, Rectangle space, Node
   if (UI::DrawButton(ec, {space.x + UI::PAD * 2, space.y + UI::PAD * 5}, 150, 25, "#143#Remove component")) {
     for (int i = COMPS_PER_NODE - 1; i > -1; --i) {
       if (nTemplate->components[i].component != nullptr) {
-        delete nTemplate->components[i].label;
-        delete nTemplate->components[i].component;
+        delete [] nTemplate->components[i].label;
+        delete [] nTemplate->components[i].component;
         nTemplate->components[i].component = nullptr;
         nTemplate->components[i].label = nullptr;
         setNode(ec, *nTemplate);

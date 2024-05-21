@@ -27,7 +27,15 @@
 #include <string>
 #include <unordered_map>
 
-enum ActionType : uint8_t { NEW_CANVAS_ACTION, MOVE_NODE, TEXT_EDIT, DELETE_NODE, CREATE_NODE, CONNECTION_DELETED };
+enum ActionType : uint8_t {
+  NEW_CANVAS_ACTION,
+  MOVE_NODE,
+  TEXT_EDIT,
+  DELETE_NODE,
+  CREATE_NODE,
+  CONNECTION_CREATED,
+  CONNECTION_DELETED
+};
 
 //Action was already performed when created
 //-> Current state includes this performed action
@@ -55,6 +63,8 @@ struct EXPORT Action {
         return "Node(s) created";
       case CONNECTION_DELETED:
         return "Connection(s) deleted";
+      case CONNECTION_CREATED:
+        return "Connection(s) created";
     }
     return "Unknown";
   }
@@ -87,7 +97,7 @@ struct NodeDeleteAction final : Action {
   void redo(EditorContext& ec) override;
 
  private:
-  bool removeNodes = true;
+  bool hasOwnerShip = true;
 };
 
 struct NodeCreateAction final : Action {
@@ -99,7 +109,7 @@ struct NodeCreateAction final : Action {
   void redo(EditorContext& ec) override;
 
  private:
-  bool removeNodes = false;
+  bool hasOwnerShip = false;
 };
 
 //Saves the move delta
@@ -117,10 +127,20 @@ struct ConnectionDeleteAction final : Action {
   ~ConnectionDeleteAction() noexcept override;
   void undo(EditorContext& ec) override;
   void redo(EditorContext& ec) override;
-  float calculateDeltas(EditorContext& ec);
 
  private:
-  bool removeNodes = true;
+  bool hasOwnerShip = true;
+};
+
+struct ConnectionCreateAction final : Action {
+  std::vector<Connection*> createdConnections;
+  explicit ConnectionCreateAction(int size);
+  ~ConnectionCreateAction() noexcept override;
+  void undo(EditorContext& ec) override;
+  void redo(EditorContext& ec) override;
+
+ private:
+  bool hasOwnerShip = false;
 };
 
 #endif  //RAYNODES_SRC_EDITOR_ELEMENTS_EDITORACTION_H_
