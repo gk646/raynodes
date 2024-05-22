@@ -325,7 +325,7 @@ inline void str_embed_num(std::string& s, const double num) {
 inline void str_embed_num(std::string& s, const int64_t num) {
   s.clear();
   char buff[15];
-  snprintf(buff, sizeof(buff), "%d", num);
+  snprintf(buff, sizeof(buff), "%lld", num);
   s.append(buff);
 }
 

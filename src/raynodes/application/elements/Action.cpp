@@ -76,7 +76,7 @@ void NodeDeleteAction::redo(EditorContext& ec) {
 //-----------NODE_CREATE-----------//
 NodeCreateAction::NodeCreateAction(const int size) : Action(CREATE_NODE) {
   createdNodes.reserve(size + 1);
-  deletedConnections.reserve(5);
+  createdConnection.reserve(5);
 }
 
 NodeCreateAction::~NodeCreateAction() noexcept {
@@ -84,7 +84,7 @@ NodeCreateAction::~NodeCreateAction() noexcept {
     for (const auto n : createdNodes) {
       delete n;
     }
-    for (const auto conn : deletedConnections) {
+    for (const auto conn : createdConnection) {
       delete conn;
     }
   }
@@ -94,7 +94,7 @@ void NodeCreateAction::undo(EditorContext& ec) {
   hasOwnerShip = true;
   for (const auto n : createdNodes) {
     ec.core.removeNode(ec, n->uID);
-    ec.core.removeConnectionsFromNode(*n, deletedConnections);
+    ec.core.removeConnectionsFromNode(*n, createdConnection);
   }
 }
 
@@ -103,10 +103,10 @@ void NodeCreateAction::redo(EditorContext& ec) {
   for (const auto n : createdNodes) {
     ec.core.insertNode(ec, *n);
   }
-  for (const auto conn : deletedConnections) {
+  for (const auto conn : createdConnection) {
     ec.core.addConnection(conn);
   }
-  deletedConnections.clear();
+  createdConnection.clear();
 }
 
 //-----------NODE_MOVE-----------//

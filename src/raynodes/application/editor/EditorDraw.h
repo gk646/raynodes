@@ -34,7 +34,7 @@ inline void DrawNodes(EditorContext& ec) {
   }
 }
 
-inline void DrawConnections(EditorContext& ec, bool isCTRLDown) {
+inline void DrawConnections(EditorContext& ec, const bool isCTRLDown) {
   const auto& connections = ec.core.connections;
   const auto selectRect = ec.logic.selectRect;
   const bool delNodes = isCTRLDown && ec.input.isMouseButtonReleased(MOUSE_BUTTON_RIGHT);
@@ -43,6 +43,7 @@ inline void DrawConnections(EditorContext& ec, bool isCTRLDown) {
   if (delNodes) action = new ConnectionDeleteAction(2);
 
   for (const auto conn : connections) {
+    if (!conn->isVisible()) continue;
     const auto fromPos = conn->getFromPos();
     const auto toPos = conn->getToPos();
     DrawLineBezier(fromPos, toPos, 2, conn->getConnectionColor());
