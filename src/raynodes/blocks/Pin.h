@@ -114,6 +114,8 @@ struct Pin {
   const PinType pinType;
   const Direction direction;
   float yPos = 0;  //Y position - outputs are deterministically drawn on the right
+                   // TODO NEEDS OPTIMIZTATION - is padded to 12 bytes
+  float xPos = 0;
   [[nodiscard]] Color getColor() const;
   static const char* TypeToString(const PinType pt) {
     switch (pt) {

@@ -41,6 +41,11 @@ struct Ints {
   uint16_t b;
 };
 
+struct Int2 {
+  int x;
+  int y;
+};
+
 struct Pointer {
   void* data;
   uint32_t size;

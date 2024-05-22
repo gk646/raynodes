@@ -36,6 +36,7 @@ struct EXPORT Connection final {
   [[nodiscard]] Vector2 getFromPos() const;
   [[nodiscard]] Vector2 getToPos() const;
   [[nodiscard]] Color getConnectionColor() const;
+  [[nodiscard]] bool isVisible() const;
   void close() const;
   void open();
 };

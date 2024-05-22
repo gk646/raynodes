@@ -18,21 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <cfloat>
+
 #include "blocks/Connection.h"
 #include "blocks/Pin.h"
 #include <raylib.h>
-
-#include "node/Node.h"
 
 Connection::Connection(Node& fromNode, Component* from, OutputPin& out, Node& toNode, Component* to, InputPin& in)
     : fromNode(fromNode), from(from), out(out), toNode(toNode), to(to), in(in) {}
 
 Vector2 Connection::getFromPos() const {
-  return {fromNode.x + fromNode.width, out.yPos};
+  return {out.xPos, out.yPos};
 }
 
 Vector2 Connection::getToPos() const {
-  return {toNode.x, in.yPos};
+  return {in.xPos, in.yPos};
 }
 
 Color Connection::getConnectionColor() const {
@@ -43,6 +43,9 @@ Color Connection::getConnectionColor() const {
   }
 
   return color;
+}
+bool Connection::isVisible() const {
+  return out.xPos != FLT_MIN;
 }
 
 void Connection::close() const {
