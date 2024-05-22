@@ -36,7 +36,7 @@ Vector2 Connection::getToPos() const {
 }
 
 Color Connection::getConnectionColor() const {
-  Color color = out.getColor();
+  const Color color = out.getColor();
 
   if (in.pinType == BOOLEAN) {
     if (!in.getData<BOOLEAN>()) return ColorAlpha(color, 0.4F);

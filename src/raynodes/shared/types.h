@@ -31,6 +31,11 @@ struct PluginContainer {
   void free();
 };
 
+struct Uints8{
+  uint8_t x;
+  uint8_t y;
+};
+
 struct Ints {
   uint16_t a;
   uint16_t b;

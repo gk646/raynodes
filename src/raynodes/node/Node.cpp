@@ -231,7 +231,7 @@ void DrawComponent(EditorContext& ec, Node& n, Component& c, const float dx, flo
   const float startYOutputs = startYInputs;  // Symmetrical layout
   const float componentStartY = dy + (maxVerticalSpace - componentHeight) / 2.0f;
 
-   IF_HIGH_ZOOM(DrawComponentPins(ec, c, dx, startYInputs, startYOutputs, width));
+  IF_HIGH_ZOOM(DrawComponentPins(ec, c, dx, startYInputs, startYOutputs, width));
 
   c.x = dx + PADDING * 2;
   c.y = componentStartY;
@@ -270,6 +270,7 @@ Node* Node::clone(const NodeID nid) {
 }
 
 void Node::Draw(EditorContext& ec, Node& n) {
+  if (n.isInGroup) [[unlikely]] { return; }
   const auto& f = ec.display.editorFont;
   CACHED_ZOOM = ec.display.camera.zoom;
   const auto fs = ec.display.fontSize;
@@ -301,6 +302,8 @@ void Node::Draw(EditorContext& ec, Node& n) {
   n.draw(ec);  // Call event func last
 }
 void Node::Update(EditorContext& ec, Node& n) {
+  if (n.isInGroup) [[unlikely]] { return; }
+
   //Cache
   const auto bounds = Rectangle{n.x, n.y, n.width, n.height};
   const auto worldMouse = ec.logic.worldMouse;
