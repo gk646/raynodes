@@ -66,6 +66,7 @@ void Pin::DrawPin(Pin& p, const Font& f, const float x, const float y, const boo
     const Vector2 textPos = {middlePos.x + (p.direction == INPUT ? -textOff : textOff), middlePos.y - pinRadius};
     DrawCenteredText(f, txt, textPos, Pin::PIN_SIZE + 2, 0, UI::COLORS[UI_LIGHT]);
   }
+  p.xPos = x;
   p.yPos = y + pinRadius;
 }
 

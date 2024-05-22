@@ -253,7 +253,6 @@ Node::Node(const Node& n, const NodeID id)
     auto clone = c->clone();
     for (auto& in : clone->inputs) {
       in.connection = nullptr;  //Dont copy the connection ptr
-      //TODO maybe copy connections but then fully -> create new connection objects
     }
     components.push_back(clone);
   }
@@ -265,6 +264,7 @@ Node::~Node() {
     delete c;
   }
 }
+
 Node* Node::clone(const NodeID nid) {
   return new Node(*this, nid);
 }
