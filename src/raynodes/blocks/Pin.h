@@ -115,7 +115,7 @@ struct Pin {
   const Direction direction;
   float yPos = 0;  //Y position - outputs are deterministically drawn on the right
   [[nodiscard]] Color getColor() const;
-  static const char* TypeToString(PinType pt) {
+  static const char* TypeToString(const PinType pt) {
     switch (pt) {
       case BOOLEAN:
         return "Boolean";
