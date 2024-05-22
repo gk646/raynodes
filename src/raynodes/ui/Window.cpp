@@ -68,13 +68,13 @@ void Window::update(EditorContext& ec) {
   const float scaleX = UI::UI_SPACE_W / ec.display.screenSize.x;
   const float scaleY = UI::UI_SPACE_H / ec.display.screenSize.y;
 
-  if (isDragged && IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+  if (isDragged && ec.input.isMouseButtonDown(MOUSE_BUTTON_LEFT)) {
     isHeaderHovered = true;
     ec.input.consumeMouse();
 
     // Calculate the movement delta in screen space, then scale it to UI space
-    auto dx = (mousePos.x - dragOffset.x) * scaleX;
-    auto dy = (mousePos.y - dragOffset.y) * scaleY;
+    const auto dx = (mousePos.x - dragOffset.x) * scaleX;
+    const auto dy = (mousePos.y - dragOffset.y) * scaleY;
 
     // Update positions in UI space
     bodyRect.x += dx;
@@ -91,7 +91,7 @@ void Window::update(EditorContext& ec) {
 
   if (CheckCollisionPointRec(mousePos, header)) {
     isHeaderHovered = true;
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !isDragged) {
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !isDragged) {
       ec.input.consumeMouse();
       dragOffset.x = mousePos.x;
       dragOffset.y = mousePos.y;

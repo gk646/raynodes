@@ -54,6 +54,7 @@ struct Node {                                                             // Ord
   const char* const name = nullptr;                                       //Unique allocated name
   bool isHovered = false;                                                 // If the node is hovered
   bool isDragged = false;                                                 // If the node is dragged
+  bool isInGroup = false;
   const NodeID uID;                                                       // Unqiue node ID
   cxstructs::StackVector<Component*, COMPS_PER_NODE, int8_t> components;  // Fixed size
   InputPin nodeIn{NODE};                                                  // Allow node-to-node connections
