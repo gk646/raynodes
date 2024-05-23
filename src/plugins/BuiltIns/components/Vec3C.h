@@ -69,7 +69,7 @@ struct Vec3C final : Component {
 
     outputs[0].setData<VECTOR_3>(out);
 
-    if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+    if (ec.input.isMBPressed(MOUSE_BUTTON_LEFT)) {
       for (auto& f : textFields) {
         f.onFocusGain(ec.logic.worldMouse);
       }

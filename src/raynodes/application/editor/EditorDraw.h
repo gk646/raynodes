@@ -37,7 +37,7 @@ inline void DrawNodes(EditorContext& ec) {
 inline void DrawConnections(EditorContext& ec, const bool isCTRLDown) {
   const auto& connections = ec.core.connections;
   const auto selectRect = ec.logic.selectRect;
-  const bool delNodes = isCTRLDown && ec.input.isMouseButtonReleased(MOUSE_BUTTON_RIGHT);
+  const bool delNodes = isCTRLDown && ec.input.isMBReleased(MOUSE_BUTTON_RIGHT);
 
   ConnectionDeleteAction* action = nullptr;
   if (delNodes) action = new ConnectionDeleteAction(2);

@@ -18,45 +18,38 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef ACTIONMENU_H
-#define ACTIONMENU_H
+#ifndef CATEGORYLISTMENU_H
+#define CATEGORYLISTMENU_H
 
 #include "shared/fwd.h"
-#include "cxstructs/StackVector.h"
 
-struct ContextActionInfo {
-  NodeContextAction action;
+#include "TextField.h"
+#include <vector>
+
+struct Category {
   const char* name;
-  uint8_t iconID;
+  std::vector<const char*> nodes;
+  bool isOpen = false;
 };
 
-struct NodeContextMenu {
-  static constexpr int SIZE = 4;
-  cxstructs::StackVector<ContextActionInfo, SIZE> actions;
-  cxstructs::StackVector<ContextActionInfo, SIZE> quickActions;
+struct EXPORT NodeCreateMenu {
+  bool isVisible = false;
+  bool prevState = false;
+  TextField searchBar{180, 20, SINGLE_LINE};
+  std::vector<Category> categories{};
 
-  void draw(EditorContext& ec, const Vector2& pos);
-  void registerAction(const char* name, NodeContextAction action, uint8_t iconID) {
-    for (const auto& n : actions) {
-      if (strcmp(n.name, name) == 0) {
-        fprintf(stderr, "Action with this name already exists");
-        return;
-      }
-    }
-    actions.push_back({action, name, iconID});
+  NodeCreateMenu() {
+    searchBar.isFocused = true;
+    searchBar.showCursor = true;
   }
-  void registerQickAction(const char* name, NodeContextAction action, uint8_t iconID) {
-    for (const auto& n : quickActions) {
-      if (strcmp(n.name, name) == 0) {
-        fprintf(stderr, "QuickAction with this name already exists");
-        return;
-      }
-    }
-    quickActions.push_back({action, name, iconID});
-  }
+  void draw(EditorContext& ec, Vector2 pos);
+  void addEntry(const char* category, const char* name);
+  void removeEntry(const char* category, const char* name);
+  void show() { isVisible = true; }
 
  private:
-  void drawQuickActions();
+  void handleOpen();
+  void drawCategories(EditorContext& ec, Vector2 pos);
 };
 
-#endif  //ACTIONMENU_H
+#endif  //CATEGORYLISTMENU_H

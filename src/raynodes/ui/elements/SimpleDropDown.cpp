@@ -59,7 +59,7 @@ void SimpleDropDown::draw(EditorContext& ec, float dx, float dy) {
 int SimpleDropDown::update(EditorContext& ec) {
   Rectangle bounds = {x, y, w, h};
 
-  if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+  if (ec.input.isMBPressed(MOUSE_BUTTON_LEFT)) {
     if (CheckCollisionPointRec(ec.logic.worldMouse, bounds)) {
       isExpanded = !isExpanded;
     } else if (isExpanded) {
@@ -100,7 +100,7 @@ void SimpleDropDown::DrawSearchDropdown(EditorContext& ec, Vector2 pos, TextFiel
   const Rectangle dropdownRect = {pos.x, pos.y, maxWidth, entryHeight};
 
   // Draw the text field
-  bool pressed = ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT);
+  bool pressed = ec.input.isMBPressed(MOUSE_BUTTON_LEFT);
 
   search.bounds = dropdownRect;
   search.bounds.width = maxWidth;
@@ -121,8 +121,8 @@ void SimpleDropDown::DrawSearchDropdown(EditorContext& ec, Vector2 pos, TextFiel
 
     BeginScissorMode(view.x, view.y, view.width + 7, view.height);
     for (int i = 0; i < items.size(); ++i) {
-      Rectangle itemRec = {pos.x, pos.y + entryHeight + i * entryHeight + scroll.y, maxWidth - 13, entryHeight};
-      bool isHovered = CheckCollisionPointRec(mouse, itemRec);
+      const Rectangle itemRec = {pos.x, pos.y + entryHeight + i * entryHeight + scroll.y, maxWidth - 13, entryHeight};
+      const bool isHovered = CheckCollisionPointRec(mouse, itemRec);
       if (pressed) ec.input.consumeMouse();
       if (isHovered && pressed && CheckCollisionPointRec(mouse, scrollPanelRec)) {
         search.buffer = items[i];

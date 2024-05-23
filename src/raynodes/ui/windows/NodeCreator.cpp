@@ -63,7 +63,7 @@ void NodeCreator::setNode(EditorContext& ec, const NodeTemplate& nTemplate) {
 }
 
 void NodeCreator::drawSearchField(EditorContext& ec, const Rectangle& body, float width) {
-  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) searchField.onFocusGain(ec.logic.mouse);
+  if (ec.input.isMBPressed(MOUSE_BUTTON_LEFT)) searchField.onFocusGain(ec.logic.mouse);
   searchField.bounds = ec.display.getFullyScaled({body.x, body.y + 1, width, 20});
   searchField.update(ec, ec.logic.mouse);
   searchField.draw("Search...");
@@ -101,7 +101,7 @@ void NodeCreator::drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeT
     if (CheckCollisionPointRec(mouse, entryBounds)) {
       background = selected ? UI::Lighten(UI::COLORS[UI_LIGHT]) : UI::Lighten(UI::COLORS[UI_MEDIUM]);
       border = UI::Darken(UI::COLORS[UI_DARK]);
-      if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+      if (ec.input.isMBPressed(MOUSE_BUTTON_LEFT)) {
         if (activeEntry != i) { setNode(ec, nInfo->nTemplate); }
         activeEntry = i;
       }
@@ -123,7 +123,7 @@ void NodeCreator::drawCreatedNodeList(EditorContext& ec, Rectangle& entry, NodeT
     if (UI::DrawButton(ec, remove, buttonSize, buttonSize, "#143#")) {
       if (ec.templates.userDefinedNodes.contains(nInfo->nTemplate.label)) {
         auto& eraseInfo = ec.templates.userDefinedNodes[nInfo->nTemplate.label];
-        ec.ui.canvasContextMenu.removeEntry(UI::USER_CATEGORY, eraseInfo.nTemplate.label);
+        ec.ui.nodeCreateMenu.removeEntry(UI::USER_CATEGORY, eraseInfo.nTemplate.label);
         for (auto& [label, component] : eraseInfo.nTemplate.components) {
           delete [] component;
           delete [] label;
@@ -251,7 +251,7 @@ bool NodeCreator::drawCreatePopup(EditorContext& ec, const Rectangle& body) {
       newNodeName.buffer.clear();
       activeEntry = 0;
       showNamePopup = false;
-      ec.ui.canvasContextMenu.addEntry(UI::USER_CATEGORY, nTemplate.label);
+      ec.ui.nodeCreateMenu.addEntry(UI::USER_CATEGORY, nTemplate.label);
       setNode(ec, nTemplate);
     }
   }

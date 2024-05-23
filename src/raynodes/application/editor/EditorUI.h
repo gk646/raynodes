@@ -55,10 +55,15 @@ inline void DrawGrid(const EditorContext& ec) {
   }
 }
 inline void DrawContextMenus(EditorContext& ec) {
-  if (ec.logic.showCanvasContextMenu) {
-    ec.ui.canvasContextMenu.draw(ec, ec.logic.contextMenuPos);
-  } else if (ec.logic.showNodeContextMenu) {
+
+  if (ec.ui.nodeCreateMenu.isVisible) {
+    ec.ui.nodeCreateMenu.draw(ec, ec.logic.contextMenuPos);
+  } else if (ec.ui.nodeContextMenu.isVisible) {
     ec.ui.nodeContextMenu.draw(ec, ec.logic.contextMenuPos);
+  } else if (ec.ui.nodeGroupContextMenu.isVisible) {
+    ec.ui.nodeGroupContextMenu.draw(ec, ec.logic.contextMenuPos);
+  } else if (ec.ui.canvasContextMenu.isVisible) {
+    ec.ui.canvasContextMenu.draw(ec, ec.logic.contextMenuPos);
   }
 }
 inline void DrawActions(EditorContext& ec) {
@@ -189,7 +194,7 @@ inline void DrawStatusBar(EditorContext& ec) {
     const auto bounds = ec.display.getFullyScaled({rightPanels - lastWidth + 25, y, lastWidth - 50, height});
     if (GuiSliderBar(bounds, nullptr, nullptr, &ec.display.camera.zoom, 0.1F, 3.0F)) {
       ec.input.consumeMouse();
-    } else if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(ec.logic.mouse, bounds)) {
+    } else if (ec.input.isMBPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(ec.logic.mouse, bounds)) {
       ec.input.consumeMouse();
     }
 

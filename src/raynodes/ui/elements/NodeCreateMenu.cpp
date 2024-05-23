@@ -22,7 +22,7 @@
 #include <raygui.h>
 
 #include "application/EditorContext.h"
-#include "ui/elements/CanvasContextMenu.h"
+#include "ui/elements/NodeCreateMenu.h"
 #include "application/elements/Action.h"
 
 #include "shared/rayutils.h"
@@ -36,15 +36,14 @@ void HandleNewNode(EditorContext& ec, const Vector2 pos, const char* name) {
   action->createdNodes.push_back(newN);
   ec.core.addEditorAction(ec, action);
 }
-
 template <typename Iterable>
-bool DrawList(EditorContext& ec, const Vector2 pos, const Iterable& names) {
-  const auto released = ec.input.isMouseButtonReleased(MOUSE_BUTTON_LEFT);
+bool DrawList(EditorContext& ec, NodeCreateMenu& menu, const Vector2 pos, const Iterable& names) {
+  const auto released = ec.input.isMBReleased(MOUSE_BUTTON_LEFT);
 
   // Create node on enter
   if (IsKeyPressed(KEY_ENTER) && names.size() == 1) {
     HandleNewNode(ec, ec.logic.contextMenuPos, names[0]);
-    ec.logic.showCanvasContextMenu = false;
+    menu.isVisible = false;
     return false;
   }
 
@@ -72,7 +71,7 @@ bool DrawList(EditorContext& ec, const Vector2 pos, const Iterable& names) {
         DrawRectangleRounded(entry, 0.1F, 30, UI::Lighten(UI::COLORS[UI_MEDIUM], 15));
         if (released) {
           HandleNewNode(ec, ec.logic.contextMenuPos, name);
-          ec.logic.showCanvasContextMenu = false;
+          menu.isVisible = false;
           EndScissorMode();
           return false;
         }
@@ -93,7 +92,7 @@ bool DrawList(EditorContext& ec, const Vector2 pos, const Iterable& names) {
 }
 }  // namespace
 
-void CanvasContextMenu::draw(EditorContext& ec, const Vector2 pos) {
+void NodeCreateMenu::draw(EditorContext& ec, const Vector2 pos) {
   handleOpen();
 
   // Textfield
@@ -111,15 +110,15 @@ void CanvasContextMenu::draw(EditorContext& ec, const Vector2 pos) {
       }
     }
     SortFilteredVector(sorted, searchStr, [](const char* arg) { return arg; });
-    const bool insideList = DrawList(ec, {pos.x, pos.y + 20}, sorted);
-    if (!insideList && ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) { ec.logic.showCanvasContextMenu = false; }
-    prevState = ec.logic.showCanvasContextMenu;
+    const bool insideList = DrawList(ec, *this, {pos.x, pos.y + 20}, sorted);
+    if (!insideList && ec.input.isMBPressed(MOUSE_BUTTON_LEFT)) { isVisible = false; }
+    prevState = isVisible;
   }
 
   ec.input.consumeMouse();
 }
 
-void CanvasContextMenu::drawCategories(EditorContext& ec, Vector2 pos) {
+void NodeCreateMenu::drawCategories(EditorContext& ec, Vector2 pos) {
   const auto& f = ec.display.editorFont;
   const auto fs = ec.display.fontSize;
   const auto mouse = ec.logic.mouse;
@@ -143,11 +142,11 @@ void CanvasContextMenu::drawCategories(EditorContext& ec, Vector2 pos) {
       }
       isOpen = true;
       insideCategory = true;
-      DrawList(ec, {pos.x + 180, entry.y}, nodes);
+      DrawList(ec, *this, {pos.x + 180, entry.y}, nodes);
     } else if (isOpen) {
       DrawRectangleRounded(entry, 0.1F, 30, highlight);
       insideCategory = true;
-      isOpen = DrawList(ec, {pos.x + 180, entry.y}, nodes);
+      isOpen = DrawList(ec, *this, {pos.x + 180, entry.y}, nodes);
     } else {
       DrawRectangleRec(entry, background);
       isOpen = false;
@@ -156,16 +155,15 @@ void CanvasContextMenu::drawCategories(EditorContext& ec, Vector2 pos) {
     entry.y += entryHeight;
   }
 
-  const auto extendedRec = Rectangle{pos.x, pos.y, 180, categories.size() * entryHeight + 20};
-  if (!(insideCategory || CheckExtendedRec(mouse, extendedRec, UI::CONTEXT_MENU_THRESHOLD))) {
-    ec.logic.showCanvasContextMenu = false;
-  }
-  prevState = ec.logic.showCanvasContextMenu;
+  const auto extendedRec = Rectangle{pos.x, pos.y - 20, 180, categories.size() * entryHeight + 20};
+  if (!(insideCategory || CheckExtendedRec(mouse, extendedRec, UI::CONTEXT_MENU_THRESHOLD))) { isVisible = false; }
+  prevState = isVisible;
 }
 
-void CanvasContextMenu::handleOpen() {
+void NodeCreateMenu::handleOpen() {
   if (prevState == false) {
     searchBar.buffer.clear();
+    searchBar.onFocusGain({searchBar.bounds.x, searchBar.bounds.y});
     for (auto& cat : categories) {
       cat.isOpen = false;
     }
@@ -173,7 +171,7 @@ void CanvasContextMenu::handleOpen() {
   }
 }
 
-void CanvasContextMenu::addEntry(const char* category, const char* name) {
+void NodeCreateMenu::addEntry(const char* category, const char* name) {
   for (auto& c : categories) {
     if (cxstructs::str_cmp(c.name, category)) {
       c.nodes.push_back(name);
@@ -186,7 +184,7 @@ void CanvasContextMenu::addEntry(const char* category, const char* name) {
   categories.push_back(cat);
 }
 
-void CanvasContextMenu::removeEntry(const char* category, const char* name) {
+void NodeCreateMenu::removeEntry(const char* category, const char* name) {
   for (auto catIt = categories.begin(); catIt != categories.end();) {
     if (cxstructs::str_cmp(catIt->name, category)) {
       bool erased = false;

@@ -26,20 +26,22 @@
 #include "ui/windows/NodeCreator.h"
 #include "ui/windows/SettingsMenu.h"
 
-UI::UI() {
+UI::UI(){
   constexpr auto bounds = GetCenteredWindowBounds<true>();
   windows.push_back(new HelpMenu(bounds, "Help"));
   windows.push_back(new SettingsMenu(bounds, "Settings"));
   windows.push_back(new NodeCreator(bounds, "Node Creator"));
 }
+
 bool UI::loadUI(EditorContext& ec) {
   //TODO this is annoying
   getWindow<NodeCreator>(NODE_CREATOR)->searchField.font = &ec.display.editorFont;
   getWindow<NodeCreator>(NODE_CREATOR)->newCompID.font = &ec.display.editorFont;
   getWindow<NodeCreator>(NODE_CREATOR)->newNodeName.font = &ec.display.editorFont;
   getWindow<NodeCreator>(NODE_CREATOR)->newCompName.font = &ec.display.editorFont;
+  miscField.font = &ec.display.editorFont;
   ec.logic.registerNodeContextActions(ec);
-  canvasContextMenu.searchBar.font = &ec.display.editorFont;
+  nodeCreateMenu.searchBar.font = &ec.display.editorFont;
   return true;
 }
 int UI::DrawListMenu(EditorContext& ec, bool& open, const char* title, const char* listText, int& active) {
@@ -59,7 +61,7 @@ int UI::DrawButton(EditorContext& ec, const Rectangle& r, const char* txt) {
   const auto bounds = ec.display.getFullyScaled(r);
   const auto res = GuiButton(bounds, txt);
 
-  if (res || (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(ec.logic.mouse, bounds))) {
+  if (res || (ec.input.isMBPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(ec.logic.mouse, bounds))) {
     ec.input.consumeMouse();  // Consume mouse so click doesnt propagate
   }
   return res;
@@ -68,7 +70,7 @@ int UI::DrawButton(EditorContext& ec, const Vector2& pos, float w, float h, cons
   const auto bounds = ec.display.getFullyScaled({pos.x, pos.y, w, h});
   const auto res = GuiButton(bounds, txt);
 
-  if (res || (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(ec.logic.mouse, bounds))) {
+  if (res || (ec.input.isMBPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(ec.logic.mouse, bounds))) {
     ec.input.consumeMouse();  // Consume mouse so click doesnt propagate
   }
   return res;
@@ -100,8 +102,8 @@ void UI::DrawText(EditorContext& ec, Vector2 pos, const char* txt, Color c, bool
           pos.x += MeasureTextEx(font, ec.string.buffer, fs, 0.0F).x;
         }
         p++;
-        int iconID = cxstructs::str_parse_int(p);
-        GuiDrawIcon(iconID, pos.x, pos.y, 1, COLORS[UI_DARK]);
+        const int iconID = cxstructs::str_parse_int(p);
+        GuiDrawIcon(iconID, static_cast<int>(pos.x), static_cast<int>(pos.y), 1, COLORS[UI_DARK]);
         p += 4;
         start = p;
         pos.x += 16;
@@ -132,14 +134,14 @@ void UI::DrawRect(EditorContext& ec, Rectangle rec, int borderWidth, Color borde
   }
 }
 Rectangle UI::GetSubRect(const Rectangle& r) {
-  float insetX = r.width / 5.0f;
-  float insetY = r.height / 5.0f;
+  const float insetX = r.width / 5.0f;
+  const float insetY = r.height / 5.0f;
 
-  float newWidth = r.width - 2 * insetX;
-  float newHeight = r.height - 2 * insetY;
+  const float newWidth = r.width - 2 * insetX;
+  const float newHeight = r.height - 2 * insetY;
 
-  float newX = r.x + insetX;
-  float newY = r.y + insetY;
+  const float newX = r.x + insetX;
+  const float newY = r.y + insetY;
 
   return {newX, newY, newWidth, newHeight};
 }

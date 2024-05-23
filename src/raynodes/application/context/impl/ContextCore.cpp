@@ -24,6 +24,97 @@
 #include "application/EditorContext.h"
 #include "application/elements/Action.h"
 
+struct NodeIDs {
+  NodeID original;
+  NodeID copied;
+};
+
+// Helps to copy relative connection between copied nodes
+struct ConnectionHelper {
+  static constexpr int LIMIT = 300;  // Support up to 300 nodes for relative connection copying
+  int size = 0;
+  std::array<NodeIDs, LIMIT> mapping{};
+  [[nodiscard]] NodeID getOriginalID(const NodeID id) const {
+    for (const auto entry : mapping) {
+      if (entry.original == id) return entry.copied;
+    }
+    return NodeID(UINT16_MAX);
+  }
+  void add(const NodeID original, const NodeID copied) {
+    if (size < LIMIT) { mapping[size++] = {original, copied}; }
+  }
+  static Int2 GetIndices(Node& n, const Component* c, const Pin* p) {
+    if (c == nullptr) {
+      for (int i = 0; i < n.outputs.size(); ++i) {
+        if (&n.outputs[i] == p) return {-1, i};
+      }
+      if (&n.nodeIn == p) return {-1, 0};
+    }
+
+    for (int comp = 0; comp < n.components.size(); ++comp) {
+      for (int in = 0; in < n.components[comp]->inputs.size(); ++in) {
+        if (&n.components[comp]->inputs[in] == p) { return {comp, in}; }
+      }
+
+      for (int out = 0; out < n.components[comp]->outputs.size(); ++out) {
+        if (&n.components[comp]->outputs[out] == p) { return {comp, out}; }
+      }
+    }
+
+    return {-1, -1};
+  }
+  static void addConnection(EditorContext& ec, const NodeID newTo, const Connection* oldConn, const NodeID newFrom) {
+    Node* toNode = ec.core.getNode(newTo);
+    const auto toIndices = GetIndices(oldConn->toNode, oldConn->to, &oldConn->in);
+
+    Component* to;
+    InputPin* in;
+    if (toIndices.x == -1) {
+      to = nullptr;
+      in = &toNode->nodeIn;
+    } else {
+      to = toNode->components[toIndices.x];
+      in = &to->inputs[toIndices.y];
+    }
+
+    Node& fromNode = *ec.core.getNode(newFrom);
+    const auto fromIndicies = GetIndices(oldConn->fromNode, oldConn->from, &oldConn->out);
+
+    Component* from;
+    OutputPin* out;
+    if (fromIndicies.x == -1) {
+      from = nullptr;
+      out = &fromNode.outputs[fromIndicies.y];
+    } else {
+      from = fromNode.components[fromIndicies.x];
+      out = &from->outputs[fromIndicies.y];
+    }
+
+    ec.core.addConnection(new Connection(fromNode, from, *out, *toNode, to, *in));
+  }
+  void addConnections(EditorContext& ec) const {
+    for (int i = 0; i < size; ++i) {
+      const auto node = ec.core.getNode(mapping[i].original);
+      if (node == nullptr) continue;  // Pasting delete nodes
+      for (const auto comp : node->components) {
+        for (const auto& in : comp->inputs) {
+          const auto conn = in.connection;
+          if (conn != nullptr) {
+            const auto newFrom = getOriginalID(conn->fromNode.uID);
+            if (newFrom != UINT16_MAX) {
+              const auto newID = getOriginalID(node->uID);
+              addConnection(ec, newID, conn, newFrom);
+            }
+          }
+        }
+      }
+    }
+  }
+  void reset() { size = 0; }
+};
+
+static ConnectionHelper CONNECTION_HELPER;
+
 bool Core::loadCore(EditorContext& ec) {
   hasUnsavedChanges = true;                    // Set flag to avoid unnecessary SetTitle
   addEditorAction(ec, new NewCanvasAction());  // Add first dummy action
@@ -35,9 +126,9 @@ bool Core::loadCore(EditorContext& ec) {
   nodes.reserve(200);
   copiedNodes.reserve(200);
   connections.reserve(MAX_ACTIONS + 1);
+  nodeGroups.reserve(5);
   return true;
 }
-
 void Core::resetEditor(EditorContext& ec) {
   hasUnsavedChanges = true;  // Set flag to avoid unnecessary SetTitle insdie addEditorAction()
 
@@ -85,8 +176,8 @@ Node* Core::createNode(EditorContext& ec, const char* name, const Vector2 worldP
 
   return newNode;
 }
-
 void Core::insertNode(EditorContext& ec, Node& node) {
+  if (nodeMap.contains(node.uID)) return;
   nodes.push_back(&node);
   nodeMap.insert({node.uID, &node});
 
@@ -94,10 +185,9 @@ void Core::insertNode(EditorContext& ec, Node& node) {
     c->onAddedToScreen(ec, node);
   }
 }
-
 // Only call with a valid id
 void Core::removeNode(EditorContext& ec, const NodeID id) {
-  if(!nodeMap.contains(id))return;
+  if (!nodeMap.contains(id)) return;
   const auto node = nodeMap[id];
   nodeMap.erase(id);
   std::erase(nodes, node);
@@ -107,104 +197,12 @@ void Core::removeNode(EditorContext& ec, const NodeID id) {
   }
 }
 
-struct NodeIDs {
-  NodeID original;
-  NodeID copied;
-};
-
-struct ConnectionHelper {
-  static constexpr int LIMIT = 200;
-  int size = 0;
-  std::array<NodeIDs, LIMIT> mapping;  // Support up to 200 nodes for relative connection copying
-  NodeID getOriginalID(NodeID id) const {
-    for (const auto entry : mapping) {
-      if (entry.original == id) return entry.copied;
-    }
-    return NodeID(UINT16_MAX);
-  }
-  void add(NodeID original, NodeID copied) {
-    if (size < LIMIT) { mapping[size++] = {original, copied}; }
-  }
-  Int2 getIndices(Node& n, Component* c, Pin* p) const {
-    if (c == nullptr) {
-      for (int i = 0; i < n.outputs.size(); ++i) {
-        if (&n.outputs[i] == p) return {-1, i};
-      }
-      if (&n.nodeIn == p) return {-1, 0};
-    }
-
-    for (int comp = 0; comp < n.components.size(); ++comp) {
-      for (int in = 0; in < n.components[comp]->inputs.size(); ++in) {
-        if (&n.components[comp]->inputs[in] == p) { return {comp, in}; }
-      }
-
-      for (int out = 0; out < n.components[comp]->outputs.size(); ++out) {
-        if (&n.components[comp]->outputs[out] == p) { return {comp, out}; }
-      }
-    }
-
-    return {-1, -1};
-  }
-
-  void addConnection(EditorContext& ec, NodeID toID, Component* oldTo, InputPin& oldIn, const Connection* oldConn,
-                     NodeID newFrom) const {
-    Node* toNode = ec.core.getNode(toID);
-    const auto toIndices = getIndices(oldConn->toNode, oldConn->to, &oldConn->in);
-
-    Component* to;
-    InputPin* in;
-    if (toIndices.x == -1) {
-      to = nullptr;
-      in = &toNode->nodeIn;
-    } else {
-      to = toNode->components[toIndices.x];
-      in = &to->inputs[toIndices.y];
-    }
-
-    Node& fromNode = *ec.core.getNode(newFrom);
-    const auto fromIndicies = getIndices(oldConn->fromNode, oldConn->from, &oldConn->out);
-
-    Component* from;
-    OutputPin* out;
-    if (fromIndicies.x == -1) {
-      from = nullptr;
-      out = &fromNode.outputs[fromIndicies.y];
-    } else {
-      from = fromNode.components[fromIndicies.x];
-      out = &from->outputs[fromIndicies.y];
-    }
-
-    ec.core.addConnection(new Connection(fromNode, from, *out, *toNode, to, *in));
-  }
-
-  void addConnections(EditorContext& ec) const {
-    for (int i = 0; i < size; ++i) {
-      const auto node = ec.core.getNode(mapping[i].original);
-      if (node == nullptr) continue;  // Pasting delete nodes
-      for (const auto comp : node->components) {
-        for (auto& in : comp->inputs) {
-          const auto conn = in.connection;
-          if (conn != nullptr) {
-            const auto newFrom = getOriginalID(conn->fromNode.uID);
-            if (newFrom != UINT16_MAX) {
-              const auto newID = getOriginalID(node->uID);
-              addConnection(ec, newID, comp, in, conn, newFrom);
-            }
-          }
-        }
-      }
-    }
-  }
-};
-
-void FindAndAddConnections(EditorContext& ec, const ConnectionHelper& helper, const int validIndex) {}
-
 void Core::paste(EditorContext& ec) const {
   if (copiedNodes.empty()) return;
   const Vector2 delta = {ec.logic.worldMouse.x - copiedNodes[0]->x, ec.logic.worldMouse.y - copiedNodes[0]->y};
 
   const auto action = new NodeCreateAction(static_cast<int>(copiedNodes.size()) + 1);
-  ConnectionHelper helper;
+  CONNECTION_HELPER.reset();
 
   for (const auto n : copiedNodes) {
     if (n == nullptr) continue;  // It can happen here that we try to copy deleted nodes
@@ -216,14 +214,13 @@ void Core::paste(EditorContext& ec) const {
     action->createdNodes.push_back(newNode);
     ec.core.insertNode(ec, *newNode);
 
-    helper.add(n->uID, newNode->uID);
+    CONNECTION_HELPER.add(n->uID, newNode->uID);  // Save the mapping from old->new
   }
 
-  helper.addConnections(ec);
+  CONNECTION_HELPER.addConnections(ec);
 
   ec.core.addEditorAction(ec, action);
 }
-
 void Core::cut(EditorContext& ec) {
   if (selectedNodes.empty()) return;
   copiedNodes.clear();
@@ -234,13 +231,13 @@ void Core::cut(EditorContext& ec) {
   ec.core.addEditorAction(ec, action);
   selectedNodes.clear();
 }
-
 void Core::erase(EditorContext& ec) {
   if (selectedNodes.empty()) return;
   const auto action = new NodeDeleteAction(ec, selectedNodes);
   ec.core.addEditorAction(ec, action);
   selectedNodes.clear();
 }
+
 void Core::open(EditorContext& ec) {
   if (ec.core.hasUnsavedChanges) ec.ui.showUnsavedChanges = true;
   else {

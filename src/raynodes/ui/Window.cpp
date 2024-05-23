@@ -44,7 +44,7 @@ void Window::draw(EditorContext& ec) {
     const Vector2 closeBottomLeft = {cBounds.x, cBounds.y + cBounds.height};
     DrawLineEx(closeTopRight, closeBottomLeft, 1, closeColor);
 
-    if (CheckCollisionPointRec(ec.logic.mouse, cBounds) && ec.input.isMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+    if (CheckCollisionPointRec(ec.logic.mouse, cBounds) && ec.input.isMBReleased(MOUSE_BUTTON_LEFT)) {
       closeWindow(ec);
     }
   }
@@ -68,7 +68,7 @@ void Window::update(EditorContext& ec) {
   const float scaleX = UI::UI_SPACE_W / ec.display.screenSize.x;
   const float scaleY = UI::UI_SPACE_H / ec.display.screenSize.y;
 
-  if (isDragged && ec.input.isMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+  if (isDragged && ec.input.isMBDown(MOUSE_BUTTON_LEFT)) {
     isHeaderHovered = true;
     ec.input.consumeMouse();
 

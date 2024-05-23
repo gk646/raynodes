@@ -37,8 +37,8 @@
 #include <raylib.h>
 #include <cxutil/cxstring.h>
 
-#include "ui/elements/CanvasContextMenu.h"
-#include "ui/elements/NodeContextMenu.h"
+#include "ui/elements/NodeCreateMenu.h"
+#include "ui/elements/ActionMenu.h"
 
 #include "blocks/Connection.h"
 #include "blocks/NodeGroup.h"
@@ -63,8 +63,8 @@ struct EXPORT EditorContext {
   Input input{};
   Core core{};
   Logic logic{};
-  UI ui{};
   Display display{};
+  UI ui{};
   String string{};
   Template templates{};
   Plugin plugin{};

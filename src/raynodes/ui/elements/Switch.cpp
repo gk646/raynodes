@@ -21,7 +21,7 @@ void Switch::draw(EditorContext& ec) const {
 }
 
 void Switch::update(EditorContext& ec, Vector2 mouse) {
-  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+  if (ec.input.isMBPressed(MOUSE_BUTTON_LEFT)) {
     if (CheckCollisionPointRec(mouse, bounds)) { isOn = !isOn; }
   }
 }

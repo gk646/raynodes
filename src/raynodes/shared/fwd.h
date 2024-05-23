@@ -49,7 +49,6 @@ struct TextField;           // UI class
 
 using ComponentCreateFunc = Component* (*)(ComponentTemplate);        // Takes a name and returns a new Component
 using NodeCreateFunc = Node* (*)(const NodeTemplate&, Vec2, NodeID);  // Creates a new node
-using NodeContextAction = void (*)(EditorContext&, Node&);            // Function for the node context menu
 
 //Raylib types
 struct Color;

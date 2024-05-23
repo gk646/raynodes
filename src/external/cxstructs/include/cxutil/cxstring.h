@@ -61,9 +61,7 @@ constexpr int str_len(const char* arg) {
 [[nodiscard("Allocates new string")]] inline char* str_dup(const char* arg) {
   const int len = str_len(arg);
   auto* newBuff = new char[len + 1];
-  for (int i = 0; i <= len; i++) {
-    newBuff[i] = arg[i];
-  }
+  std::memcpy(newBuff, arg, len+1);
   return newBuff;
 }
 // Compares to string with a while loop

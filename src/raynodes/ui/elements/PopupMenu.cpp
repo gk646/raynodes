@@ -28,7 +28,7 @@
 #include "application/EditorContext.h"
 #include "shared/rayutils.h"
 
-const char* PopupMenu::InputText(EditorContext& ec, Rectangle& r, TextField& input, ValidationFunc func,
+const char* PopupMenu::InputText(EditorContext& ec, const Rectangle& r, TextField& input, const ValidationFunc func,
                                  const char* txt) {
   const auto& f = ec.display.editorFont;
   const auto fs = ec.display.fontSize;
@@ -45,7 +45,7 @@ const char* PopupMenu::InputText(EditorContext& ec, Rectangle& r, TextField& inp
   input.bounds.x = scaled.x + (scaled.width - input.bounds.width) / 2.0F;
   input.bounds.y = scaled.y + scaled.height / 5.0F;
 
-  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+  if (ec.input.isMBPressed(MOUSE_BUTTON_LEFT)) {
     if (!CheckCollisionPointRec(ec.logic.mouse, scaled)) {
       input.buffer.clear();
       return UI::DUMMY_STRING;
@@ -116,7 +116,7 @@ const char* PopupMenu::InputTextEx(EditorContext& ec, Rectangle& r, TextField& i
   const bool validCustom = customFunc(ec, r);
 
   // Update after so custom func has layer control
-  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+  if (ec.input.isMBPressed(MOUSE_BUTTON_LEFT)) {
     if (!CheckCollisionPointRec(ec.logic.mouse, scaled)) {
       input.buffer.clear();
       return UI::DUMMY_STRING;

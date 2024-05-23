@@ -45,7 +45,7 @@ static float CACHED_ZOOM = 1.0F;  // Cache the zoom value to have cleaner method
 // Helper functions
 namespace {
 void UpdateNodePins(EditorContext& ec, Node& n) {
-  if (!ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) return;
+  if (!ec.input.isMBPressed(MOUSE_BUTTON_LEFT)) return;
 
   if (Pin::UpdatePin(ec, n, nullptr, n.nodeIn, n.x)) return;
 
@@ -81,7 +81,7 @@ void CheckPinCollisions(EditorContext& ec, Node& n, Component* c) {
 void UpdateComponent(EditorContext& ec, Node& n, Component* c) {
   const auto compRect = c->getBounds();
   const auto worldMouse = ec.logic.worldMouse;
-  const auto pressed = ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT);
+  const auto pressed = ec.input.isMBPressed(MOUSE_BUTTON_LEFT);
 
   //Pins are partly outside so need to check them regardless of hover state
   if (pressed) {
@@ -138,9 +138,7 @@ void HandleSelection(Node& n, EditorContext& ec, const Rectangle bounds, auto& s
 
 //selectedNodes is std::unordered_map
 void HandleHover(EditorContext& ec, Node& n, std::unordered_map<NodeID, Node*>& selectedNodes) {
-  ec.logic.isAnyNodeHovered = true;
-  ec.logic.hoveredNode = &n;
-  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+  if (ec.input.isMBPressed(MOUSE_BUTTON_LEFT)) {
     if (!ec.input.isKeyDown(KEY_LEFT_CONTROL) && !selectedNodes.contains(n.uID)) {
       //Clear selection when an unselected node is clicked / unless control is held
       selectedNodes.clear();
@@ -157,18 +155,14 @@ void HandleHover(EditorContext& ec, Node& n, std::unordered_map<NodeID, Node*>& 
     }
 
     n.isDragged = true;
-    ec.logic.isAnyNodeDragged = true;
-    ec.logic.draggedNode = &n;
     DRAG_OFFSET = ec.logic.worldMouse;
   }
 }
 
 //selectedNodes is std::unordered_map
 void HandleDrag(Node& n, EditorContext& ec, auto& selectedNodes, auto worldMouse) {
-  ec.logic.isAnyNodeHovered = true;
   ec.logic.isAnyNodeDragged = true;
-  ec.logic.draggedNode = &n;
-  if (ec.input.isMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+  if (ec.input.isMBDown(MOUSE_BUTTON_LEFT)) {
     const Vector2 movementDelta = {worldMouse.x - DRAG_OFFSET.x, worldMouse.y - DRAG_OFFSET.y};
     n.x += movementDelta.x;
     n.y += movementDelta.y;
@@ -185,6 +179,7 @@ void HandleDrag(Node& n, EditorContext& ec, auto& selectedNodes, auto worldMouse
       }
     }
     DRAG_OFFSET = worldMouse;
+    ec.input.consumeMouse();
   } else {
     n.isDragged = false;
     ec.logic.isAnyNodeDragged = false;
@@ -335,11 +330,14 @@ void Node::Update(EditorContext& ec, Node& n) {
   }
 
   //Check if hovered
-  n.isHovered = n.isDragged || CheckCollisionPointRec(worldMouse, bounds);
-
-  //Its hovered - what's going to happen?
-  if (n.isHovered && !ec.logic.isAnyNodeHovered) [[unlikely]] {
-    HandleHover(ec, n, selectedNodes);
+  if (n.isDragged || CheckCollisionPointRec(worldMouse, bounds)) [[unlikely]] {
+    ec.logic.hoveredNode = &n;
+    n.isHovered = true;
+    //Its hovered - what's going to happen?
+    if (!ec.logic.isAnyNodeHovered) [[likely]] {
+      HandleHover(ec, n, selectedNodes);
+    }
+    ec.logic.isAnyNodeHovered = true;
   } else {
     n.isHovered = !selectedNodes.empty() && selectedNodes.contains(n.uID);
   }
