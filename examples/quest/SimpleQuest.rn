@@ -1,0 +1,40 @@
+--EditorData--
+1120303.237-465.6130.850
+--Templates--
+3
+0Dialog ChoiceNPCTypeDisplayTextChoice1Choice2Choice3Choice4255
+1DialogNPCTypeDisplayText255
+2QuestHeaderNameDescriptionZoneLevel255
+--Nodes--
+20TestTestDTEST_ROOM1-807-462
+01ARIAWhats your name?NumericNormal nameMehLast one-493-547
+02ARIAWhich number?1234-166-862
+13ARIA-134-521
+14ARIA-126-392
+05ARIALast choice huh?Noo never!MaybeIts okOKOKOKOK-124-254
+16ARIACool number!235-909
+17ARIACool number2238-778
+18ARIALooks like your number is too big hehe!224-646
+19ARIAOkay, but i gotta go now!774-452
+110ARIAWas nice to see you!1140-455
+--Connections--
+0-101-10
+1202-10
+1303-10
+1404-10
+1505-10
+2206-10
+2307-10
+2408-10
+2508-10
+8-109-10
+7-109-10
+6-109-10
+4-109-10
+3-109-10
+3-109-10
+5209-10
+5309-10
+5509-10
+5409-10
+9-1010-10

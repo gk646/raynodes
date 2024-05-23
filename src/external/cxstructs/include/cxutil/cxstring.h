@@ -84,6 +84,16 @@ inline int str_cmpn_case(const char* s1, const char* s2, int maxCount) {
   }
   return tolower(*s1) - tolower(*s2);
 }
+// Case insensitive! - Compares to string with a while loop - stops at max count
+inline bool str_cmp_case(const char* s1, const char* s2) {
+  while (*s1 && *s2) {
+    const int diff = tolower(*s1) - tolower(*s2);
+    if (diff != 0) return false;
+    ++s1;
+    ++s2;
+  }
+  return tolower(*s1) - tolower(*s2) == 0;
+}
 // Case insensitive! - Tries to find and return the first occurrence of sequence in string
 inline const char* str_substr_case(const char* string, const char* sequence) {
   if (!*sequence) return string;

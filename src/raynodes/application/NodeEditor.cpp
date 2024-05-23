@@ -51,7 +51,7 @@ bool NodeEditor::start() {
   c + context.ui.loadUI(context);
 
   // Only load file if path is given - automatically opens picker
-  if (!context.persist.openedFilePath.empty()) { c + context.persist.importProject(context); }
+  if (!context.persist.openedFilePath.empty()) c + context.persist.importProject(context);
 
   return c.holds();
 }

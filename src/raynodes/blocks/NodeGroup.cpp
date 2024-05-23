@@ -54,17 +54,24 @@ void HandleDrag(EditorContext& ec, NodeGroup& ng) {
     ng.isHovered = false;
   }
 }
-bool HasNoInputs(const Component& c) {
-  for (const auto& in : c.inputs) {
-    if (in.connection != nullptr) return false;
+// Checks if the given node has no input connection with any of the given nodes
+bool HasNoInputs(const Node& search, const std::vector<Node*>& others) {
+  for (const auto c : search.components) {
+    for (const auto& in : c->inputs) {
+      if (in.connection != nullptr) {
+        if (std::ranges::contains(others, &in.connection->fromNode)) return false;
+      }
+    }
   }
   return true;
 }
-bool HasNoOutputs(const Node* search, const std::vector<Node*>& others) {
+
+// Checks if the given node has no output connection with any of the given nodes
+bool HasNoOutputs(const Node& search, const std::vector<Node*>& others) {
   for (const auto n : others) {
-    for (const auto& c : n->components) {
+    for (const auto c : n->components) {
       for (const auto& in : c->inputs) {
-        if (in.connection != nullptr && &in.connection->fromNode == search) return false;
+        if (in.connection != nullptr && &in.connection->fromNode == &search) return false;
       }
     }
   }
@@ -90,7 +97,7 @@ void DrawRename(EditorContext& ec, NodeGroup& ng) {
 }
 }  // namespace
 
-NodeGroup::NodeGroup(EditorContext& ec, const char* name, std::unordered_map<NodeID, Node*> selectedNodes)
+NodeGroup::NodeGroup(const EditorContext& ec, const char* name, std::unordered_map<NodeID, Node*> selectedNodes)
     : foldedDims(), pos(), dims(), name(cxstructs::str_dup(name)) {
   usedPins.reserve(5);
   nodes.reserve(selectedNodes.size() + 1);
@@ -102,10 +109,8 @@ NodeGroup::NodeGroup(EditorContext& ec, const char* name, std::unordered_map<Nod
   updateInternalState(ec);
 }
 
-NodeGroup::NodeGroup(EditorContext& ec, const char* name)
-    : foldedDims(), pos(), dims(), name(cxstructs::str_dup(name)) {
-  updateInternalState(ec);
-}
+NodeGroup::NodeGroup(const float x, const float y, const char* name, bool expanded)
+    : expanded(expanded), foldedDims(), pos(x, y), dims(), name(cxstructs::str_dup(name)) {}
 
 NodeGroup::~NodeGroup() {
   delete[] name;
@@ -230,6 +235,7 @@ void NodeGroup::update(EditorContext& ec) {
 
 void NodeGroup::addNode(EditorContext& ec, Node& node) {
   if (!std::ranges::contains(nodes, &node)) {
+    node.isInGroup = true;
     nodes.push_back(&node);
     updateInternalState(ec);
   }
@@ -287,16 +293,16 @@ void NodeGroup::updateInternalState(const EditorContext& ec) {
   usedPins.clear();
 
   for (const auto node : nodes) {
-    // Draw inputs
-    for (const auto comp : node->components) {
-      if (HasNoInputs(*comp)) {
+    // All inputs that are not used from other nodes inside the group are projected out
+    if (HasNoInputs(*node, nodes)) {
+      for (const auto comp : node->components) {
         for (auto& in : comp->inputs) {
           usedPins.emplace_back(node, comp, &in);
         }
       }
     }
-    // Draw outputs
-    if (HasNoOutputs(node, nodes)) {
+    // All outputs that are not used from other nodes inside the group are projected out
+    if (HasNoOutputs(*node, nodes)) {
       for (const auto comp : node->components) {
         for (auto& out : comp->outputs) {
           usedPins.emplace_back(node, comp, &out);
@@ -312,21 +318,21 @@ Rectangle NodeGroup::getBounds() const {
 }
 
 // Invoke the event methods
-void NodeGroup::InvokeConnection(EditorContext&ec, Node& node) {
-  for(auto& g : ec.core.nodeGroups) {
+void NodeGroup::InvokeConnection(EditorContext& ec, Node& node) {
+  for (auto& g : ec.core.nodeGroups) {
     g.onConnectionAdded(ec, node);
   }
 }
 
 void NodeGroup::InvokeMoved(EditorContext& ec, Node& node) {
   const auto bounds = node.getBounds();
-  for(auto& g : ec.core.nodeGroups) {
-    g.onNodeMoved(ec, node,bounds);
+  for (auto& g : ec.core.nodeGroups) {
+    g.onNodeMoved(ec, node, bounds);
   }
 }
 
 void NodeGroup::InvokeDelete(EditorContext& ec, Node& node) {
-  for(auto& g : ec.core.nodeGroups) {
+  for (auto& g : ec.core.nodeGroups) {
     g.removeNode(ec, node);
   }
 }

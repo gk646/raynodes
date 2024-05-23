@@ -189,7 +189,7 @@ inline void io_load_skip_separator(FILE* file) {
   }
 }
 inline bool io_load_inside_section(FILE* file, const char* section) {
-  long currentPos = ftell(file);
+  const long currentPos = ftell(file);
   if (currentPos == -1) return false;  // Error - we return false
 
   char ch;
@@ -206,8 +206,8 @@ inline bool io_load_inside_section(FILE* file, const char* section) {
 
     char buffer[MAX_SECTION_SIZE] = {};
     int count = 0;
-    int sectionLength = manual_strlen(section);
-    while (fread(&ch, 1, 1, file) == 1 && count < sectionLength && count < MAX_SECTION_SIZE - 1) {
+    const int sectionLength = manual_strlen(section);
+    while (fread(&ch, 1, 1, file) == 1 && ch != '-' && count < sectionLength && count < MAX_SECTION_SIZE - 1) {
       buffer[count++] = ch;
     }
     buffer[count] = '\0';  // Null-terminate the string
@@ -215,13 +215,21 @@ inline bool io_load_inside_section(FILE* file, const char* section) {
       io_load_newline(file, false);
       return true;  // Found same section
     }
-
     io_load_newline(file, false);
+
     return false;  // Found new section
   }
 
   fseek(file, currentPos, SEEK_SET);
   return true;  // Still inside same section
+}
+// Returns true if the next byte is a newline - useful when loading a undefined amount in one line
+inline bool io_load_is_newline(FILE* file) {
+  char c;
+  fread(&c, 1, 1, file);
+  const auto result = c == '\n';
+  fseek(file, -1, SEEK_CUR);
+  return result;
 }
 // include <string> to use
 #  if defined(_STRING_) || defined(_GLIBCXX_STRING)

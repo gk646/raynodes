@@ -19,6 +19,7 @@
 // SOFTWARE.
 
 #include "application/EditorContext.h"
+#include "application/elements/Action.h"
 
 #include <ranges>
 #include <unordered_set>
@@ -26,23 +27,19 @@
 #include <cxstructs/Constraint.h>
 #include <tinyfiledialogs.h>
 
-//TODO make save format that combines both saving and loading
-//-> should be easy as its symmetric - function wrapper and boolean for loading-saving
 // Errors that we should detect:
-// - Non Unique Node labels when loading templates (DONE)
-// - Symbol name is too long (component or node) (DONE)
-// - Non Unique Component Labels when loading templates (per node)
+// - Non Unique Node labels when loading templates                          (DONE)
+// - Symbol name is too long (component or node)                            (DONE)
+// - Non Unique Component Labels when loading templates (per node)          (DONE)
+// - Missing definitions for loaded component (not present in factory maps) (DONE)
 // - Missing definitions for loaded node (not present in factory maps)
-// - Missing definitions for loaded component (not present in factory maps)
-
-using PersistFunc = bool (*)(EditorContext&, FILE*);
 
 static constexpr int MAX_UNIQUE_LABELS = 512;
 // One hot encoding the labels
 struct ComponentIndices {
   char storage[PLG_MAX_NAME_LEN * MAX_UNIQUE_LABELS] = {};
   uint16_t count = 0;
-  int add(const char* name, int index = -1) {
+  int add(const char* name, const int index = -1) {
     if (name == nullptr || count >= MAX_UNIQUE_LABELS || get(name) != -1) return -1;
     int addIndex = index == -1 ? count : index;
     char* ptr = storage + addIndex * PLG_MAX_NAME_LEN;
@@ -61,7 +58,7 @@ struct ComponentIndices {
     }
     return -1;
   }
-  [[nodiscard]] const char* getName(int index) const {
+  [[nodiscard]] const char* getName(const int index) const {
     if (index == -1 || index > count || index >= MAX_UNIQUE_LABELS) return nullptr;
     return storage + index * PLG_MAX_NAME_LEN;
   }
@@ -84,7 +81,7 @@ bool IsValidConnection(int maxNodeID, int fromNode, int from, int out, int toNod
   const bool correctToComponent = (to >= 0 && to < COMPS_PER_NODE) || to == -1;
   return correctNode && correctFromComponent && correctToComponent && out != -1 && in != -1;
 }
-void CreateNewConnection(EditorContext& ec, int fromID, int fromI, int outI, int toID, int toI, int inI) {
+Connection* CreateNewConnection(EditorContext& ec, int fromID, int fromI, int outI, int toID, int toI, int inI) {
   const auto& nodeMap = ec.core.nodeMap;
   // We use int8_t as size_type to save space
   Node& fromNode = *nodeMap.at(static_cast<NodeID>(fromID));
@@ -108,7 +105,9 @@ void CreateNewConnection(EditorContext& ec, int fromID, int fromI, int outI, int
     in = &toNode.nodeIn;
   }
 
-  ec.core.addConnection(new Connection(fromNode, from, *out, toNode, to, *in));
+  const auto conn = new Connection(fromNode, from, *out, toNode, to, *in);
+  ec.core.addConnection(conn);
+  return conn;
 }
 void SaveEditorData(FILE* file, EditorContext& ec) {
   io_save_section(file, "EditorData");
@@ -185,6 +184,22 @@ int SaveConnections(FILE* file, EditorContext& ec) {
   }
   return count;
 }
+void SaveGroups(FILE* file, EditorContext& ec) {
+  io_save_section(file, "Groups");
+  for (const auto& ng : ec.core.nodeGroups) {
+    io_save(file, static_cast<int>(ng.pos.x));
+    io_save(file, static_cast<int>(ng.pos.y));
+    io_save(file, ng.name);
+    io_save(file, ng.expanded);
+    for (const auto n : ng.nodes) {
+      io_save(file, n->uID);
+    }
+    io_save_newline(file);
+  }
+}
+void SaveComments(FILE* file, EditorContext& ec) {
+  io_save_section(file, "Comments");
+}
 void LoadEditorData(FILE* file, EditorContext& ec) {
   io_load_newline(file, true);   //Skip the Editor section
   io_load_skip_separator(file);  // Node count
@@ -194,7 +209,7 @@ void LoadEditorData(FILE* file, EditorContext& ec) {
   io_load(file, ec.display.camera.zoom);
   io_load_newline(file);
 }
-void LoadTemplates(FILE* file, EditorContext& ec) {
+void LoadTemplates(FILE* file) {
   io_load_newline(file, false);
   int amount = 0;
   io_load(file, amount);
@@ -220,7 +235,7 @@ int LoadNodes(FILE* file, EditorContext& ec) {
     int id;
     io_load(file, id);
     auto* nodeName = compIndices.getName(index);
-    const auto newNode = ec.core.createNode(ec, nodeName, {0, 0}, static_cast<uint16_t>(id));
+    const auto newNode = ec.core.createAddNode(ec, nodeName, {0, 0}, static_cast<uint16_t>(id));
     if (!newNode) {
       io_load_newline(file, true);
       continue;
@@ -254,9 +269,36 @@ int LoadConnections(FILE* file, EditorContext& ec) {
   }
   return count;
 }
+void LoadGroups(FILE* file, EditorContext& ec) {
+  while (io_load_inside_section(file, "Groups")) {
+    int x, y;
+    char buff[PLG_MAX_NAME_LEN];
+    bool expanded;
+    io_load(file, x);
+    io_load(file, y);
+    io_load(file, buff, PLG_MAX_NAME_LEN);
+    io_load(file, expanded);
+    auto& ng = ec.core.nodeGroups.emplace_back(static_cast<float>(x), static_cast<float>(y), buff, expanded);
+    while (!io_load_is_newline(file)) {
+      int id;
+      io_load(file, id);
+      auto* node = ec.core.getNode(static_cast<NodeID>(id));
+      // To get the correct dimensions
+      if (node) {
+        Node::Draw(ec, *node);
+        Node::Update(ec, *node);
+        ng.addNode(ec, *node);
+      }
+    }
+    io_load_newline(file, true);
+  }
+}
+void LoadComments(FILE* file, EditorContext& ec) {
+  io_load_newline(file, true);
+}
 }  // namespace
 
-bool Persist::saveProject(EditorContext& ec, bool saveAsMode) {
+bool Persist::saveProject(EditorContext& ec, const bool saveAsMode) {
   // Strictly enforce this to limit saving -> Actions need to be accurate
   if (!ec.core.hasUnsavedChanges && !saveAsMode) return true;
 
@@ -281,6 +323,7 @@ bool Persist::saveProject(EditorContext& ec, bool saveAsMode) {
     SaveTemplates(file, ec);
     nodes = SaveNodes(file, ec);
     connections = SaveConnections(file, ec);
+    SaveGroups(file, ec);
   });
 
   if (!res) {
@@ -299,7 +342,7 @@ bool Persist::saveProject(EditorContext& ec, bool saveAsMode) {
 bool Persist::importProject(EditorContext& ec) {
   if (openedFilePath.empty()) {
     //TODO save and reuse default path
-    auto* res = tinyfd_openFileDialog("Open File", nullptr, 1, Info::fileFilter, Info::fileDescription, 0);
+    const auto* res = tinyfd_openFileDialog("Open File", nullptr, 1, Info::fileFilter, Info::fileDescription, 0);
     if (res != nullptr) openedFilePath = res;
   }
 
@@ -320,9 +363,10 @@ bool Persist::importProject(EditorContext& ec) {
   int nodes = 0;
   int connections = 0;
   LoadEditorData(file, ec);
-  LoadTemplates(file, ec);
+  LoadTemplates(file);
   nodes = LoadNodes(file, ec);
   connections = LoadConnections(file, ec);
+  LoadGroups(file, ec);
 
   //printf("Loaded %s nodes\n", ec.string.getPaddedNum(nodes));
   //printf("Loaded %s connections\n", ec.string.getPaddedNum(connections));
@@ -339,7 +383,9 @@ bool Persist::importProject(EditorContext& ec) {
 //-----------USER_FILES-----------//
 
 namespace {
-bool LoadFromFile(EditorContext& ec, const char* path, PersistFunc func) {
+// Generic reusable method
+using PersistFunc = bool (*)(EditorContext&, FILE*);
+bool LoadFromFile(EditorContext& ec, const char* path, const PersistFunc func) {
   FILE* file = fopen(path, "rb");
 
   if (file == nullptr) {
@@ -347,14 +393,13 @@ bool LoadFromFile(EditorContext& ec, const char* path, PersistFunc func) {
     return true;
   }
 
-  auto res = func(ec, file);
+  const auto res = func(ec, file);
   if (!res) return false;
 
   if (fclose(file) != 0) return false;
 
   return true;
 }
-
 bool LoadUserTemplates(EditorContext& ec, FILE* file) {
   io_load_newline(file, true);
   int size;
@@ -378,7 +423,7 @@ bool LoadUserTemplates(EditorContext& ec, FILE* file) {
     }
 
     // Node create func
-    const auto createFunc = [](const NodeTemplate& nt, Vec2 p, NodeID id) {
+    const auto createFunc = [](const NodeTemplate& nt, const Vec2 p, const NodeID id) {
       return new Node(nt, p, id);
     };
 
@@ -388,7 +433,6 @@ bool LoadUserTemplates(EditorContext& ec, FILE* file) {
   }
   return true;
 }
-
 bool SaveUserTemplatesImpl(EditorContext& ec, FILE* file) {
   io_save_section(file, "Templates");
   io_save(file, static_cast<int>(ec.templates.userDefinedNodes.size()));
@@ -405,7 +449,6 @@ bool SaveUserTemplatesImpl(EditorContext& ec, FILE* file) {
   }
   return true;
 }
-
 }  // namespace
 
 bool Persist::loadUserFiles(EditorContext& ec) {
@@ -423,8 +466,11 @@ bool Persist::saveUserTemplates(EditorContext& ec) {
   constexpr int sizePerTemplate = 250;
   const int size = std::max(static_cast<int>(ec.templates.userDefinedNodes.size()), 1) * sizePerTemplate;
 
-  const auto res =
-      io_save_buffered_write(Info::userTemplates, size, [&](FILE* file) { SaveUserTemplatesImpl(ec, file); });
+  const auto saveFunc = [&](FILE* file) {
+    SaveUserTemplatesImpl(ec, file);
+  };
+
+  const auto res = io_save_buffered_write(Info::userTemplates, size, saveFunc);
 
   if (!res) {
     fprintf(stderr, "Error saving to %s", Info::userTemplates);
@@ -432,4 +478,113 @@ bool Persist::saveUserTemplates(EditorContext& ec) {
   }
 
   return true;
+}
+
+bool Persist::importNodesFromProject(EditorContext& ec) {
+  const auto title = "Select project to import nodes from";
+  const auto* res = tinyfd_openFileDialog(title, nullptr, 1, Info::fileFilter, Info::fileDescription, 0);
+  if (res == nullptr) return false;
+
+  const auto loadFunc = [](EditorContext& ec, FILE* file) {
+    compIndices.reset();
+    // Skip Editor Data
+    io_load_newline(file, true);
+    io_load_newline(file, true);
+
+    // Load templates
+    LoadTemplates(file);
+
+    auto* action = new NodeCreateAction(10);
+
+    // Adding the current to the used id allows us to map back connections uniquely
+    const auto startID = ec.core.UID;
+
+    // Nodes are imported such that import point is the top left corner
+    const Vector2 contextWorldPos = GetScreenToWorld2D(ec.logic.contextMenuPos, ec.display.camera);
+    float minX = FLT_MAX;
+    float minY = FLT_MAX;
+
+    // Load the nodes
+    while (io_load_inside_section(file, "Nodes")) {
+      int index = -1;
+      io_load(file, index);
+      if (index == -1) {
+        io_load_newline(file, true);
+        continue;
+      }
+      int id;
+      io_load(file, id);
+      auto* nodeName = compIndices.getName(index);
+      const auto newNode = ec.core.createAddNode(ec, nodeName, {0, 0}, startID + id);
+      if (!newNode) {
+        io_load_newline(file, true);
+        continue;
+      }
+      Node::LoadState(file, *newNode);
+
+      io_load_newline(file);
+      action->createdNodes.push_back(newNode);
+
+      // Update the minimum position
+      if (newNode->x < minX) minX = newNode->x;
+      if (newNode->y < minY) minY = newNode->y;
+    }
+
+    // Load the connections
+    while (io_load_inside_section(file, "Connections")) {
+      int fromNode, from, out;
+      int toNode, to, in;
+      //Output
+      io_load(file, fromNode);
+      io_load(file, from);
+      io_load(file, out);
+      //Input
+      io_load(file, toNode);
+      io_load(file, to);
+      io_load(file, in);
+      fromNode += startID;
+      toNode += startID;
+      if (IsValidConnection(UINT16_MAX, fromNode, from, out, toNode, to, in)) {
+        auto* conn = CreateNewConnection(ec, fromNode, from, out, toNode, to, in);
+        action->createdConnection.push_back(conn);
+      }
+      io_load_newline(file);
+    }
+
+    // Offset the nodes so they are positioned as specified above
+    const Vector2 offset = {contextWorldPos.x - minX, contextWorldPos.y - minY};
+    for (auto* newNode : action->createdNodes) {
+      newNode->x += offset.x;
+      newNode->y += offset.y;
+    }
+
+    while (io_load_inside_section(file, "Groups")) {
+      int x, y;
+      char buff[PLG_MAX_NAME_LEN];
+      bool expanded;
+      io_load(file, x);
+      io_load(file, y);
+      io_load(file, buff, PLG_MAX_NAME_LEN);
+      io_load(file, expanded);
+      auto& ng = ec.core.nodeGroups.emplace_back(static_cast<float>(x), static_cast<float>(y), buff, expanded);
+      while (!io_load_is_newline(file)) {
+        int id;
+        io_load(file, id);
+        auto* node = ec.core.getNode(static_cast<NodeID>(startID + id));
+        // To get the correct dimensions
+        if (node) {
+          Node::Draw(ec, *node);
+          Node::Update(ec, *node);
+          ng.addNode(ec, *node);
+        }
+      }
+      io_load_newline(file, true);
+    }
+
+    ec.core.UID = static_cast<NodeID>(startID + action->createdNodes.size());
+    ec.core.addEditorAction(ec, action);
+    return true;
+  };
+
+  return LoadFromFile(ec, res, loadFunc);
 }

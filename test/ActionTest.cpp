@@ -20,7 +20,7 @@ TEST_CASE("Fuzzy Test", "[Actions]") {
   };
 
   auto createNode = [](EditorContext& ec) {
-    ec.core.createNode(ec, "Vec3", {});
+    ec.core.createAddNode(ec, "Vec3", {});
   };
 
   auto undo = [](EditorContext& ec) {
@@ -34,7 +34,7 @@ TEST_CASE("Fuzzy Test", "[Actions]") {
   const std::vector<EditorFunction> funcs{createNode, createNode, copyNode, deleteNode, pasteNode, undo, redo};
 
   // Select a few nodes
-  TestUtil::fuzzTest(ec, funcs, 1000, [](EditorContext& ec) {
+  TestUtil::fuzzTest(ec, funcs, 10000, [](EditorContext& ec) {
     ec.core.selectedNodes.clear();
     int size = ec.core.nodes.size();
     if (size == 0) return;

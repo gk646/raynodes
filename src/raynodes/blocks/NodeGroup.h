@@ -9,12 +9,6 @@
 #include <raylib.h>
 #include <cxstructs/StackVector.h>
 
-struct StandalonePin {
-  Node* node;
-  Component* component;
-  Pin* pin;
-};
-
 struct EXPORT NodeGroup {
   bool isRenaming = false;
   bool isHovered = false;
@@ -27,8 +21,8 @@ struct EXPORT NodeGroup {
   std::vector<Node*> nodes;             // Nodes that make up this group
   std::vector<StandalonePin> usedPins;  // Used in or out pins
 
-  NodeGroup(EditorContext& ec, const char* name, std::unordered_map<NodeID, Node*> selectedNodes);
-  NodeGroup(EditorContext& ec, const char* name);
+  NodeGroup(const EditorContext& ec, const char* name, std::unordered_map<NodeID, Node*> selectedNodes);
+  NodeGroup(float x, float y, const char* name, bool expanded);
   NodeGroup(NodeGroup&& other) noexcept
       : isHovered(other.isHovered), isDragged(other.isDragged), expanded(other.expanded),
         foldedDims(other.foldedDims), pos(other.pos), dims(other.dims), name(other.name),
@@ -51,16 +45,16 @@ struct EXPORT NodeGroup {
   }
   ~NodeGroup();
   bool operator==(const NodeGroup& other) const { return this == &other; }
-
-  void draw(EditorContext& ec);
-  void update(EditorContext& ec);
   [[nodiscard]] Rectangle getBounds() const;
 
+  // Core
+  void draw(EditorContext& ec);
+  void update(EditorContext& ec);
   NodeGroup clone(Vector2 pos);
 
+  // Event functions
   void removeNode(EditorContext& ec, Node& node);
   void addNode(EditorContext& ec, Node& node);
-
   void onNodeMoved(EditorContext& ec, Node& node, Rectangle nBounds);
   void onConnectionAdded(EditorContext& ec, Node& node);
 

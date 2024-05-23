@@ -35,6 +35,11 @@ using SortVector = cxstructs::StackVector<const char*, 150>;
 template <typename T, typename GetString>
 void StringFilter(T* arg, const char* search, cxstructs::StackVector<T*, 150>& collector, GetString getString) {
   const char* name = getString(arg);
+  if (cxstructs::str_cmp_case(name, search)) {
+    collector.clear();
+    collector.push_back(arg);
+    return;
+  }
   if (cxstructs::str_substr_case(name, search) != nullptr) { collector.push_back(arg); }
 }
 

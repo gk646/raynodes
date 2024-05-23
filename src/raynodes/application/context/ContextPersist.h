@@ -29,6 +29,8 @@ struct EXPORT Persist {
   bool importProject(EditorContext& ec);
   bool saveProject(EditorContext& ec, bool saveAsMode = false);
   bool saveUserTemplates(EditorContext& ec);
+  // Imports only the nodes from another project and calls func for each
+  bool importNodesFromProject(EditorContext& ec);
 };
 
 #endif  //RAYNODES_SRC_APPLICATION_CONTEXT_CONTEXTPERSIST_H_

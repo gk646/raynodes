@@ -82,6 +82,7 @@ inline void PollControls(EditorContext& ec) {
   // Node Search menu
   if (ec.input.isKeyPressed(KEY_TAB)) {
     ec.logic.contextMenuPos = ec.logic.mouse;
+    ec.ui.canvasContextMenu.hide();
     ec.ui.nodeCreateMenu.show();
   }
 

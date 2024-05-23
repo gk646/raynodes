@@ -30,7 +30,7 @@ TEST_CASE("Test correct file creation and count", "[Persist]") {
   constexpr int testSize = 10;
 
   for (int i = 0; i < testSize; ++i) {
-    ec.core.createNode(ec, "Text", {0, 0});
+    ec.core.createAddNode(ec, "Text", {0, 0});
   }
   REQUIRE(ec.core.nodes.size() == testSize);
 
@@ -60,11 +60,11 @@ TEST_CASE("Teset correct data persistence", "[Persist]") {
 
   // Create nodes
   {
-    ec.core.createNode(ec, "Text", {})->getComponent<TextFieldC<>>("Text")->textField.buffer = testString;
-    ec.core.createNode(ec, "Int", {})->getComponent<MathC>("Int")->selectedMode = testInt;
-    auto vec2 = ec.core.createNode(ec, "Vec2", {})->getComponent<Vec2C<>>("Vec2")->textFields;
+    ec.core.createAddNode(ec, "Text", {})->getComponent<TextFieldC<>>("Text")->textField.buffer = testString;
+    ec.core.createAddNode(ec, "Int", {})->getComponent<MathC>("Int")->selectedMode = testInt;
+    auto vec2 = ec.core.createAddNode(ec, "Vec2", {})->getComponent<Vec2C<>>("Vec2")->textFields;
     vec2[0].buffer = testFloat, vec2[1].buffer = testFloat;
-    auto vec3 = ec.core.createNode(ec, "Vec3", {})->getComponent<Vec3C<>>("Vec3")->textFields;
+    auto vec3 = ec.core.createAddNode(ec, "Vec3", {})->getComponent<Vec3C<>>("Vec3")->textFields;
     vec3[0].buffer = testFloat, vec3[1].buffer = testFloat, vec3[2].buffer = testFloat;
   }
 
@@ -99,7 +99,7 @@ TEST_CASE("Benchmark saving and loading", "[Persist]") {
   constexpr int testSize = 1000;
 
   for (int i = 0; i < testSize; ++i) {
-    ec.core.createNode(ec, "Text", {0, 0});
+    ec.core.createAddNode(ec, "Text", {0, 0});
   }
 
   REQUIRE(ec.core.nodes.size() == testSize);
