@@ -162,7 +162,7 @@ void Core::resetEditor(EditorContext& ec) {
   hasUnsavedChanges = false;
 }
 
-Node* Core::createNode(EditorContext& ec, const char* name, const Vector2 worldPos, uint16_t hint) {
+Node* Core::createAddNode(EditorContext& ec, const char* name, const Vector2 worldPos, uint16_t hint) {
   if (name == nullptr) return nullptr;
 
   //Use the hint when provided
@@ -176,6 +176,7 @@ Node* Core::createNode(EditorContext& ec, const char* name, const Vector2 worldP
 
   return newNode;
 }
+
 void Core::insertNode(EditorContext& ec, Node& node) {
   if (nodeMap.contains(node.uID)) return;
   nodes.push_back(&node);
@@ -185,10 +186,13 @@ void Core::insertNode(EditorContext& ec, Node& node) {
     c->onAddedToScreen(ec, node);
   }
 }
+
 // Only call with a valid id
 void Core::removeNode(EditorContext& ec, const NodeID id) {
   if (!nodeMap.contains(id)) return;
   const auto node = nodeMap[id];
+
+  if (node->isInGroup) [[unlikely]] { NodeGroup::InvokeDelete(ec, *node); }
   nodeMap.erase(id);
   std::erase(nodes, node);
 

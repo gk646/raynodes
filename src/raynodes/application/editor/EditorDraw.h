@@ -50,6 +50,8 @@ inline void DrawConnections(EditorContext& ec, const bool isCTRLDown) {
 
     if (delNodes && CheckCollisionBezierRect(fromPos, toPos, selectRect)) {
       action->deletedConnections.push_back(conn);
+      NodeGroup::InvokeConnection(ec,conn->toNode);
+      NodeGroup::InvokeConnection(ec,conn->fromNode);
       ec.core.removeConnection(conn);
     }
   }

@@ -21,8 +21,8 @@
 #ifndef RAYNODES_SRC_SHARED_FWD_H_
 #define RAYNODES_SRC_SHARED_FWD_H_
 
+#include <cstdint>
 #include "shared/defines.h"
-#include "shared/types.h"
 
 enum PinType : uint8_t;     // Datatype of connection pins
 enum MOperation : uint8_t;  // Type of math operation
@@ -46,14 +46,19 @@ struct EditorContext;       // Central backend data holder
 struct PluginContainer;     // Holds the dll instance and the plugin instance
 class Window;               // UI class
 struct TextField;           // UI class
+struct Vec2;                // Vector2 replacement
+struct ComponentTemplate;   // Building plan for a component
 
 using ComponentCreateFunc = Component* (*)(ComponentTemplate);        // Takes a name and returns a new Component
 using NodeCreateFunc = Node* (*)(const NodeTemplate&, Vec2, NodeID);  // Creates a new node
+using NodeFunc = void (*)(EditorContext&, Node*);                     // Generic function called on a node
 
 //Raylib types
 struct Color;
 struct Rectangle;
 struct Font;
 struct Vector2;
+
+#include "shared/types.h"
 
 #endif  //RAYNODES_SRC_SHARED_FWD_H_

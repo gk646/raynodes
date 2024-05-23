@@ -30,7 +30,7 @@
 
 namespace {
 void HandleNewNode(EditorContext& ec, const Vector2 pos, const char* name) {
-  const auto newN = ec.core.createNode(ec, name, GetScreenToWorld2D(pos, ec.display.camera));
+  const auto newN = ec.core.createAddNode(ec, name, GetScreenToWorld2D(pos, ec.display.camera));
   if (!newN) return;
   const auto action = new NodeCreateAction(2);
   action->createdNodes.push_back(newN);

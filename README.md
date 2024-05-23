@@ -1,6 +1,7 @@
 # raynodes
 
-`raynodes` is a standalone 2D node editor made using [raylib](https://github.com/raysan5/raylib) and [raygui](https://github.com/raysan5/raygui) with a focus
+`raynodes` is a standalone 2D node editor made using [raylib](https://github.com/raysan5/raylib)
+and [raygui](https://github.com/raysan5/raygui) with a focus
 extensibility. It aims to be an attractive tool for any node based task, and supports being integrated into
 bigger projects like games, editors...
 In many cases it comes close to being a node-editor SDK of sorts.
@@ -12,14 +13,16 @@ A small showcase of its major features:
 - Custom filetype optimized for **low export size**
 - **Fast and optimized** import header included for working with project exports!
 - Supports both **Windows and Linux** (and possibly macOS)
-- **Plugin interface** and capabilities
+- **Plugin interface** and capabilities which allows extending the node library
 - **Unit testing** of critical parts (importing, persistence...)
-- Fully-fledged **User created** nodes in-editor without touching the source code!
+- Supports **user-created** nodes inside the editor without touching the source code!
 - **Modern code base** using many C++20 and above
 
 For more infos on the design choices go to [Software Design](#Software-Design)  
 For more information on how to use the editor look at the [raynodes-wiki](https://github.com/gk646/raynodes/wiki).  
-The other dependencies are [cxstructs](https://github.com/gk646/cxstructs), [tinyfiledialogs](https://sourceforge.net/projects/tinyfiledialogs/) for file dialogs and [catch2](https://github.com/catchorg/Catch2) for testing.
+The other dependencies
+are [cxstructs](https://github.com/gk646/cxstructs), [tinyfiledialogs](https://sourceforge.net/projects/tinyfiledialogs/)
+for file dialogs and [catch2](https://github.com/catchorg/Catch2) for testing.
 
 ![Image](.github/fullEditor.png)
 
@@ -34,7 +37,8 @@ The other dependencies are [cxstructs](https://github.com/gk646/cxstructs), [tin
 
 ### For Users
 
-Just download the .zip for your operating system  from the most recent release in the [release page](https://github.com/gk646/raynodes/releases).
+Just download the .zip for your operating system from the most recent release in
+the [release page](https://github.com/gk646/raynodes/releases).
 Unzip and start the executable! Have fun using `raynodes`.
 
 ### For Developers
@@ -49,7 +53,8 @@ To build the project locally you just need to do 4 simple steps:
 4. Build the project from inside the build directory with `make ..`
 
 All external dependencies are included in the source!
-This model is chosen based on their combined low size (only **14mb**) and the provided simplicity for sharing and integrated testing.
+This model is chosen based on their combined low size (only **14mb**) and the provided simplicity for sharing and
+integrated testing.
 
 ## Editor Features:
 
@@ -60,7 +65,6 @@ Files starting with `.` (dot) will be interpreted as relative paths:
 `./raynodes.exe ./MyRelativePathFile.rn`  
 Else it will be interpreted as absolute path:  
 `./raynodes.exe C:\Users\Me\Documents\MyAbsoluteFile.rn`
-
 
 **On Windows you can also set it as the default executable for ".rn" files, then double click to open any such file!**
 
@@ -74,10 +78,12 @@ the [shortcuts](https://github.com/gk646/raynodes/wiki/Controls) page in the wik
 The user interface takes inspiration from other editors like paint.net. For a comprehensive list checkout
 the [user-interface](https://github.com/gk646/raynodes/wiki/User-Interface) page of the wiki!
 
-### User Defined Templates 
+### User Defined Templates
 
 `raynodes` gives you the ability to create your own nodes without even interacting with the source code!
-Open the `Node Creator` window via the button on the left and add a new node by clicking `+Add`. For more in-depth information check out the [User-Created-Nodes](https://github.com/gk646/raynodes/wiki/User-Created-Nodes) page of the wiki!
+Open the `Node Creator` window via the button on the left and add a new node by clicking `+Add`. For more in-depth
+information check out the [User-Created-Nodes](https://github.com/gk646/raynodes/wiki/User-Created-Nodes) page of the
+wiki!
 
 ## Custom Components!
 
