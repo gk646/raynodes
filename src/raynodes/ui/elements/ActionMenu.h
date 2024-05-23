@@ -65,6 +65,7 @@ struct ActionMenu {
     quickActions.push_back({action, tooltip, iconID});
   }
   void show() { isVisible = true; }
+  void hide() { isVisible = false; }
 };
 
 #endif  //ACTIONMENU_H

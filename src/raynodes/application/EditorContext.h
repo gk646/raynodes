@@ -52,7 +52,7 @@
 #include "context/ContextLogic.h"
 #include "context/ContextPersist.h"
 #include "context/ContextInput.h"
-#include "context/ContextTemplates.h"
+#include "context/ContextTemplate.h"
 #include "context/ContextPlugin.h"
 
 // We actually wanna keep this as small as possible

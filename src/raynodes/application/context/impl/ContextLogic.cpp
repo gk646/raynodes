@@ -132,7 +132,7 @@ void Logic::registerNodeContextActions(EditorContext& ec) {
   // Node Menu
   {
     ec.ui.nodeContextMenu.registerAction(
-        "Remove all connections",
+        "Remove connections",
         [](EditorContext& ec, Node& node) {
           // Cant fully test for connections unless we iterate connections
           // -> Outputs dont track connections!
@@ -184,6 +184,13 @@ void Logic::registerNodeContextActions(EditorContext& ec) {
 
   // Node Group Menu
   {
+    ec.ui.nodeGroupContextMenu.registerQickAction(
+        "Refresh",
+        [](EditorContext& ec, NodeGroup& ng) {
+            ng.onConnectionAdded(ec,*ng.nodes[0]);
+        },
+        222);
+
     ec.ui.nodeGroupContextMenu.registerAction(
         "Remove node group",
         [](EditorContext& ec, NodeGroup& ng) {
@@ -199,17 +206,20 @@ void Logic::registerNodeContextActions(EditorContext& ec) {
     ec.ui.canvasContextMenu.registerQickAction(
         "Open node menu",
         [](EditorContext& ec, Vector2& _) {
-          ec.ui.canvasContextMenu.isVisible = false;
+          ec.ui.canvasContextMenu.hide();
           ec.logic.contextMenuPos = ec.logic.mouse;
           ec.ui.nodeCreateMenu.show();
         },
         227);
 
     ec.ui.canvasContextMenu.registerAction(
-        "Import nodes here",
+        "Add comment",
         [](EditorContext& ec, Vector2& _) {
-          //TODO add import nodes from other projects
+
         },
-        209);
+        30);
+
+    ec.ui.canvasContextMenu.registerAction(
+        "Import nodes here", [](EditorContext& ec, Vector2& _) { ec.persist.importNodesFromProject(ec); }, 209);
   }
 }

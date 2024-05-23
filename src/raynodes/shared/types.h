@@ -21,9 +21,6 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include <cstdint>
-
-struct RaynodesPluginI;
 struct PluginContainer {
   void* handle;
   const char* name;
@@ -31,7 +28,7 @@ struct PluginContainer {
   void free();
 };
 
-struct Uints8{
+struct Uints8 {
   uint8_t x;
   uint8_t y;
 };
@@ -78,6 +75,12 @@ struct Color4 {
   unsigned char a;  // Color alpha value
 };
 
+struct StandalonePin {
+  Node* node;
+  Component* component;
+  Pin* pin;
+};
+
 struct ComponentTemplate {
   const char* label = nullptr;
   const char* component = nullptr;
@@ -89,8 +92,6 @@ struct NodeTemplate {
   ComponentTemplate components[COMPS_PER_NODE];  // Current limit
 };
 
-struct Node;
-enum NodeID : uint16_t;
 using NodeCreateFunc = Node* (*)(const NodeTemplate&, Vec2, NodeID);  // Creates a new node
 
 struct NodeInfo {

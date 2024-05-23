@@ -61,7 +61,7 @@ struct EXPORT Core final {
     if (it != nodeMap.end()) return it->second;
     return nullptr;
   }
-  Node* createNode(EditorContext& ec, const char* name, Vector2 worldPos, uint16_t hint = UINT16_MAX);
+  Node* createAddNode(EditorContext& ec, const char* name, Vector2 worldPos, uint16_t hint = UINT16_MAX);
   void insertNode(EditorContext& ec, Node& node);
   void removeNode(EditorContext& ec, NodeID id);
   void moveToFront(Node* node) {
