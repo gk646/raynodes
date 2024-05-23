@@ -43,7 +43,7 @@ struct ClockC final : Component {
       outputs[0].setData<BOOLEAN>(currentState);
       delayBuilder = 0.0F;
     }
-    if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) delayField.onFocusGain(ec.logic.worldMouse);
+    if (ec.input.isMBPressed(MOUSE_BUTTON_LEFT)) delayField.onFocusGain(ec.logic.worldMouse);
     delayField.update(ec, ec.logic.worldMouse);
   }
 

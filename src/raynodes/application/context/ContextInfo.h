@@ -33,7 +33,7 @@ struct EXPORT Info final {
   static constexpr auto userTemplates = "res/Templates.txt";
   static constexpr int majorVersion = 1;
   static constexpr int minorVersion = 0;
-  static constexpr int patch = 5;
+  static constexpr int patch = 7;
 
   static const char* getVersion(EditorContext& ec);
 };

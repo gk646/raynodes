@@ -18,6 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <ranges>
+
 #include "application/EditorContext.h"
 #include "application/elements/Action.h"
 
@@ -39,6 +41,8 @@ void AssignConnection(EditorContext& ec, Node& fromNode, Component* from, Output
   //Call the event functions
   if (from) from->onConnectionAdded(ec, *conn);
   if (to) to->onConnectionAdded(ec, *conn);
+  if (fromNode.isInGroup) [[unlikely]] { NodeGroup::InvokeConnection(ec, fromNode); }
+  if (toNode.isInGroup) [[unlikely]] { NodeGroup::InvokeConnection(ec, toNode); }
 }
 
 void FindDropPin(EditorContext& ec, Node& fromNode, Component* from, Pin* draggedPin) {
@@ -87,6 +91,22 @@ void FindDropPin(EditorContext& ec, Node& fromNode, Component* from, Pin* dragge
       }
     }
   }
+
+  // This comes at no cost in most cases
+  for (const auto& g : ec.core.nodeGroups) {
+    for (const auto [node, component, pin] : g.usedPins) {
+      if (CheckCollisionPointCircle(worldMouse, {pin->xPos, pin->yPos}, radius)) {
+        if (isOutputPin) {
+          AssignConnection(ec, fromNode, from, *static_cast<OutputPin*>(draggedPin), *node, component,
+                           *static_cast<InputPin*>(pin));
+          return;
+        }
+        AssignConnection(ec, *node, component, *static_cast<OutputPin*>(pin), fromNode, from,
+                         *static_cast<InputPin*>(draggedPin));
+        return;
+      }
+    }
+  }
 }
 }  // namespace
 
@@ -109,47 +129,87 @@ void Logic::handleDroppedPin(EditorContext& ec) {
 }
 
 void Logic::registerNodeContextActions(EditorContext& ec) {
-  ec.ui.nodeContextMenu.registerAction(
-      "Remove all connections",
-      [](EditorContext& ec, Node& node) {
-        // Cant fully test for connections unless we iterate connections
-        // -> Outputs dont track connections!
-        auto* action = new ConnectionDeleteAction(2);
-        ec.core.removeConnectionsFromNode(node, action->deletedConnections);
-        if (action->deletedConnections.empty()) delete action;
-        else ec.core.addEditorAction(ec, action);
-      },
-      175);
+  // Node Menu
+  {
+    ec.ui.nodeContextMenu.registerAction(
+        "Remove all connections",
+        [](EditorContext& ec, Node& node) {
+          // Cant fully test for connections unless we iterate connections
+          // -> Outputs dont track connections!
+          auto* action = new ConnectionDeleteAction(2);
+          ec.core.removeConnectionsFromNode(node, action->deletedConnections);
+          if (action->deletedConnections.empty()) delete action;
+          else ec.core.addEditorAction(ec, action);
+        },
+        175);
 
-  ec.ui.nodeContextMenu.registerAction(
-      "Create node group",
-      [](EditorContext& ec, Node& node) {
-        ec.core.nodeGroups.emplace_back(ec, "Default Name", ec.core.selectedNodes);
-      },
-      109);
+    ec.ui.nodeContextMenu.registerAction(
+        "Create node group",
+        [](EditorContext& ec, Node& node) {
+          // Check upfront if at least 1 free node exists
+          for (const auto n : ec.core.selectedNodes | std::ranges::views::values) {
+            if (!n->isInGroup) {
+              ec.core.nodeGroups.emplace_back(ec, "Node Group", ec.core.selectedNodes);
+              return;
+            }
+          }
+        },
+        109);
 
-  // Quick Actions
+    // Quick Actions
 
-  ec.ui.nodeContextMenu.registerQickAction(
-      "Cut (Ctrl+X)",
-      [](EditorContext& ec, Node& node) {
-        ec.core.selectedNodes.insert({node.uID, &node});
-        ec.core.cut(ec);
-      },
-      17);
-  ec.ui.nodeContextMenu.registerQickAction(
-      "Copy (Ctrl+C)",
-      [](EditorContext& ec, Node& node) {
-        ec.core.selectedNodes.insert({node.uID, &node});
-        ec.core.copy(ec);
-      },
-      18);
+    ec.ui.nodeContextMenu.registerQickAction(
+        "Cut (Ctrl+X)",
+        [](EditorContext& ec, Node& node) {
+          ec.core.selectedNodes.insert({node.uID, &node});
+          ec.core.cut(ec);
+        },
+        17);
+    ec.ui.nodeContextMenu.registerQickAction(
+        "Copy (Ctrl+C)",
+        [](EditorContext& ec, Node& node) {
+          ec.core.selectedNodes.insert({node.uID, &node});
+          ec.core.copy(ec);
+        },
+        18);
 
-  ec.ui.nodeContextMenu.registerQickAction(
-      "Delete (Delete)",
-      [](EditorContext& ec, Node& node) {
-        ec.core.selectedNodes.insert({node.uID, &node});
-        ec.core.erase(ec);
-      },
-      143);
+    ec.ui.nodeContextMenu.registerQickAction(
+        "Delete (Delete)",
+        [](EditorContext& ec, Node& node) {
+          ec.core.selectedNodes.insert({node.uID, &node});
+          ec.core.erase(ec);
+        },
+        143);
+  }
+
+  // Node Group Menu
+  {
+    ec.ui.nodeGroupContextMenu.registerAction(
+        "Remove node group",
+        [](EditorContext& ec, NodeGroup& ng) {
+          for (const auto n : ng.nodes) {
+            ng.removeNode(ec, *n);
+          }
+        },
+        143);
+  }
+
+  // Canvas Menu
+  {
+    ec.ui.canvasContextMenu.registerQickAction(
+        "Open node menu",
+        [](EditorContext& ec, Vector2& _) {
+          ec.ui.canvasContextMenu.isVisible = false;
+          ec.logic.contextMenuPos = ec.logic.mouse;
+          ec.ui.nodeCreateMenu.show();
+        },
+        227);
+
+    ec.ui.canvasContextMenu.registerAction(
+        "Import nodes here",
+        [](EditorContext& ec, Vector2& _) {
+          //TODO add import nodes from other projects
+        },
+        209);
+  }
 }

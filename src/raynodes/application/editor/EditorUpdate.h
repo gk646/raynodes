@@ -61,6 +61,8 @@ void FormatSelectRectangle(EditorContext& ec) {
 
 namespace Editor {
 inline void UpdateTick(EditorContext& ec) {
+  ec.logic.hoveredGroup = nullptr;  // Reset each tick
+
   //Reverse update to correctly reflect input layers
   for (auto it = ec.core.nodes.rbegin(); it != ec.core.nodes.rend(); ++it) {
     Node::Update(ec, **it);
@@ -73,6 +75,7 @@ inline void UpdateTick(EditorContext& ec) {
 
   if (ec.logic.isSelecting) { FormatSelectRectangle(ec); }
 }
+// Called at the start of each tick
 inline void StartUpdateTick(EditorContext& ec) {
   auto& camera = ec.display.camera;
 
@@ -95,7 +98,8 @@ inline void StartUpdateTick(EditorContext& ec) {
   ec.logic.mouse = mouse;
   ec.logic.isAnyNodeHovered = false;  // Reset each tick
   ec.logic.isAnyNodeDragged = false;  // Reset each tick
-  ec.input.reset();                   //Reset input for tick
+
+  ec.input.reset();  //Reset input for tick
 
   // raygui text size - 16 per default
   const auto scaleY = ec.display.screenSize.y / 1080.0F;
