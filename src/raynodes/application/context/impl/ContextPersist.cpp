@@ -383,7 +383,7 @@ bool LoadUserTemplates(EditorContext& ec, FILE* file) {
     };
 
     ec.templates.userDefinedNodes.insert({temp.label, {temp, createFunc}});
-    ec.ui.canvasContextMenu.addEntry(UI::USER_CATEGORY, temp.label);
+    ec.ui.nodeCreateMenu.addEntry(UI::USER_CATEGORY, temp.label);
     io_load_newline(file, true);
   }
   return true;

@@ -64,10 +64,6 @@ struct EXPORT UI final {
   static constexpr float UI_SPACE_H = 1080.0F;  // UI space height
   static constexpr float PAD = 25.0F;           // UI space padding amount
 
-  CanvasContextMenu canvasContextMenu;
-  NodeContextMenu nodeContextMenu;
-  std::vector<Window*> windows;  // UI Windows
-
   // General State
   bool showUnsavedChanges = false;
 
@@ -83,6 +79,13 @@ struct EXPORT UI final {
   // Settings
   bool showTopBarOnlyOnHover = false;
   bool showGrid = true;
+
+  TextField miscField;  // Reusable textfield
+  NodeCreateMenu nodeCreateMenu;
+  ActionMenu<Node> nodeContextMenu{"Node Menu"};
+  ActionMenu<NodeGroup> nodeGroupContextMenu{"Node Group Menu"};
+  ActionMenu<Vector2> canvasContextMenu{"Canvas Menu"};
+  std::vector<Window*> windows;  // UI Windows
 
   UI();
   bool loadUI(EditorContext& ec);

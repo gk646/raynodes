@@ -23,14 +23,18 @@
 
 #include "shared/fwd.h"
 
-// Return nullptr for a valid str else the fail reason
+// Return nullptr if valid, else the fail reason
 using ValidationFunc = const char* (*)(EditorContext&, const char*);
+
+// Custom draw function - Passed the rectangle of the textbox
 using CustomDraw = bool (*)(EditorContext& ec, const Rectangle& r);
 
 struct EXPORT PopupMenu {
-  static const char* InputText(EditorContext& ec, Rectangle& scaled, TextField& input, ValidationFunc func,
-                               const char* header);
+  // Returns nullptr if not valid, UI::DUMMY_STRING to signal close, or the input string
+  static const char* InputText(EditorContext& ec, const Rectangle& r, TextField& input, ValidationFunc func,
+                               const char* txt);
 
+  // Returns nullptr if not valid, UI::DUMMY_STRING to signal close, or the input string
   static const char* InputTextEx(EditorContext& ec, Rectangle& scaled, TextField& input, ValidationFunc func,
                                  const char* header, CustomDraw draw);
 };

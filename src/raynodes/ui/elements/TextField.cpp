@@ -100,9 +100,10 @@ void TextField::draw(const char* emptyHint) {
                       bounds.x + 3, bounds.y, fs);
   }
 }
-void TextField::update(EditorContext& ec, Vector2 mouse) {
+void TextField::update(EditorContext& ec, const Vector2 mouse) {
   if (!isFocused || ec.input.keyboardConsumed) [[likely]] { return; }  // This is actually the most likely case
 
+  // Safety
   cursorPos = cxstructs::clamp(static_cast<int>(cursorPos), 0, static_cast<int>(buffer.size()));
 
   // In here we consume upfront and use raw getters
@@ -129,7 +130,7 @@ void TextField::update(EditorContext& ec, Vector2 mouse) {
     return;
   }
 
-  if (IsKeyPressed(KEY_V) && IsKeyDown(KEY_LEFT_CONTROL) && buffer.length() < 1024) {
+  if (IsKeyPressed(KEY_V) && IsKeyDown(KEY_LEFT_CONTROL)) {
     deleteSelection();
     const int prev = static_cast<int>(buffer.size());
     buffer.insert(cursorPos, GetClipboardText());
@@ -154,7 +155,7 @@ void TextField::update(EditorContext& ec, Vector2 mouse) {
     return;
   }
 
-  if (constraint != SINGLE_LINE && IsKeyPressed(KEY_ENTER) && buffer.length() < 1024) {
+  if (constraint != SINGLE_LINE && IsKeyPressed(KEY_ENTER)) {
     buffer.insert(buffer.begin() + cursorPos, '\n');
     cursorPos++;
     updateDimensions();
@@ -203,7 +204,7 @@ void TextField::update(EditorContext& ec, Vector2 mouse) {
   int key = GetCharPressed();
   while (key > 0) {
     if (selectionEnd != selectionStart) deleteSelection();
-    if (IsInputAllowed(key, constraint) && buffer.length() < 1024) {
+    if (IsInputAllowed(key, constraint)) {
       buffer.insert(buffer.begin() + cursorPos, static_cast<char>(key));
       cursorPos++;
       updateDimensions();

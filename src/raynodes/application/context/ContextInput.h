@@ -24,13 +24,13 @@ struct Input {
   bool mouseConsumed = false;
   bool keyboardConsumed = false;
   //Input wrappers
-  [[nodiscard]] bool isMouseButtonPressed(const int button) const {
+  [[nodiscard]] bool isMBPressed(const int button) const {
     return !mouseConsumed && IsMouseButtonPressed(button);
   }
-  [[nodiscard]] bool isMouseButtonReleased(const int button) const {
+  [[nodiscard]] bool isMBReleased(const int button) const {
     return IsMouseButtonReleased(button);  // Dont lock release
   }
-  [[nodiscard]] bool isMouseButtonDown(const int button) const {
+  [[nodiscard]] bool isMBDown(const int button) const {
     return !mouseConsumed && IsMouseButtonDown(button);
   }
   [[nodiscard]] bool isKeyPressed(const int key) const { return !keyboardConsumed && IsKeyPressed(key); }

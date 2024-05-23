@@ -40,6 +40,13 @@ struct EXPORT Core final {
   bool closeApplication = false;
   bool requestedClose = false;
 
+  // Needed because of the nodeGroups vector
+  Core() = default;
+  Core(Core&&) = default;
+  Core& operator=(Core&&) = default;
+  Core(const Core&) = delete;
+  Core& operator=(const Core&) = delete;
+
   bool loadCore(EditorContext& ec);
   void resetEditor(EditorContext& ec);  // Reset to initial state for loading new projects
 
@@ -49,7 +56,11 @@ struct EXPORT Core final {
     UID = static_cast<NodeID>(UID + 1);
     return retval;
   }
-  Node* getNode(const NodeID id) { return nodeMap[id]; }
+  Node* getNode(const NodeID id) {
+    const auto it = nodeMap.find(id);
+    if (it != nodeMap.end()) return it->second;
+    return nullptr;
+  }
   Node* createNode(EditorContext& ec, const char* name, Vector2 worldPos, uint16_t hint = UINT16_MAX);
   void insertNode(EditorContext& ec, Node& node);
   void removeNode(EditorContext& ec, NodeID id);

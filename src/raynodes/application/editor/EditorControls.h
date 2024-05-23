@@ -34,6 +34,9 @@ void HandleMoveAction(EditorContext& ec) {
     } else {
       ec.core.addEditorAction(ec, moveAction);
     }
+    for (const auto [fst, snd] : ec.core.selectedNodes) {
+      NodeGroup::InvokeMoved(ec, *snd);
+    }
     moveAction = nullptr;
   }
 }
@@ -55,31 +58,42 @@ inline void PollControls(EditorContext& ec) {
     camera.zoom = camera.zoom < Display::MIN_ZOOM ? Display::MIN_ZOOM : camera.zoom;
   }
 
-  //Context menu
-  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_RIGHT)) { contextMenuPos = mouse; }
+  if (ec.input.isMBPressed(MOUSE_BUTTON_RIGHT)) { contextMenuPos = mouse; }
 
-  if (ec.input.isMouseButtonReleased(MOUSE_BUTTON_RIGHT)) {
+  //Context menus
+  if (ec.input.isMBReleased(MOUSE_BUTTON_RIGHT)) {
     if (DistEuclidean(contextMenuPos, mouse) <= 5.0F) {
-      if (ec.logic.isAnyPinHovered) ec.logic.showPinContextMenu = true;
-      else if (ec.logic.isAnyNodeHovered) {
-        ec.logic.showNodeContextMenu = true;
+      if (ec.logic.isAnyPinHovered) {
+        //TODO pin menu
+      } else if (ec.logic.isAnyNodeHovered) {
+        ec.ui.nodeContextMenu.show();
         ec.core.selectedNodes.insert({ec.logic.hoveredNode->uID, ec.logic.hoveredNode});
-      } else ec.logic.showCanvasContextMenu = true;
+      } else if (ec.logic.hoveredGroup != nullptr) {
+        ec.ui.nodeGroupContextMenu.show();
+      } else {
+        ec.ui.canvasContextMenu.show();
+      }
       ec.logic.isDraggingScreen = false;
       ec.logic.isSelecting = false;
       return;
     }
   }
 
+  // Node Search menu
+  if (ec.input.isKeyPressed(KEY_TAB)) {
+    ec.logic.contextMenuPos = ec.logic.mouse;
+    ec.ui.nodeCreateMenu.show();
+  }
+
   //Panning
-  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_LEFT) && !ec.logic.isAnyNodeHovered) {
+  if (ec.input.isMBPressed(MOUSE_BUTTON_LEFT) && !ec.logic.isAnyNodeHovered) {
     ec.logic.isSelecting = false;
     selectedNodes.clear();
     dragStart = worldMouse;
     isDragging = true;
   }
 
-  if (ec.input.isMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+  if (ec.input.isMBReleased(MOUSE_BUTTON_LEFT)) {
     ec.logic.handleDroppedPin(ec);
     isDragging = false;
     HandleMoveAction(ec);
@@ -92,8 +106,7 @@ inline void PollControls(EditorContext& ec) {
   }
 
   //Selecting
-  if (ec.input.isMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !ec.logic.isAnyNodeHovered
-      && !ec.logic.showCanvasContextMenu) {
+  if (ec.input.isMBPressed(MOUSE_BUTTON_RIGHT) && !ec.logic.isAnyNodeHovered && !ec.ui.nodeCreateMenu.isVisible) {
     ec.logic.isSelecting = true;
     ec.logic.selectPoint = worldMouse;
     selectRect.width = 0;
@@ -101,7 +114,7 @@ inline void PollControls(EditorContext& ec) {
     selectedNodes.clear();
   }
 
-  if (ec.input.isMouseButtonReleased(MOUSE_BUTTON_RIGHT)) { ec.logic.isSelecting = false; }
+  if (ec.input.isMBReleased(MOUSE_BUTTON_RIGHT)) { ec.logic.isSelecting = false; }
 
   //Delete
   if (ec.input.isKeyPressed(KEY_DELETE) || ec.input.isKeyPressed(KEY_BACKSPACE)) { ec.core.erase(ec); }
@@ -140,6 +153,13 @@ inline void PollControls(EditorContext& ec) {
       ec.core.selectAll(ec);
     }
   }
+
+  // Move camera
+  const auto moveSpeed = 10 - camera.zoom;
+  if (ec.input.isKeyDown(KEY_UP)) { camera.target.y -= moveSpeed; }
+  if (ec.input.isKeyDown(KEY_LEFT)) { camera.target.x -= moveSpeed; }
+  if (ec.input.isKeyDown(KEY_DOWN)) { camera.target.y += moveSpeed; }
+  if (ec.input.isKeyDown(KEY_RIGHT)) { camera.target.x += moveSpeed; }
 }
 
 }  // namespace Editor

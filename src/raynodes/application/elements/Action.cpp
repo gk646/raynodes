@@ -41,6 +41,7 @@ NodeDeleteAction::NodeDeleteAction(EditorContext& ec, const std::unordered_map<N
     ec.core.removeNode(ec, id);
     ec.core.removeConnectionsFromNode(*node, deletedConnections);
     deletedNodes.push_back(node);
+    if (node->isInGroup) [[unlikely]] { NodeGroup::InvokeDelete(ec, *node); }
   }
 }
 
