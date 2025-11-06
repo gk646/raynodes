@@ -1,5 +1,7 @@
 # raynodes
 
+### Note: Project is no longer maintained
+
 `raynodes` is a standalone 2D node editor made using [raylib](https://github.com/raysan5/raylib)
 and [raygui](https://github.com/raysan5/raygui) with a focus
 extensibility. It aims to be an attractive tool for any node based task, and supports being integrated into
@@ -50,7 +52,7 @@ To build the project locally you just need to do 4 simple steps:
 1. Clone this git repository
 2. Create a new directory inside the clone repository (e.g. cmake-build-debug)
 3. Configure the build from inside the build directory with `cmake ..`
-4. Build the project from inside the build directory with `make ..`
+4. Build the project from inside the build directory with `make`
 
 All external dependencies are included in the source!
 This model is chosen based on their combined low size (only **14mb**) and the provided simplicity for sharing and

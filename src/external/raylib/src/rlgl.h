@@ -4399,7 +4399,7 @@ unsigned int rlGetShaderBufferSize(unsigned int id)
 
 #if defined(GRAPHICS_API_OPENGL_43)
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, id);
-    glGetInteger64v(GL_SHADER_STORAGE_BUFFER_SIZE, &size);
+    glGetInteger64v(GL_SHADER_STORAGE_BUFFER_SIZE,(long int*) &size);
 #endif
 
     return (size > 0)? (unsigned int)size : 0;
